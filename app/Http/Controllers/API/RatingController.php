@@ -18,6 +18,15 @@ class RatingController extends Controller
 
         try {
 
+            //add comment column in ratings table, if doesn't exist
+            if (!\Schema::hasColumn('ratings', 'comment')) {
+                \Schema::table('ratings', function ($table) {
+                    $table->text('comment')->nullable();
+                });
+            }
+
+
+            //
             $vendorId = $request->vendor_id;
             $driverId = $request->driver_id;
             $userId = $request->user_id;
@@ -75,7 +84,7 @@ class RatingController extends Controller
                 return response()->json([
                     "message" => __("Rider rated successfully")
                 ], 200);
-            }else if (!empty($driverId)) {
+            } else if (!empty($driverId)) {
 
                 $review = Review::where('user_id',  Auth::id())
                     ->where([

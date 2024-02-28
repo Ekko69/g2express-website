@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 class Vehicle extends NoDeleteBaseModel
 {
 
-    protected $with = ['driver', 'car_model.car_make', 'vehicle_type'];
+    protected $with = ['car_model.car_make', 'vehicle_type'];
 
     protected $casts = [
         'id' => 'integer',

@@ -30,8 +30,10 @@ class CreateProductsTable extends Migration
             $table->boolean('is_active')->default(true);
             $table->boolean('plus_option')->default(true);
             $table->boolean('digital')->default(false);
+            $table->boolean('age_restricted')->default(false);
             $table->foreignId('vendor_id')->constrained();
             $table->integer('in_order')->default(1);
+            $table->boolean('approved')->default(0);
             $table->timestamps();
             $table->softDeletes();
         });

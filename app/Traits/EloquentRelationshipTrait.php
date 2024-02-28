@@ -51,11 +51,19 @@ trait EloquentRelationshipTrait
         return $relations;
     }
 
-    public function fleets(){
+    public function fleets()
+    {
         return $this->belongsToMany('App\Models\Fleet');
     }
 
-    public function fleet(){
+    public function fleet()
+    {
         return $this->fleets()->first() ?? null;
+    }
+
+    // orders
+    public function orders()
+    {
+        return $this->hasMany('App\Models\Order');
     }
 }

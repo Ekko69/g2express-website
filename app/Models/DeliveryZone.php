@@ -7,7 +7,7 @@ use Kirschbaum\PowerJoins\PowerJoins;
 use Illuminate\Database\Eloquent\Model;
 use Malhal\Geographical\Geographical;
 
-class DeliveryZone extends Model
+class DeliveryZone extends NoDeleteBaseModel
 {
     use HasFactory;
     use PowerJoins;
@@ -33,8 +33,8 @@ class DeliveryZone extends Model
     public function scopeCloseTo($query, $latitude, $longitude)
     {
         return $query
-        ->selectRaw('radius AS deliveryZoneRange')
-        ->distance($latitude, $longitude)
+            ->selectRaw('radius AS deliveryZoneRange')
+            ->distance($latitude, $longitude)
             ->havingRaw("deliveryZoneRange >= distance")->orderBy('distance', 'ASC');
     }
 }

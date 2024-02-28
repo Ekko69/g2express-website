@@ -15,6 +15,8 @@ use Kirschbaum\PowerJoins\PowerJoins;
 use Propaganistas\LaravelPhone\PhoneNumber;
 use App\Traits\EloquentRelationshipTrait;
 use App\Traits\DriverAttributeTrait;
+use App\Traits\DocumentRequestTrait;
+use App\Traits\UserFirebaseTokenAttributeTrait;
 
 class User extends Authenticatable implements HasMedia
 {
@@ -22,6 +24,8 @@ class User extends Authenticatable implements HasMedia
     use PowerJoins;
     use EloquentRelationshipTrait;
     use DriverAttributeTrait;
+    use DocumentRequestTrait;
+    use UserFirebaseTokenAttributeTrait;
 
     /**
      * The attributes that are mass assignable.
@@ -64,7 +68,10 @@ class User extends Authenticatable implements HasMedia
         'assigned_orders',
         'raw_phone',
         'is_taxi_driver',
+        'document_requested',
+        'pending_document_approval',
     ];
+
 
 
     public function registerMediaCollections(): void
@@ -102,7 +109,7 @@ class User extends Authenticatable implements HasMedia
 
     public function getRatingAttribute()
     {
-        return  (int) ($this->averageRating ?? 3);
+        return  (string) ($this->averageRating ?? 3);
     }
 
 
@@ -136,8 +143,9 @@ class User extends Authenticatable implements HasMedia
     {
         if (empty($value)) {
             try {
-                return PhoneNumber::make($this->phone)->getCountry();
+                return (new PhoneNumber($this->phone))->getCountry();
             } catch (\Exception $ex) {
+                return "us";
             }
         }
         return $value;
@@ -146,7 +154,7 @@ class User extends Authenticatable implements HasMedia
     public function getRawPhoneAttribute()
     {
         try {
-            return str_replace(" ", "", PhoneNumber::make($this->phone)->formatNational());
+            return str_replace(" ", "", (new PhoneNumber($this->phone))->formatNational());
         } catch (\Exception $ex) {
             return $this->phone;
         }

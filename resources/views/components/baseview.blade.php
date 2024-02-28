@@ -1,13 +1,15 @@
+@include('layouts.partials.demo-header')
 <div class="px-4">
     <div class="flex items-center w-full mb-2 text-2xl font-semibold">
         {{ $title ?? 'List' }}
         @if ($showNew ?? false)
-        <div class="mx-auto"></div>
-            <x-buttons.new title="{{ $actionTitle ?? ''  }}" />
+            <div class="mx-auto"></div>
+            <x-buttons.new title="{{ $actionTitle ?? '' }}" />
         @endif
     </div>
     @if ($newInfo ?? false)
-    <p class="mb-4 text-xs font-light">{{ __('Note: Please login as vendor manager to be able create new data') }}</p>
+        <p class="mb-4 text-xs font-light">{{ __('Note: Please login as vendor manager to be able create new data') }}
+        </p>
     @endif
     {{-- list --}}
     {{ $slot }}

@@ -52,9 +52,17 @@ class Page extends BaseSettingsComponent
             ])->save();
 
             $this->showSuccessAlert(__("Page Settings saved successfully!"));
-            
-        } catch (Exception $error) {
+            $this->setupEditors();
+        } catch (\Exception $error) {
             $this->showErrorAlert($error->getMessage() ?? __("Page Settings save failed!"));
         }
+    }
+
+
+    public function setupEditors()
+    {
+        //
+        $this->emit('loadSummerNote', "driverDocumentInstructionsEdit", $this->driverDocumentInstructions);
+        $this->emit('loadSummerNote', "vendorDocumentInstructionsEdit", $this->vendorDocumentInstructions);
     }
 }

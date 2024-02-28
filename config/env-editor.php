@@ -23,11 +23,11 @@ return [
     */
     'route' => [
         // Prefix url for route Group
-        'prefix' => 'env-editor',
+        'prefix' => 'env/editor',
         // Routes base name
-        'name' => 'env-editor',
+        'name' => 'env.editor',
         // Middleware(s) applied on route Group
-        'middleware' => ['web'],
+        'middleware' => ['web', 'auth', 'role:admin', 'allow.production'],
     ],
 
     /* ------------------------------------------------------------------------------------------------

@@ -14,7 +14,9 @@ class AutoTranslator extends Command
      *
      * @var string
      */
-    protected $signature = 'auto:translate';
+    protected $signature = 'auto:translate {folder?} {languageCode?}';
+    //make the folder and language code optional
+    // protected $signature = 'auto:translate {folder?} {languageCode?}';
 
     /**
      * The console command description.
@@ -50,9 +52,23 @@ class AutoTranslator extends Command
             );
 
             //
-            $path = base_path() . "/resources/lang";
-            $fullLangFilePath = base_path() . "/lang-full.txt";
-            $newLangFilePath = base_path() . "/lang.txt";
+            $folder = $this->argument('folder');
+            if (!empty($folder)) {
+                $path = base_path() . "/resources/lang/$folder";
+                //create folder if not exist
+                if (!File::exists($path)) {
+                    File::makeDirectory($path);
+                }
+
+                //
+                $fullLangFilePath = base_path() . "/website-lang-full.txt";
+                $newLangFilePath = base_path() . "/website-lang.txt";
+            } else {
+                $path = base_path() . "/resources/lang";
+                $fullLangFilePath = base_path() . "/lang-full.txt";
+                $newLangFilePath = base_path() . "/lang.txt";
+            }
+
             //
             //load the new lang strings
             $newLang = File::get($newLangFilePath);
@@ -60,6 +76,12 @@ class AutoTranslator extends Command
 
             //load the language codes
             $codes = config('backend.languageCodes');
+            //if the language code is specified in the command
+            $languageCode = $this->argument('languageCode');
+            if (!empty($languageCode)) {
+                $codes = [$languageCode];
+            }
+
             foreach ($codes as $code) {
                 //
                 $this->info("Translating ==> $code");
@@ -87,6 +109,10 @@ class AutoTranslator extends Command
                 // $newTranslatedDataJson = json_encode($newTranslatedDataJson, JSON_UNESCAPED_UNICODE);
                 //load the language file
                 $langFilePath = $path . "/" . $code . ".json";
+                //create file if not exist
+                if (!File::exists($langFilePath)) {
+                    File::put($langFilePath, "{}");
+                }
                 //
                 $languageFile = File::get($langFilePath);
                 $langJson = json_decode($languageFile, $flag = JSON_UNESCAPED_UNICODE);
@@ -106,7 +132,7 @@ class AutoTranslator extends Command
             //add the content of new lang file to lang-full.txt
             File::append($fullLangFilePath, "\n" . $newLang);
             File::replace($newLangFilePath, "");
-            //delete the content of the new lang file 
+            //delete the content of the new lang file
         } catch (\Exception $error) {
             $this->newLine();
             $this->error($error->getMessage());

@@ -1,4 +1,5 @@
 @section('title', __('Wallet Topup'))
+
 <div class="">
 
     <div wire:loading.flex>
@@ -35,12 +36,14 @@
                     </button>
                 @endforeach
             </div>
-
-            @if (($selectedPaymentMethod->slug ?? '') == 'paypal')
-                <div id="paypal-button-container" class="py-12"></div>
-            @endif
         </div>
         <p class="w-full p-4 text-sm text-center text-gray-500">{{ __('Do not close this window') }}</p>
+
+        <div x-data="{ open: {{ $selectedPaymentMethod != null && $selectedPaymentMethod->slug == 'paypal' ? 'true' : 'false' }} }">
+            <x-modal onCancel="resetSelectedMethod" :clickAway="false">
+                <div id="paypal-button-container" class="py-12"></div>
+            </x-modal>
+        </div>
     @else
         @include('livewire.payment.offline.wallet')
     @endif

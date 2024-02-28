@@ -12,6 +12,9 @@ use App\Traits\FirebaseDBTrait;
 use App\Traits\FirebaseAuthTrait;
 use App\Traits\DBTrait;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Exception;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Auth;
 
 class DataLivewire extends BaseLivewireComponent
 {
@@ -66,7 +69,7 @@ class DataLivewire extends BaseLivewireComponent
             $vendorEarningIds = Earning::whereNull("user_id")->pluck("id")->toArray();
             Payout::whereIn("earning_id", $vendorEarningIds)->delete();
             DB::table('earnings')->whereNull("user_id")->truncate();
-            if (\Schema::hasTable('earneds')) {
+            if (Schema::hasTable('earneds')) {
                 DB::table('earneds')->truncate();
             }
 
@@ -84,6 +87,41 @@ class DataLivewire extends BaseLivewireComponent
         }
     }
 
+    public function clearWalletTransactions()
+    {
+        try {
+
+            $this->isDemo();
+
+            DB::statement("SET foreign_key_checks=0");
+            //order payments
+            DB::table('wallet_transactions')->truncate();
+            DB::table('wallets')->update(['balance' => 0]);
+            DB::statement("SET foreign_key_checks=1");
+            $this->dismissModal();
+            $this->showSuccessAlert($this->model . " " . __('clear successfully!'));
+        } catch (Exception $error) {
+            $this->showErrorAlert($error->getMessage() ?? $this->model . " " . __('clearing failed!'));
+        }
+    }
+
+    public function clearUserWalletBalance()
+    {
+        try {
+
+            $this->isDemo();
+
+            DB::statement("SET foreign_key_checks=0");
+            //order payments
+            DB::table('wallets')->update(['balance' => 0]);
+            DB::statement("SET foreign_key_checks=1");
+            $this->dismissModal();
+            $this->showSuccessAlert($this->model . " " . __('clear successfully!'));
+        } catch (Exception $error) {
+            $this->showErrorAlert($error->getMessage() ?? $this->model . " " . __('clearing failed!'));
+        }
+    }
+
     public function clearProducts()
     {
         //
@@ -92,15 +130,41 @@ class DataLivewire extends BaseLivewireComponent
             $this->isDemo();
 
             DB::statement("SET foreign_key_checks=0");
-            \DB::table('category_product')->truncate();
-            \DB::table('coupon_product')->truncate();
-            \DB::table('menu_product')->truncate();
-            \DB::table('option_product')->truncate();
-            \DB::table('product_subcategory')->truncate();
-            \DB::table('favourites')->truncate();
-            \DB::table('products')->truncate();
+            DB::table('category_product')->truncate();
+            DB::table('coupon_product')->truncate();
+            DB::table('menu_product')->truncate();
+            DB::table('option_product')->truncate();
+            DB::table('product_subcategory')->truncate();
+            DB::table('favourites')->truncate();
+            DB::table('products')->truncate();
             //clear media
             $this->clearMedia(["App\Models\Product"]);
+            DB::statement("SET foreign_key_checks=1");
+
+
+            $this->dismissModal();
+            $this->showSuccessAlert($this->model . " " . __('clear successfully!'));
+        } catch (Exception $error) {
+
+            $this->showErrorAlert($error->getMessage() ?? $this->model . " " . __('clearing failed!'));
+        }
+    }
+
+    public function clearServices()
+    {
+        //
+        try {
+
+            $this->isDemo();
+
+            DB::statement("SET foreign_key_checks=0");
+            DB::table('service_option_groups')->truncate();
+            DB::table('service_options')->truncate();
+            DB::table('option_service')->truncate();
+            DB::table('order_services')->truncate();
+            DB::table('services')->truncate();
+            //clear media
+            $this->clearMedia(["App\Models\Service"]);
             DB::statement("SET foreign_key_checks=1");
 
 
@@ -126,22 +190,22 @@ class DataLivewire extends BaseLivewireComponent
                 ->update(['vendor_id' => null]);
 
             DB::statement("SET foreign_key_checks=0");
-            \DB::table('category_vendor')->truncate();
-            \DB::table('country_vendor')->truncate();
-            \DB::table('city_vendor')->truncate();
-            \DB::table('day_vendor')->truncate();
-            \DB::table('payment_method_vendor')->truncate();
-            \DB::table('state_vendor')->truncate();
-            \DB::table('package_type_pricings')->truncate();
-            \DB::table('option_product')->delete();
-            \DB::table('options')->truncate();
-            \DB::table('option_groups')->truncate();
+            DB::table('category_vendor')->truncate();
+            DB::table('country_vendor')->truncate();
+            DB::table('city_vendor')->truncate();
+            DB::table('day_vendor')->truncate();
+            DB::table('payment_method_vendor')->truncate();
+            DB::table('state_vendor')->truncate();
+            DB::table('package_type_pricings')->truncate();
+            DB::table('option_product')->delete();
+            DB::table('options')->truncate();
+            DB::table('option_groups')->truncate();
             //
             $vendorEarningIds = Earning::whereNull("user_id")->pluck("id")->toArray();
             Payout::whereIn("earning_id", $vendorEarningIds)->delete();
-            \DB::table('earnings')->whereNull("user_id")->delete();
+            DB::table('earnings')->whereNull("user_id")->delete();
             //
-            \DB::table('vendors')->truncate();
+            DB::table('vendors')->truncate();
             //clear media
             $this->clearMedia(["App\Models\Vendor", "App\Models\PackageType", "App\Models\Option", "App\Models\OptionGroup"]);
             DB::statement("SET foreign_key_checks=1");
@@ -166,18 +230,24 @@ class DataLivewire extends BaseLivewireComponent
             //unassugn the managers
             DB::statement("SET foreign_key_checks=0");
             //
-            User::where('creator_id', "!=", \Auth::id())
+            User::where('creator_id', "!=", Auth::id())
                 ->update(['creator_id' => null]);
             //vendors
-            Vendor::where('creator_id', "!=", \Auth::id())
+            Vendor::where('creator_id', "!=", Auth::id())
                 ->update(['creator_id' => null]);
             //
-            \DB::table('delivery_addresses')->truncate();
-            \DB::table('wallet_transactions')->truncate();
-            \DB::table('wallets')->truncate();
-            \DB::table('users')->where('id', "!=", \Auth::id())->delete();
+            DB::table('delivery_addresses')->truncate();
+            DB::table('wallet_transactions')->truncate();
+            DB::table('wallets')->truncate();
+            DB::table('users')->where('id', "!=", Auth::id())->delete();
             $this->clearMedia(["App\Models\User"]);
             DB::statement("SET foreign_key_checks=1");
+            //get last user id
+            $lastUserId = User::latest()->first()->id;
+            //set auto increment to next id
+            $lastUserId = $lastUserId + 1;
+            DB::statement("ALTER TABLE users AUTO_INCREMENT = $lastUserId");
+
 
 
             $this->dismissModal();
@@ -241,12 +311,19 @@ class DataLivewire extends BaseLivewireComponent
                     ->take(1)
                     ->pluck('id');
 
-                Media::where('model_type', $media->model_type)
+                $mediaCollection = Media::where('model_type', $media->model_type)
                     ->where("model_id", $media->model_id)
                     ->where("collection_name", $media->collection_name)
-                    ->whereNotIn('id', $keep)
-                    ->delete();
+                    ->whereNotIn('id', $keep)->get();
 
+                //delete the files from storage
+                foreach ($mediaCollection as $mediaItem) {
+                    $filePath = $mediaItem->getPath();
+                    if (file_exists($filePath)) {
+                        unlink($filePath);
+                    }
+                    $mediaItem->delete();
+                }
             }
 
 
@@ -265,10 +342,10 @@ class DataLivewire extends BaseLivewireComponent
 
 
 
-    //clear media 
+    //clear media
     public function clearMedia(array $models)
     {
         //clear media
-        \DB::table('media')->whereIn("model_type", $models)->delete();
+        DB::table('media')->whereIn("model_type", $models)->delete();
     }
 }

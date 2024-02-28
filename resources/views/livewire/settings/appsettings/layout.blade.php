@@ -26,7 +26,7 @@
         </div>
         <div class="block mt-4 text-sm">
             <p>{{ __('Proof type') }}</p>
-            <x-select :options="['none', 'code', 'signature', 'photo']" title="" name="orderVerificationType" />
+            <x-select :options="['none', 'code', 'signature', 'photo']" name="orderVerificationType" />
         </div>
         <div class="block mt-4 text-sm">
             <p>{{ __('Vendors Home Page List Count') }}</p>

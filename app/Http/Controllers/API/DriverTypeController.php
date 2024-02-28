@@ -49,6 +49,13 @@ class DriverTypeController extends Controller
         if (!$request->is_taxi) {
             $vehicleTypeId = 0;
         }
+
+        $vehicleTypeId = (int) $vehicleTypeId;
+
+        if ($vehicleTypeId == 0) {
+            $vehicleTypeId = null;
+        }
+
         //update driver firebase node
         //driver ref
         $driverRef = "drivers/" . $driver->id . "";
@@ -58,7 +65,7 @@ class DriverTypeController extends Controller
             $firestoreClient->addDocument(
                 $driverRef,
                 [
-                    'vehicle_type_id' => (int) $vehicleTypeId
+                    'vehicle_type_id' => $vehicleTypeId
                 ]
             );
         } catch (\Exception $error) {
@@ -66,7 +73,7 @@ class DriverTypeController extends Controller
                 $firestoreClient->updateDocument(
                     $driverRef,
                     [
-                        'vehicle_type_id' => (int) $vehicleTypeId
+                        'vehicle_type_id' => $vehicleTypeId
                     ]
                 );
             } catch (\Exception $error) {
@@ -161,7 +168,7 @@ class DriverTypeController extends Controller
             ], 400);
         }
 
-        
+
         $vehicle = Vehicle::find($id);
         if (empty($vehicle) || $vehicle->driver_id != Auth::id() || !$vehicle->verified) {
             return response()->json([

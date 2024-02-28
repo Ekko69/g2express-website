@@ -17,6 +17,7 @@ use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Twilio\TwiML\Voice\Pay;
 
 class NewOrderLivewire extends BaseLivewireComponent
 {
@@ -26,14 +27,6 @@ class NewOrderLivewire extends BaseLivewireComponent
     public $newOrder;
     public $model = Order::class;
     public $selectedProductId;
-
-    protected $listeners = [
-        'productsUpdated' => 'setProductsUpdated',
-        'vendorUpdated' => 'setVendorUpdated',
-        'user_idUpdated' => 'userIdUpdated',
-        'delivery_address_idUpdated' => 'deliveryAddressIdUpdated',
-        'payment_method_idUpdated' => 'paymentMethodIdUpdated',
-    ];
 
     public $vendor_id;
     public $user_id;
@@ -53,6 +46,18 @@ class NewOrderLivewire extends BaseLivewireComponent
     public $newProductOptions = [];
     public $newOrderProductsQtys;
     public $showSummary = false;
+
+    public function getListeners()
+    {
+        return $this->listeners +
+            [
+                'productsUpdated' => 'setProductsUpdated',
+                'vendorUpdated' => 'setVendorUpdated',
+                'user_idUpdated' => 'userIdUpdated',
+                'delivery_address_idUpdated' => 'deliveryAddressIdUpdated',
+                'payment_method_idUpdated' => 'paymentMethodIdUpdated',
+            ];
+    }
 
 
     public function render()
@@ -88,8 +93,6 @@ class NewOrderLivewire extends BaseLivewireComponent
 
 
 
-
-
     public function addProduct($id)
     {
         try {
@@ -97,29 +100,44 @@ class NewOrderLivewire extends BaseLivewireComponent
             if (empty($this->products)) {
                 $this->products = [];
             }
+            //if not array
+            if (!is_array($this->products)) {
+                $this->products = [];
+            }
+
 
             //
             $this->selectedProductId = $id;
             $this->selectedModel = Product::find($id);
 
+
             //if product has options then show options
             if ($this->selectedModel->options->count() > 0) {
-                $this->optionGroups = OptionGroup::where('vendor_id', $this->selectedModel->vendor_id)->get();
-                $this->showDetailsModal($id);
+                $this->optionGroups = $this->selectedModel->option_groups;
+                $this->showDetailsModal(null);
                 return;
             }
 
 
-            $this->products[] = [
+
+
+            // $this->products[] = [
+            //     'product_id' => $id,
+            //     'product' => $this->selectedModel,
+            //     'selected_options' => "",
+            //     'price' => $this->selectedModel->sell_price,
+            //     'qty' => 1,
+            // ];
+            $mProduct = [
                 'product_id' => $id,
-                'product' => $this->selectedModel,
-                'selected_options' => [],
+                'name' => $this->selectedModel->name,
+                'selected_options' => json_encode([]),
                 'price' => $this->selectedModel->sell_price,
                 'qty' => 1,
             ];
+            //array push
+            array_push($this->products, $mProduct);
 
-            //
-            $this->products = array_values($this->products);
             //
         } catch (\Exception $ex) {
             logger("Error", [$ex]);
@@ -142,14 +160,25 @@ class NewOrderLivewire extends BaseLivewireComponent
         }
 
         $this->selectedModel = Product::find($this->selectedProductId);
-        $selectedOptions = Option::whereIn('id', $selectedOptionIds)->get()->toArray();
-        $this->products[] = [
+        $selectedOptions = Option::whereIn('id', $selectedOptionIds)->get();
+        //map and transform
+        $selectedOptions = $selectedOptions->map(function ($item, $key) {
+            return [
+                'id' => $item->id,
+                'name' => $item->name,
+                'price' => $item->price,
+            ];
+        });
+        //
+        $mProduct = [
             'product_id' => $this->selectedModel->id,
-            'product' => $this->selectedModel,
-            'selected_options' => $selectedOptions,
+            'name' => $this->selectedModel->name,
+            'selected_options' => json_encode($selectedOptions),
             'price' => $this->selectedModel->sell_price,
             'qty' => 1,
         ];
+
+        array_push($this->products, $mProduct);
         $this->newProductSelectedOptions = [];
         $this->showDetails = false;
     }
@@ -199,7 +228,16 @@ class NewOrderLivewire extends BaseLivewireComponent
             //default delivery address
             $deliveryAddress = DeliveryAddress::distance($this->vendor->latitude, $this->vendor->longitude)->find($this->delivery_address_id);
             if ($deliveryAddress->distance > $this->vendor->delivery_range) {
-                $this->showErrorAlert(__(("Delivery address is out of vendor delivery range")));
+                $distanceBetweenOrder = $deliveryAddress->distance;
+                $msg = __("Delivery address is out of vendor delivery range");
+                $msg .= ".\n ";
+                $msg .= __("Distance between order and vendor is");
+                $msg .= " $distanceBetweenOrder km";
+                $msg .= ".\n ";
+                $msg .= __("Vendor delivery range is :vendorDeliveryRange");
+                $vendorDeliveryRange = $this->vendor->delivery_range;
+                $msg .= " $vendorDeliveryRange km";
+                $this->showErrorAlert($msg, null);
                 return;
             }
         } else if (empty($this->payment_method_id)) {
@@ -237,7 +275,10 @@ class NewOrderLivewire extends BaseLivewireComponent
                 $productOptionsIds = "";
 
                 foreach ($this->products ?? [] as $key => $newOrderProductData) {
-                    $productOptions = $newOrderProductData['selected_options'];
+                    $productOptions = $newOrderProductData['selected_options'] ?? [];
+                    if (is_string($productOptions)) {
+                        $productOptions = json_decode($productOptions, true);
+                    }
                     foreach ($productOptions as $key => $productOption) {
                         $productOptionsString .= $productOption['name'];
                         $productOptionsIds .= $productOption['id'];
@@ -304,7 +345,8 @@ class NewOrderLivewire extends BaseLivewireComponent
         $order->user_id = $this->user_id;
         $order->delivery_address_id = $this->delivery_address_id;
         if (empty($this->payment_method_id)) {
-            $order->payment_method_id = $this->paymentMethods->first()->id;
+            $this->paymentMethods ??= PaymentMethod::active()->get();
+            $order->payment_method_id = $this->paymentMethods->first()->id ?? PaymentMethod::first()->id;
         } else {
             $order->payment_method_id = $this->payment_method_id;
         }
@@ -326,17 +368,26 @@ class NewOrderLivewire extends BaseLivewireComponent
             } else {
                 $productPrice = $newOrderProduct->price;
             }
-            $order->sub_total += $productPrice * ($this->newOrderProductsQtys[$newOrderProduct->id] ?? 1);
+            //
+            $qty = $newOrderProductData['qty'] ?? 1;
+            $order->sub_total += $productPrice * $qty;
         }
 
         foreach ($this->products ?? [] as $key => $newOrderProductData) {
             $selectedProductOptions = $newOrderProductData['selected_options'];
-            $this->newProductSelectedOptions[$key] = $newOrderProductData['selected_options'];
-
+            if (is_string($selectedProductOptions)) {
+                $selectedProductOptions = json_decode($selectedProductOptions, true);
+            }
+            $this->newProductSelectedOptions[$key] = $selectedProductOptions ?? $newOrderProductData['selected_options'];
+            //
+            $qty = $newOrderProductData['qty'] ?? 1;
+            $optionTotalPrice = 0;
             //pricing
             foreach ($selectedProductOptions as $selectedProductOption) {
-                $order->sub_total += $selectedProductOption['price'];
+                $optionTotalPrice += $selectedProductOption['price'];
             }
+            //
+            $order->sub_total += $optionTotalPrice;
         }
 
 

@@ -5,6 +5,7 @@ namespace App\Http\Livewire;
 use App\Models\Order;
 use App\Traits\FirebaseAuthTrait;
 use App\Traits\FirebaseDBTrait;
+use MrShan0\PHPFirestore\FirestoreClient;
 use Exception;
 
 class OrderChatLivewire extends BaseLivewireComponent
@@ -60,7 +61,7 @@ class OrderChatLivewire extends BaseLivewireComponent
         //
         try {
 
-            $this->isDemo();
+            // $this->isDemo();
         } catch (\Exception $error) {
             $this->showErrorAlert($error->getMessage());
             return;
@@ -84,7 +85,17 @@ class OrderChatLivewire extends BaseLivewireComponent
             //
             $chats = [];
             foreach ($chatsDocs['documents'] as $key => $chatsDoc) {
-                $chats[] = $chatsDoc->toArray();
+                $chat =  $chatsDoc->toArray();
+                $chatPhoto = $chatsDoc->get('photos');
+                $photos = [];
+                foreach ($chatPhoto as $key => $photo) {
+                    $photoData = $photo->getData();
+                    $photos[] = [
+                        "url" => $photoData[0]['url'],
+                    ];
+                }
+                $chat['photos'] = $photos;
+                $chats[] = $chat;
             }
             if ($this->selectedChatType == "driverVendor") {
                 $this->emit('loadChats', [$this->order->driver_id, $chats]);

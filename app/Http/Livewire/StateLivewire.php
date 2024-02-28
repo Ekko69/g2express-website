@@ -6,38 +6,49 @@ use App\Models\State;
 use App\Models\Country;
 use Exception;
 use Illuminate\Support\Facades\DB;
+
 class StateLivewire extends BaseLivewireComponent
 {
 
 
-     //
-     public $model = State::class;
+    //
+    public $model = State::class;
 
-     //
-     public $name;
-     public $country_id;
- 
-     protected $rules = [
-         "name" => "required|string",
-         "country_id" => "required|exists:countries,id",
-     ];
+    //
+    public $name;
+    public $country_id;
+    public $countries = [];
 
-     
-    public function render()
+    protected $rules = [
+        "name" => "required|string",
+        "country_id" => "required|exists:countries,id",
+    ];
+
+
+    public function mount()
     {
-
-        $countries = Country::get();
-        return view('livewire.states',[
-            "countries" => $countries,
-        ]);
+        $this->countries = Country::get();
+        $this->country_id = $this->countries->first()->id ?? null;
     }
 
 
-    public function save(){
+    public function render()
+    {
+
+        if (empty($this->countries)) {
+            $this->mount();
+        }
+
+        return view('livewire.states');
+    }
+
+
+    public function save()
+    {
         //validate
         $this->validate();
 
-        try{
+        try {
 
             DB::beginTransaction();
             $model = new State();
@@ -48,31 +59,30 @@ class StateLivewire extends BaseLivewireComponent
             DB::commit();
 
             $this->dismissModal();
-            $this->reset();
-            $this->showSuccessAlert(__("State")." ".__('created successfully!'));
             $this->emit('refreshTable');
-
-
-        }catch(Exception $error){
+            $this->reset();
+            $this->mount();
+            $this->showSuccessAlert(__("sssState") . " " . __('created successfully!'));
+        } catch (Exception $error) {
             DB::rollback();
-            $this->showErrorAlert( $error->getMessage() ?? __("State")." ".__('creation failed!'));
-
+            $this->showErrorAlert($error->getMessage() ?? __("State") . " " . __('creation failed!'));
         }
-
     }
 
-    public function initiateEdit($id){
+    public function initiateEdit($id)
+    {
         $this->selectedModel = $this->model::find($id);
         $this->name = $this->selectedModel->name;
         $this->country_id = $this->selectedModel->country->id;
         $this->emit('showEditModal');
     }
 
-    public function update(){
+    public function update()
+    {
         //validate
         $this->validate();
 
-        try{
+        try {
 
             DB::beginTransaction();
             $model = $this->selectedModel;
@@ -83,19 +93,13 @@ class StateLivewire extends BaseLivewireComponent
             DB::commit();
 
             $this->dismissModal();
-            $this->reset();
-                        $this->showSuccessAlert(__("State")." ".__('updated successfully!'));
             $this->emit('refreshTable');
-
-
-        }catch(Exception $error){
+            $this->reset();
+            $this->mount();
+            $this->showSuccessAlert(__("State") . " " . __('updated successfully!'));
+        } catch (Exception $error) {
             DB::rollback();
-                        $this->showErrorAlert( $error->getMessage() ?? __("State")." ".__('updated failed!'));
-
+            $this->showErrorAlert($error->getMessage() ?? __("State") . " " . __('updated failed!'));
         }
-
     }
-
-
-
 }

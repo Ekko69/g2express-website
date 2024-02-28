@@ -16,7 +16,7 @@ class DriverAssignmentCheckService
     public function checkCanAssignOrder($order)
     {
 
-        if(empty(request()->driver_id)){
+        if (empty(request()->driver_id)) {
             return;
         }
         $driver = User::find(request()->driver_id);

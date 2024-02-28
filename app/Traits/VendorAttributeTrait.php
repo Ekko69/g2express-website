@@ -2,9 +2,11 @@
 
 namespace App\Traits;
 
+use App\Models\VendorType;
+
 trait VendorAttributeTrait
 {
-
+    use GoogleMapApiTrait;
 
     //TAX
     public function getTaxAttribute($value)
@@ -22,6 +24,10 @@ trait VendorAttributeTrait
         return ($value != null && $value != "") ? $value : setting('finance.maxOrderAmount', 10000000);
     }
     //
+    public function getCommissionAttribute($value)
+    {
+        return (float) (($value != null && $value != "") ? $value : setting('vendorsCommission', "0"));
+    }
 
 
     public function getChargePerKmAttribute($value)
@@ -54,5 +60,27 @@ trait VendorAttributeTrait
     public function plain_fees()
     {
         return $this->belongsToMany('App\Models\Fee');
+    }
+
+
+    public function scopeByDeliveryZone($query, $latitude, $longitude)
+    {
+        //no filter by location
+        if (!fetchDataByLocation()) {
+            return $query;
+        }
+        //filter by location
+        $deliveryZonesIds = $this->getDeliveryZonesByLocation($latitude, $longitude);
+        return $query->whereHas("delivery_zones", function ($query) use ($deliveryZonesIds) {
+            $query->whereIn('delivery_zone_id', $deliveryZonesIds);
+        })->orWhereDoesntHave("delivery_zones");
+    }
+
+
+    //scope to fetch only vendor exclude service, parcel
+    public function scopePlainVendor($query)
+    {
+        $assignableVendorTypeIds = VendorType::whereNotIn('slug', ['parcel', 'package', 'service', 'booking'])->get()->pluck('id');
+        return $query->whereIn('vendor_type_id', $assignableVendorTypeIds);
     }
 }

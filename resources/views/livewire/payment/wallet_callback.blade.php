@@ -15,5 +15,5 @@
 
     {{-- close --}}
     <p class="w-full p-4 text-sm text-center text-gray-500">{{ __('You may close this window') }}</p>
-    {{-- <x-buttons.close /> --}}
+    <x-buttons.close />
 </div>

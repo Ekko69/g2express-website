@@ -17,17 +17,19 @@
             <x-heroicon-o-fire class="w-5 h-5" />
         </x-menu-item>
     @endcan
-
+    {{-- modules --}}
+    @can('view-vendor-types')
+        {{-- Vendor Types --}}
+        <x-menu-item title="{{ __('Modules') }}" route="vendor.types">
+            <x-heroicon-o-color-swatch class="w-5 h-5" />
+        </x-menu-item>
+    @endcan
+    <x-hr />
     {{-- Vendors --}}
     @can('view-vendors')
         <x-group-menu-item routePath="vendors*" title="{{ __('Vendor Mangt.') }}" icon="heroicon-o-cube">
 
-            @can('view-vendor-types')
-                {{-- Vendor Types --}}
-                <x-menu-item title="{{ __('Vendor Types') }}" route="vendor.types">
-                    <x-heroicon-o-color-swatch class="w-5 h-5" />
-                </x-menu-item>
-            @endcan
+
             @can('view-zones')
                 <x-menu-item title="{{ __('Zones') }}" route="zones">
                     <x-heroicon-o-flag class="w-5 h-5" />
@@ -43,19 +45,30 @@
                 <x-heroicon-o-shopping-cart class="w-5 h-5" />
             </x-menu-item>
 
+            {{-- vendors documents --}}
+            @can('view-vendor-documents')
+                <x-menu-item title="{{ __('Document Requests') }}" route="vendors.documents">
+                    <x-lineawesome-file-alt-solid class="w-5 h-5" />
+                </x-menu-item>
+            @endcan
+
         </x-group-menu-item>
     @endcan
 
 
     @hasanyrole('manager')
         @showDeliveryBoys
-        <x-menu-item title="{{ __('Delivery Boys') }}" route="drivers">
+        <x-hr />
+        <x-menu-item title="{{ __('Delivery Boys') }}" route="my.drivers">
             <x-heroicon-o-user-group class="w-5 h-5" />
+        </x-menu-item>
+        <x-menu-item title="{{ __('Delivery Settings') }}" route="my.driver.settings">
+            <x-heroicon-o-cog class="w-5 h-5" />
         </x-menu-item>
         @endshowDeliveryBoys
     @endhasanyrole
 
-    <x-hr />
+
 
     @can('view-categories')
         <x-group-menu-item routePath="categories*" title="{{ __('Categories') }}" icon="heroicon-o-bookmark">
@@ -82,6 +95,12 @@
         <x-menu-item title="{{ __('Products') }}" route="products">
             <x-heroicon-o-archive class="w-5 h-5" />
         </x-menu-item>
+
+        <x-menu-item title="{{ __('Product Requests') }}" route="products.requests">
+            <x-heroicon-o-question-mark-circle class="w-5 h-5" />
+        </x-menu-item>
+
+        <x-hr />
 
         <x-menu-item title="{{ __('Menus') }}" route="products.menus">
             <x-heroicon-o-book-open class="w-5 h-5" />
@@ -160,9 +179,20 @@
 
     {{-- Services --}}
     @showService
-    <x-menu-item title="{{ __('Services/Booking') }}" route="services">
-        <x-heroicon-o-rss class="w-5 h-5" />
-    </x-menu-item>
+    <x-group-menu-item routePath="service/*" title="{{ __('Services/Booking') }}" icon="heroicon-o-rss">
+        <x-menu-item title="{{ __('Services/Booking') }}" route="services">
+            <x-heroicon-o-rss class="w-5 h-5" />
+        </x-menu-item>
+        {{-- SERVICE GROUPS --}}
+        <x-menu-item title="{{ __('Service Groups') }}" route="services.option.groups">
+            <x-lineawesome-layer-group-solid class="w-5 h-5" />
+        </x-menu-item>
+
+        {{-- service options --}}
+        <x-menu-item title="{{ __('Service Options') }}" route="services.options">
+            <x-heroicon-o-dots-horizontal class="w-5 h-5" />
+        </x-menu-item>
+    </x-group-menu-item>
     @endshowService
 
     {{-- taxi booking --}}
@@ -202,7 +232,7 @@
 
             {{-- Price --}}
             @can('view-taxi-pricing')
-                <x-menu-item title="{{ __('Pricing') }}" route="taxi.pricing">
+                <x-menu-item title="{{ __('Vehicle Multiple Pricing') }}" route="taxi.pricing">
                     <x-heroicon-o-cash class="w-5 h-5" />
                 </x-menu-item>
             @endcan
@@ -294,19 +324,56 @@
         </x-group-menu-item>
     @endcan
 
-    {{-- Users --}}
-    @can('view-users')
-        <x-menu-item title="{{ __('Users') }}" route="users">
-            <x-heroicon-o-user-group class="w-5 h-5" />
-        </x-menu-item>
+    {{-- user management --}}
+    @can(['view-users', 'view-deleted-users'])
+        <x-group-menu-item routePath="user*" title="{{ __('User Mangt.') }}" icon="heroicon-o-user-group">
+            {{-- Users --}}
+            @can('view-users')
+                <x-menu-item title="{{ __('Users') }}" route="users">
+                    <x-heroicon-o-user-group class="w-5 h-5" />
+                </x-menu-item>
+            @endcan
+
+            {{-- Deleted Users --}}
+            @can('view-deleted-users')
+                <x-menu-item title="{{ __('Deleted Users') }}" route="users.deleted">
+                    <x-lineawesome-user-minus-solid class="w-5 h-5" />
+                </x-menu-item>
+            @endcan
+
+        </x-group-menu-item>
     @endcan
 
-    {{-- Deleted Users --}}
-    @can('view-deleted-users')
-        <x-menu-item title="{{ __('Deleted Users') }}" route="users.deleted">
-            <x-heroicon-o-user-group class="w-5 h-5" />
-        </x-menu-item>
+    {{-- driver management --}}
+    @can(['view-drivers', 'view-driver-incentives'])
+        <x-group-menu-item routePath="driver*" title="{{ __('Driver Mangt.') }}" icon="lineawesome-users-cog-solid">
+            {{-- Drivers --}}
+            @can('view-drivers')
+                <x-menu-item title="{{ __('Drivers') }}" route="drivers">
+                    <x-lineawesome-biking-solid class="w-5 h-5" />
+                </x-menu-item>
+            @endcan
+            {{-- drivers documents --}}
+            @can('view-driver-documents')
+                <x-menu-item title="{{ __('Document Requests') }}" route="drivers.documents">
+                    <x-lineawesome-file-alt-solid class="w-5 h-5" />
+                </x-menu-item>
+            @endcan
+
+            {{-- driver incentives --}}
+            {{-- TODO: Driver incentives --}}
+            {{-- @can('view-driver-incentives')
+                <x-menu-item title="{{ __('Incentives') }}" route="driver.incentives">
+                    <x-lineawesome-percentage-solid class="w-5 h-5" />
+                </x-menu-item>
+            @endcan --}}
+
+        </x-group-menu-item>
     @endcan
+
+    {{-- dispatch order on maps --}}
+    {{-- order timeline --}}
+
 
 
     @can('view-payment-section')
@@ -523,6 +590,16 @@
                 <x-heroicon-o-cog class="w-5 h-5" />
             </x-menu-item>
 
+            {{-- Page Settings --}}
+            <x-menu-item title="{{ __('Page Settings') }}" route="settings.page">
+                <x-heroicon-o-document class="w-5 h-5" />
+            </x-menu-item>
+
+            {{-- CMS Pages --}}
+            <x-menu-item title="{{ __('CMS Pages') }}" route="settings.page.cms">
+                <x-heroicon-o-document-text class="w-5 h-5" />
+            </x-menu-item>
+
             {{-- App Settings --}}
             <x-menu-item title="{{ __('Mobile App Settings') }}" route="settings.app">
                 <x-heroicon-o-device-mobile class="w-5 h-5" />
@@ -576,6 +653,11 @@
                 <x-menu-item title="{{ __('Roles') }}" route="settings.roles">
                     <x-heroicon-o-finger-print class="w-5 h-5" />
                 </x-menu-item>
+                @production
+                    <x-menu-item title="{{ __('Enviroment Config') }}" rawRoute="{{ url('env/editor') }}" ex="true">
+                        <x-heroicon-o-cog class="w-5 h-5" />
+                    </x-menu-item>
+                @endproduction
             @endhasanyrole
 
             {{-- upgrade --}}

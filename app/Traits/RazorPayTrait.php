@@ -111,7 +111,7 @@ trait RazorPayTrait
                 throw new \Exception("Order is invalid");
             } else if (!$order->isDirty('payment_status') && $order->payment_status  == "successful") {
                 //throw new \Exception("Order is has already been paid");
-return;
+                return;
             }
 
 
@@ -152,7 +152,7 @@ return;
                 throw new \Exception("Wallet Topup is invalid");
             } else if (!$walletTransaction->isDirty('status') && $walletTransaction->status == "successful") {
                 // throw new \Exception("Wallet Topup is has already been paid");
-return;
+                return;
             }
 
 
@@ -195,7 +195,7 @@ return;
                 throw new \Exception("Subscription Payment is invalid");
             } else if (!$subscriptionVendor->isDirty('status') && $subscriptionVendor->status == "successful") {
                 //throw new \Exception("Subscription Payment is has already been paid");
-return;
+                return;
             }
 
 

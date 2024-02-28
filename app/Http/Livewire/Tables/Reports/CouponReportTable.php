@@ -13,7 +13,7 @@ class CouponReportTable extends BaseReportTable
 {
 
     public $model = CouponUser::class;
- 
+
     public function query()
     {
         return CouponUser::with(['user', 'coupon', 'order' => function ($query) {
@@ -35,21 +35,7 @@ class CouponReportTable extends BaseReportTable
         ];
     }
 
-    public function filters(): array
-    {
-        return [
-            'start_date' => Filter::make(__('Start Date'))
-                ->date([
-                    'min' => now()->subYear()->format('Y-m-d'), // Optional
-                    'max' => now()->format('Y-m-d') // Optional
-                ]),
-            'end_date' => Filter::make(__('End Date'))
-                ->date([
-                    'min' => now()->subYear()->format('Y-m-d'), // Optional
-                    'max' => now()->format('Y-m-d') // Optional
-                ])
-        ];
-    }
+
 
 
     public function exportSelected()

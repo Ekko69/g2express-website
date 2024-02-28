@@ -1,35 +1,52 @@
 @section('title', __('Clear Data'))
 <div>
 
-    <x-baseview title="{{__('Clear Data')}}">
+    <x-baseview title="{{ __('Clear Data') }}">
 
         <div class="grid grid-cols-1 gap-6 mt-10 md:grid-cols-2 lg:grid-cols-3">
 
 
-            <x-settings-item title="{{__('Orders')}}" wireClick="confirmAction('Order','clearOrders')" >
+            <x-settings-item title="{{ __('Orders') }}" wireClick="confirmAction('Order','clearOrders')">
                 <x-heroicon-o-shopping-bag class="w-5 h-5" />
             </x-settings-item>
 
+            {{-- wallet transactions --}}
+            <x-settings-item title="{{ __('Wallet Transactions') }}"
+                wireClick="confirmAction('WalletTransaction','clearWalletTransactions')">
+                <x-heroicon-o-credit-card class="w-5 h-5" />
+            </x-settings-item>
 
-            <x-settings-item title="{{__('Products')}}" wireClick="confirmAction('Product','clearProducts')" >
-                <x-heroicon-o-archive class="w-5 h-5" />
+            <x-settings-item title="{{ __('Reset Wallet Balance') }}"
+                wireClick="confirmAction('Wallet','clearUserWalletBalance')">
+                <x-heroicon-o-credit-card class="w-5 h-5" />
             </x-settings-item>
 
 
-            <x-settings-item title="{{__('Vendors')}}" wireClick="confirmAction('Vendor','clearVendors')" >
+            <x-settings-item title="{{ __('Products') }}" wireClick="confirmAction('Product','clearProducts')">
+                <x-heroicon-o-archive class="w-5 h-5" />
+            </x-settings-item>
+
+            <x-settings-item title="{{ __('Services') }}" wireClick="confirmAction('Service','clearServices')">
+                <x-heroicon-o-rss class="w-5 h-5" />
+            </x-settings-item>
+
+
+            <x-settings-item title="{{ __('Vendors') }}" wireClick="confirmAction('Vendor','clearVendors')">
                 <x-heroicon-o-shopping-cart class="w-5 h-5" />
             </x-settings-item>
 
 
-            <x-settings-item title="{{__('Users')}}" wireClick="confirmAction('User','clearUsers')" >
+            <x-settings-item title="{{ __('Users') }}" wireClick="confirmAction('User','clearUsers')">
                 <x-heroicon-o-user-group class="w-5 h-5" />
             </x-settings-item>
 
-            <x-settings-item title="{{__('Clean Drivers Record')}}" wireClick="confirmAction('Driver','clearDrivers')" >
+            <x-settings-item title="{{ __('Clean Drivers Record') }}"
+                wireClick="confirmAction('Driver','clearDrivers')">
                 <x-heroicon-o-user-group class="w-5 h-5" />
             </x-settings-item>
 
-            <x-settings-item title="{{__('Clean Old Media Files')}}" wireClick="confirmAction('Media','clearOldMedia')" >
+            <x-settings-item title="{{ __('Clean Old Media Files') }}"
+                wireClick="confirmAction('Media','clearOldMedia')">
                 <x-heroicon-o-archive class="w-5 h-5" />
             </x-settings-item>
 

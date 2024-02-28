@@ -64,7 +64,7 @@ trait OrderTrait
         return $randomString;
     }
 
-    function generateOrderCode($length = 25, $check = true)
+    function generateOrderCode($length = 10, $check = true)
     {
         $characters = '1234567890';
         $charactersLength = strlen($characters);
@@ -101,7 +101,7 @@ trait OrderTrait
 
     public function isPayableByWallet($userId = null)
     {
-        $userId = $userId ?? auth()->id();
+        $userId = $userId ?? request()->user_id ?? auth()->id();
         $paymentMethodId = request()->payment_method_id ?? 0;
         $paymentMethod = PaymentMethod::find($paymentMethodId);
         if (!empty($paymentMethod) && $paymentMethod->is_cash && $paymentMethod->slug == "wallet") {
@@ -134,7 +134,8 @@ trait OrderTrait
             //wallet check
             if ($paymentMethod->slug == "wallet") {
                 //
-                $wallet = Wallet::mine()->first();
+                $userId = request()->user_id ?? auth()->id();
+                $wallet = Wallet::where('user_id', $userId)->first();
                 if (empty($wallet) || $wallet->balance < $request->total) {
                     throw new \Exception(__("Wallet Balance is less than order total amount"), 1);
                 } else {

@@ -39,7 +39,7 @@ class DeliveryAddressController extends Controller
 
             $vendors = [];
             if (!empty($request->vendor_ids)) {
-                $vendors = Vendor::whereIn("id", json_decode($request->vendor_ids,true))->get();
+                $vendors = Vendor::whereIn("id", json_decode($request->vendor_ids, true))->get();
             }
 
             foreach ($deliveryAddresses as $deliveryAddress) {
@@ -49,15 +49,13 @@ class DeliveryAddressController extends Controller
 
                     foreach ($vendors as $mVendor) {
                         $deliveryAddress->can_deliver = $this->locationInZone($mVendor, $deliveryAddress);
-                        //once at least a delivery addrss can't be delivered to to, return can_deliver false and 
+                        //once at least a delivery addrss can't be delivered to to, return can_deliver false and
                         //stop checking other vendor
-                        if(!$deliveryAddress->can_deliver){
+                        if (!$deliveryAddress->can_deliver) {
                             break;
                         }
                     }
-                    
-
-                }else{
+                } else {
                     $deliveryAddress->can_deliver = $this->locationInZone($vendor, $deliveryAddress);
                 }
             }
@@ -103,20 +101,20 @@ class DeliveryAddressController extends Controller
             $model = new DeliveryAddress();
             $model->fill($request->all());
             $model->user_id = Auth::id();
-            $model->save();
 
             //fetch more data like city,country etc
-            if( empty($model->city) || empty($model->country) || empty($model->state) ){
+            if (empty($model->city) || empty($model->country) || empty($model->state)) {
                 $geoCoder = new GeocoderController();
                 $request = new \Illuminate\Http\Request();
                 $request->replace(['lat' => $model->latitude, 'lng' => $model->longitude]);
                 $addresses = $geoCoder->forward($request)->getData()->data;
-                $addresses = json_decode( json_encode($addresses), true);
+                $addresses = json_decode(json_encode($addresses), true);
                 $model->city = $addresses[0]["subLocality"] ?? $addresses[0]["locality"];
                 $model->state = $addresses[0]["administrative_area_level_1"];
                 $model->country = $addresses[0]["country"];
-                $model->save();
             }
+            //save the model
+            $model->save();
 
             return response()->json([
                 "message" => __("Delivery address created successfully"),
@@ -137,6 +135,18 @@ class DeliveryAddressController extends Controller
 
             $model = DeliveryAddress::where('user_id', Auth::id())->where('id', $id)->firstorfail();
             $model->fill($request->all());
+            //fetch more data like city,country etc
+            if (empty($model->city) || empty($model->country) || empty($model->state)) {
+                $geoCoder = new GeocoderController();
+                $request = new \Illuminate\Http\Request();
+                $request->replace(['lat' => $model->latitude, 'lng' => $model->longitude]);
+                $addresses = $geoCoder->forward($request)->getData()->data;
+                $addresses = json_decode(json_encode($addresses), true);
+                $model->city = $addresses[0]["subLocality"] ?? $addresses[0]["locality"];
+                $model->state = $addresses[0]["administrative_area_level_1"];
+                $model->country = $addresses[0]["country"];
+            }
+            //save the model
             $model->save();
 
             return response()->json([

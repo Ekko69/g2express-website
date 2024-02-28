@@ -29,7 +29,7 @@ trait PaypalTrait
     {
         $paymentMethod = PaymentMethod::where('slug', "paypal")->first();
         return [
-            'mode'    => \App::environment('production') ? 'live':'sandbox',
+            'mode'    => \App::environment('production') ? 'live' : 'sandbox',
             'live' => [
                 'client_id'         => $paymentMethod->public_key,
                 'client_secret'     => $paymentMethod->secret_key,
@@ -88,8 +88,9 @@ trait PaypalTrait
     protected function verifyPaypalTransaction($order, $transactionId)
     {
 
-        $provider = new PayPalClient;
-        $provider->setApiCredentials($this->paypalConfig());
+        $config = $this->paypalConfig();
+        $provider = new PayPalClient($config);
+        $provider->setApiCredentials($config);
         $provider->getAccessToken();
         $response = $provider->showOrderDetails($transactionId);
 
@@ -106,7 +107,7 @@ trait PaypalTrait
                 throw new \Exception("Order is invalid");
             } else if (!$order->isDirty('payment_status') && $order->payment_status  == "successful") {
                 //throw new \Exception("Order is has already been paid");
-return;
+                return;
             }
 
 
@@ -131,8 +132,9 @@ return;
     protected function verifyPaypalTopupTransaction($walletTransaction, $transactionId)
     {
 
-        $provider = new PayPalClient;
-        $provider->setApiCredentials($this->paypalConfig());
+        $config = $this->paypalConfig();
+        $provider = new PayPalClient($config);
+        $provider->setApiCredentials($config);
         $provider->getAccessToken();
         $response = $provider->showOrderDetails($transactionId);
 
@@ -143,7 +145,7 @@ return;
                 throw new \Exception("Wallet Topup is invalid");
             } else if (!$walletTransaction->isDirty('status') && $walletTransaction->status == "successful") {
                 // throw new \Exception("Wallet Topup is has already been paid");
-return;
+                return;
             }
 
             try {
@@ -169,8 +171,9 @@ return;
     protected function verifyPaypalSubscriptionTransaction($vendorSubscription, $transactionId)
     {
 
-        $provider = new PayPalClient;
-        $provider->setApiCredentials($this->paypalConfig());
+        $config = $this->paypalConfig();
+        $provider = new PayPalClient($config);
+        $provider->setApiCredentials($config);
         $provider->getAccessToken();
         $response = $provider->showOrderDetails($transactionId);
 

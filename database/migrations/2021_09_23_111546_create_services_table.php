@@ -18,13 +18,15 @@ class CreateServicesTable extends Migration
             $table->string('name');
             $table->text('description')->nullable();
             $table->foreignId('vendor_id')->constrained();
-            $table->foreignId('category_id')->constrained()->nullable();
-            $table->foreignId('subcategory_id')->constrained()->nullable();
+            $table->foreignId('category_id')->nullable()->constrained();
+            $table->foreignId('subcategory_id')->nullable()->constrained();
             $table->double('price', 15, 2);
             $table->double('discount_price', 15, 2)->default(0.00);
             $table->enum('duration', ['fixed', 'hour', 'day', 'month', 'year'])->default('hour');
             $table->boolean('is_active')->default(true);
             $table->boolean('location')->default(true);
+            $table->boolean('age_restricted')->default(false);
+            $table->integer('in_order')->default(1);
             $table->timestamps();
         });
     }

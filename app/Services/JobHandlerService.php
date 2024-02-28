@@ -7,7 +7,6 @@ use App\Jobs\DriverVehicleTypeJob;
 use App\Jobs\OrderStatusNotificationJob;
 use App\Jobs\OrderPaymentRequestNotificationJob;
 use App\Jobs\OrderPaymentStatusChangeNotificationJob;
-use App\Jobs\VPSFirebaseFunctionTaxiOrderMatchingJob;
 use App\Jobs\TaxiOrderMatchingJob;
 use App\Jobs\ClearDriverFirebaseJob;
 use App\Jobs\ClearFirebaseJob;
@@ -110,15 +109,15 @@ class JobHandlerService
      * 2 - Taxi status change
      * 3 - Driver notification
      */
-    public function orderFCMNotificationJob($order, $type = 1)
+    public function orderFCMNotificationJob($order, $type = 1, $status = null)
     {
 
         //clear firebase data
         if (delayFCMJob()) {
-            OrderStatusNotificationJob::dispatch($order, $type)
+            OrderStatusNotificationJob::dispatch($order, $type, $status)
                 ->delay(now()->addSeconds(jobDelaySeconds()));
         } else {
-            (new OrderStatusNotificationJob($order, $type))->handle();
+            (new OrderStatusNotificationJob($order, $type, $status))->handle();
         }
     }
 
@@ -161,12 +160,10 @@ class JobHandlerService
         // $taxiUseFirebaseServer = (bool) setting('taxiUseFirebaseServer', false);
         //force all taxi matchng to use VPS server
         //TODO: To be able to disable pushing data to firebase
-        $delayFor = now()->addSeconds(setting('taxiDelayTaxiMatching', 2));
+        $delayFor = setting('taxiDelayTaxiMatching', 2); //now()->addSeconds(setting('taxiDelayTaxiMatching', 2));
         $assignmentType = setting('autoassignmentsystem', 0);
         if ($assignmentType == 0) {
             VPSTaxiOrderMatchingJob::dispatch($order)->delay($delayFor);
-        } else if ($assignmentType == 2) {
-            VPSFirebaseFunctionTaxiOrderMatchingJob::dispatch($order)->delay($delayFor);
         } else {
             TaxiOrderMatchingJob::dispatch($order)->delay($delayFor);
         }

@@ -11,13 +11,10 @@ use Illuminate\Support\Facades\Auth;
 
 class OrderLivewire extends BaseLivewireComponent
 {
-
     //
     public $model = Order::class;
-
     //
     public $orderId;
-    public $deliveryBoys;
     public $deliveryBoyId;
     public $status;
     public $paymentStatus;
@@ -34,6 +31,7 @@ class OrderLivewire extends BaseLivewireComponent
     {
         return $this->listeners + [
             'autocompleteDeliveryAddressSelected' => 'autocompleteDeliveryAddressSelected',
+            'deliveryBoyIdUpdated' => 'autocompleteDriverSelected',
         ];
     }
 
@@ -45,27 +43,19 @@ class OrderLivewire extends BaseLivewireComponent
 
     public function loadCustomData()
     {
-        $this->deliveryBoys = User::role('driver')->get();
-
-        //if vendor has any personal delivery boy, use that list instead
-        if (!empty(Auth::user()->vendor_id)) {
-            $personalDrivers = User::role('driver')->where('vendor_id', Auth::user()->vendor_id)->get();
-            if (count($personalDrivers) > 0) {
-                $this->deliveryBoys = $personalDrivers;
-            } else {
-                $this->deliveryBoys = User::role('driver')->whereNull('vendor_id')->get();
-            }
+        if (empty($this->orderStatus)) {
+            $this->orderStatus = $this->orderStatus();
         }
-
-        $this->orderStatus = $this->orderStatus();
-        $this->orderPaymentStatus = $this->orderPaymentStatus();
+        if (empty($this->orderPaymentStatus)) {
+            $this->orderPaymentStatus = $this->orderPaymentStatus();
+        }
     }
 
-    public function autocompleteDriverSelected($driver)
+    public function autocompleteDriverSelected($value)
     {
         try {
             //clear old products
-            $this->deliveryBoyId = $driver['id'];
+            $this->deliveryBoyId = $value['value'];
         } catch (\Exception $ex) {
             logger("Error", [$ex]);
         }
@@ -88,8 +78,11 @@ class OrderLivewire extends BaseLivewireComponent
         $this->paymentStatus = $this->selectedModel->payment_status;
         $this->note = $this->selectedModel->note;
         $this->loadCustomData();
-        $this->emit('preselectedDeliveryBoyEmit', \Str::ucfirst($this->selectedModel->driver->name ?? ''));
-        $this->emit('showEditModal');
+        //
+        if ($this->deliveryBoyId != null) {
+            $this->emit('deliveryBoyId_Loaded', $this->deliveryBoyId);
+        }
+        $this->showEditModal();
     }
 
 

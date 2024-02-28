@@ -1,433 +1,628 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "https://www.w3.org/TR/html4/strict.dtd">
-<!-- saved from url=(0092)https://mail.google.com/mail/u/6?ik=eaec821c43&view=lg&permmsgid=msg-f%3A1701937600630568273 -->
-<html lang="{{ setting('localeCode', 'en') }}" dir="{{ isRTL() ? 'rtl' : 'ltr' }}">
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
 
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <style type="text/css" nonce="">
-        body,
-        td,
-        div,
-        p,
-        a,
-        input {
-            font-family: arial, sans-serif;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <meta name="x-apple-disable-message-reformatting">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <link rel="shortcut icon" href="https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico" type="image/x-icon">
-    <title>Order Update</title>
-    <style type="text/css" nonce="">
-        body,
-        td {
-            font-size: 13px
+    <meta content="telephone=no" name="format-detection">
+    <title>{{ __('Order Update') }}</title>
+    <!--[if (mso 16)]>
+    <style type="text/css">
+    a {text-decoration: none;}
+    </style>
+    <![endif]-->
+    <!--[if gte mso 9]><style>sup { font-size: 100% !important; }</style><![endif]-->
+    <!--[if gte mso 9]>
+<xml>
+    <o:OfficeDocumentSettings>
+    <o:AllowPNG></o:AllowPNG>
+    <o:PixelsPerInch>96</o:PixelsPerInch>
+    </o:OfficeDocumentSettings>
+</xml>
+<![endif]-->
+    <style type="text/css">
+        #outlook a {
+            padding: 0;
         }
 
-        a:link,
-        a:active {
-            color: #1155CC;
-            text-decoration: none
+        .es-button {
+            mso-style-priority: 100 !important;
+            text-decoration: none !important;
         }
 
-        a:hover {
-            text-decoration: underline;
-            cursor: pointer
+        a[x-apple-data-detectors] {
+            color: inherit !important;
+            text-decoration: none !important;
+            font-size: inherit !important;
+            font-family: inherit !important;
+            font-weight: inherit !important;
+            line-height: inherit !important;
         }
 
-        a:visited {
-            color: ##6611CC
+        .es-desk-hidden {
+            display: none;
+            float: left;
+            overflow: hidden;
+            width: 0;
+            max-height: 0;
+            line-height: 0;
+            mso-hide: all;
         }
 
-        img {
-            border: 0px
-        }
+        @media only screen and (max-width:600px) {
 
-        pre {
-            white-space: pre;
-            white-space: -moz-pre-wrap;
-            white-space: -o-pre-wrap;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            max-width: 800px;
-            overflow: auto;
-        }
+            p,
+            ul li,
+            ol li,
+            a {
+                line-height: 150% !important
+            }
 
-        .logo {
-            left: -7px;
-            position: relative;
+            h1,
+            h2,
+            h3,
+            h1 a,
+            h2 a,
+            h3 a {
+                line-height: 120% !important
+            }
+
+            h1 {
+                font-size: 30px !important;
+                text-align: left
+            }
+
+            h2 {
+                font-size: 24px !important;
+                text-align: left
+            }
+
+            h3 {
+                font-size: 20px !important;
+                text-align: left
+            }
+
+            .es-header-body h1 a,
+            .es-content-body h1 a,
+            .es-footer-body h1 a {
+                font-size: 30px !important;
+                text-align: left
+            }
+
+            .es-header-body h2 a,
+            .es-content-body h2 a,
+            .es-footer-body h2 a {
+                font-size: 24px !important;
+                text-align: left
+            }
+
+            .es-header-body h3 a,
+            .es-content-body h3 a,
+            .es-footer-body h3 a {
+                font-size: 20px !important;
+                text-align: left
+            }
+
+            .es-menu td a {
+                font-size: 14px !important
+            }
+
+            .es-header-body p,
+            .es-header-body ul li,
+            .es-header-body ol li,
+            .es-header-body a {
+                font-size: 14px !important
+            }
+
+            .es-content-body p,
+            .es-content-body ul li,
+            .es-content-body ol li,
+            .es-content-body a {
+                font-size: 14px !important
+            }
+
+            .es-footer-body p,
+            .es-footer-body ul li,
+            .es-footer-body ol li,
+            .es-footer-body a {
+                font-size: 14px !important
+            }
+
+            .es-infoblock p,
+            .es-infoblock ul li,
+            .es-infoblock ol li,
+            .es-infoblock a {
+                font-size: 12px !important
+            }
+
+            *[class="gmail-fix"] {
+                display: none !important
+            }
+
+            .es-m-txt-c,
+            .es-m-txt-c h1,
+            .es-m-txt-c h2,
+            .es-m-txt-c h3 {
+                text-align: center !important
+            }
+
+            .es-m-txt-r,
+            .es-m-txt-r h1,
+            .es-m-txt-r h2,
+            .es-m-txt-r h3 {
+                text-align: right !important
+            }
+
+            .es-m-txt-l,
+            .es-m-txt-l h1,
+            .es-m-txt-l h2,
+            .es-m-txt-l h3 {
+                text-align: left !important
+            }
+
+            .es-m-txt-r img,
+            .es-m-txt-c img,
+            .es-m-txt-l img {
+                display: inline !important
+            }
+
+            .es-button-border {
+                display: inline-block !important
+            }
+
+            a.es-button,
+            button.es-button {
+                font-size: 18px !important;
+                display: inline-block !important
+            }
+
+            .es-adaptive table,
+            .es-left,
+            .es-right {
+                width: 100% !important
+            }
+
+            .es-content table,
+            .es-header table,
+            .es-footer table,
+            .es-content,
+            .es-footer,
+            .es-header {
+                width: 100% !important;
+                max-width: 600px !important
+            }
+
+            .es-adapt-td {
+                display: block !important;
+                width: 100% !important
+            }
+
+            .adapt-img {
+                width: 100% !important;
+                height: auto !important
+            }
+
+            .es-m-p0 {
+                padding: 0px !important
+            }
+
+            .es-m-p0r {
+                padding-right: 0px !important
+            }
+
+            .es-m-p0l {
+                padding-left: 0px !important
+            }
+
+            .es-m-p0t {
+                padding-top: 0px !important
+            }
+
+            .es-m-p0b {
+                padding-bottom: 0 !important
+            }
+
+            .es-m-p20b {
+                padding-bottom: 20px !important
+            }
+
+            .es-mobile-hidden,
+            .es-hidden {
+                display: none !important
+            }
+
+            tr.es-desk-hidden,
+            td.es-desk-hidden,
+            table.es-desk-hidden {
+                width: auto !important;
+                overflow: visible !important;
+                float: none !important;
+                max-height: inherit !important;
+                line-height: inherit !important
+            }
+
+            tr.es-desk-hidden {
+                display: table-row !important
+            }
+
+            table.es-desk-hidden {
+                display: table !important
+            }
+
+            td.es-desk-menu-hidden {
+                display: table-cell !important
+            }
+
+            .es-menu td {
+                width: 1% !important
+            }
+
+            table.es-table-not-adapt,
+            .esd-block-html table {
+                width: auto !important
+            }
+
+            table.es-social {
+                display: inline-block !important
+            }
+
+            table.es-social td {
+                display: inline-block !important
+            }
+
+            .es-desk-hidden {
+                display: table-row !important;
+                width: auto !important;
+                overflow: visible !important;
+                max-height: inherit !important
+            }
         }
     </style>
 </head>
 
-<body>
-    <div class="bodycontainer">
-        <div class="maincontent">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" class="message">
-                <tbody>
-                    <tr>
-                        <td colspan="2">
-                            <table width="100%" cellpadding="12" cellspacing="0" border="0">
-                                <tbody>
+<body
+    style="width:100%;font-family:arial, 'helvetica neue', helvetica, sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;padding:0;Margin:0">
+    <div class="es-wrapper-color" style="background-color:#F6F6F6">
+        <!--[if gte mso 9]>
+   <v:background xmlns:v="urn:schemas-microsoft-com:vml" fill="t">
+    <v:fill type="tile" color="#f6f6f6"></v:fill>
+   </v:background>
+  <![endif]-->
+        <table class="es-wrapper" width="100%" cellspacing="0" cellpadding="0"
+            style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;padding:0;Margin:0;width:100%;height:100%;background-repeat:repeat;background-position:center top;background-color:#F6F6F6">
+            <tr>
+                <td valign="top" style="padding:0;Margin:0">
+                    <table class="es-header" cellspacing="0" cellpadding="0" align="center"
+                        style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;table-layout:fixed !important;width:100%;background-color:transparent;background-repeat:repeat;background-position:center top">
+                        <tr>
+                            <td align="center" style="padding:0;Margin:0">
+                                <table class="es-header-body" cellspacing="0" cellpadding="0" bgcolor="#ffffff"
+                                    align="center"
+                                    style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background-color:#FFFFFF;width:600px">
                                     <tr>
-                                        <td>
-                                            <div style="overflow: hidden;">
-                                                <font size="-1">
-                                                    <div
-                                                        style="color:#2f313f;font-family:&#39;Google Sans&#39;,Helvetica,Arial;font-size:16px;margin:0!important;width:100%;width:100%">
-                                                        <center>
-                                                            <div
-                                                                style="font-family:&#39;Google Sans&#39;,Helvetica,Arial;font-size:16px">
-                                                                <table cellpadding="0" cellspacing="0" border="0"
-                                                                    width="100%" bgcolor="#FFFFFF"
-                                                                    style="table-layout:fixed;width:100%;width:100%">
-                                                                    <tbody>
-                                                                        <tr>
-                                                                            <td style="padding:0">
-                                                                                <table cellpadding="0" cellspacing="0"
-                                                                                    style="margin:0 auto;width:100%;border-collapse:collapse;background:#f4f4f6"
-                                                                                    bgcolor="#F4F4F6"
-                                                                                    class="m_-7689638270191332508header">
-                                                                                    <tbody>
-                                                                                        <tr>
-                                                                                            <td>
-                                                                                                <table cellpadding="0"
-                                                                                                    cellspacing="0"
-                                                                                                    style="margin:0 auto;max-width:632px;width:100%;border-collapse:collapse">
-                                                                                                    <tbody>
-                                                                                                        <tr>
-                                                                                                            <td colspan="2"
-                                                                                                                style="padding:40px 0 0 16px;vertical-align:top">
-                                                                                                                <img src="{{ url(setting('websiteLogo', asset('images/logo.png'))) }}"
-                                                                                                                    alt=""
-                                                                                                                    width="140"
-                                                                                                                    height="140">
-                                                                                                            </td>
-                                                                                                            <td
-                                                                                                                style="vertical-align:top;text-align:right;padding-right:16px;padding-top:40px">
-                                                                                                                <span
-                                                                                                                    class="m_-7689638270191332508order-date"
-                                                                                                                    style="margin:0;font-size:14px;line-height:18px;color:#7c7d86!important;font-family:&#39;Google Sans&#39;,Helvetica,Arial;text-decoration:none;display:block">­{{ $order->created_at }}</span>
-                                                                                                            </td>
-                                                                                                        </tr>
-                                                                                                        <tr>
-                                                                                                            <td colspan="2"
-                                                                                                                style="padding:20px 10px 31px 16px">
-                                                                                                                <p
-                                                                                                                    style="margin:0 0 9px;color:#2f313f;font-size:24px;line-height:30px;font-weight:bold!important;font-family:&#39;Google Sans&#39;,Helvetica,Arial">
-                                                                                                                    <b>{{ __('Hi') }}
-                                                                                                                        {{ $order->user->name }}!</b>
-                                                                                                                </p>
-                                                                                                                <p
-                                                                                                                    style="margin:0;color:#7c7d86;font-size:16px;line-height:20px;font-family:&#39;Google Sans&#39;,Helvetica,Arial">
-                                                                                                                    {{ __('This is your receipt.') }}
-                                                                                                                </p>
-                                                                                                            </td>
-                                                                                                        </tr>
-                                                                                                    </tbody>
-                                                                                                </table>
-                                                                                            </td>
-                                                                                        </tr>
-                                                                                    </tbody>
-                                                                                </table>
-                                                                                <table cellpadding="0" cellspacing="0"
-                                                                                    style="margin:0 auto;max-width:632px;width:100%;border-collapse:collapse">
-                                                                                    <tbody>
-                                                                                        <tr>
-                                                                                            <td colspan="3"
-                                                                                                style="background:#ffffff;padding:0">
-                                                                                                <table
-                                                                                                    class="m_-7689638270191332508header"
-                                                                                                    width="100%"
-                                                                                                    cellpadding="0"
-                                                                                                    cellspacing="0"
-                                                                                                    style="border:none;border-collapse:collapse;width:100%;margin-bottom:30px">
-                                                                                                    <tbody>
-                                                                                                        <tr>
-                                                                                                            <td class="m_-7689638270191332508header-label"
-                                                                                                                style="padding:40px 16px 0">
-                                                                                                                <div
-                                                                                                                    style="margin:0 auto;max-width:600px;width:100%">
-                                                                                                                    <span
-                                                                                                                        style="display:block;margin-top:0;margin-bottom:0;color:#7c7d86;font-size:14px;line-height:16px;font-family:&#39;Google Sans&#39;,Helvetica,Arial">{{ __('From') }}</span>
-                                                                                                                    <span
-                                                                                                                        style="display:block;margin-top:4px;margin-bottom:5px;color:#2f313f;font-size:20px;line-height:24px;font-family:&#39;Google Sans&#39;,Helvetica,Arial">{{ $order->vendor->name }}</span>
-                                                                                                                    <a
-                                                                                                                        class="m_-7689638270191332508address-title">­{{ $order->vendor->address }}</a>
-                                                                                                                </div>
-                                                                                                            </td>
-                                                                                                        </tr>
-
-                                                                                                        <tr>
-                                                                                                            <td class="m_-7689638270191332508header-label"
-                                                                                                                style="padding:16px 16px 27px">
-                                                                                                                <div
-                                                                                                                    style="margin:0 auto;max-width:600px;width:100%">
-                                                                                                                    <span
-                                                                                                                        style="display:block;margin-top:0;margin-bottom:0;color:#7c7d86;font-size:14px;line-height:16px;font-family:&#39;Google Sans&#39;,Helvetica,Arial">{{ __('To') }}</span>
-                                                                                                                    <a style="display:block;margin-top:4px;margin-bottom:5px;color:#2f313f!important;font-size:20px;line-height:24px;font-family:&#39;Google Sans&#39;,Helvetica,Arial;text-decoration:none!important"
-                                                                                                                        class="m_-7689638270191332508address-title">­{{ $order->delivery_address != null ? $order->delivery_address->name : __('Customer Pickup') }}</a>
-                                                                                                                </div>
-                                                                                                            </td>
-                                                                                                        </tr>
-                                                                                                        <tr>
-                                                                                                            <td
-                                                                                                                style="padding:0 16px">
-                                                                                                                <div
-                                                                                                                    style="background:#f4f4f6;height:1px;width:100%;max-width:600px;margin:10px auto">
-                                                                                                                </div>
-                                                                                                            </td>
-                                                                                                        </tr>
-                                                                                                        <tr>
-                                                                                                            <td
-                                                                                                                style="vertical-align:middle;padding:0 16px">
-                                                                                                                <table
-                                                                                                                    width="100%"
-                                                                                                                    cellpadding="0"
-                                                                                                                    cellspacing="0"
-                                                                                                                    style="table-layout:fixed;width:100%;border:none;border-collapse:collapse;max-width:600px;margin-left:auto;margin-right:auto">
-                                                                                                                    <tbody>
-
-                                                                                                                        <!-- <start order products!--  -->
-                                                                                                                        @if ($order->vendor->is_package_vendor)
-
-                                                                                                                            <tr>
-                                                                                                                                <td
-                                                                                                                                    style="vertical-align:top;padding:0">
-                                                                                                                                    <p
-                                                                                                                                        style="margin:0 auto;max-width:600px;width:100%">
-                                                                                                                                        <span
-                                                                                                                                            style="display:inline-block;color:#2f313f;font-size:16px;line-height:24px;font-family:&#39;Google Sans&#39;,Helvetica,Arial;padding-left:4px;padding-right:1px;float:left">1
-                                                                                                                                            x</span>
-
-                                                                                                                                        <span
-                                                                                                                                            style="color:#2f313f;font-size:16px;line-height:24px;font-family:&#39;Google Sans&#39;,Helvetica,Arial;padding-left:4px">{{ $order->package_type->name ?? '' }}</span>
-                                                                                                                                    </p>
-                                                                                                                                </td>
-                                                                                                                                <td
-                                                                                                                                    style="vertical-align:top;text-align:right;padding:0;table-layout:fixed;max-width:80px;width:80px">
-                                                                                                                                    <p
-                                                                                                                                        style="display:inline-block;color:#2f313f;font-size:16px;line-height:24px;font-family:&#39;Google Sans&#39;,Helvetica,Arial;margin-top:0;margin-bottom:0">
-                                                                                                                                        {{ currencyFormat($order->sub_total ?? '0.00') }}
-                                                                                                                                    </p>
-                                                                                                                                </td>
-                                                                                                                            </tr>
-                                                                                                                        @else
-                                                                                                                            @foreach ($order->products as $product)
-                                                                                                                                <tr>
-                                                                                                                                    <td
-                                                                                                                                        style="vertical-align:top;padding:0">
-                                                                                                                                        <p
-                                                                                                                                            style="margin:0 auto;max-width:600px;width:100%">
-                                                                                                                                            <span
-                                                                                                                                                style="display:inline-block;color:#2f313f;font-size:16px;line-height:24px;font-family:&#39;Google Sans&#39;,Helvetica,Arial;padding-left:4px;padding-right:1px;float:left">{{ $product->quantity }}
-                                                                                                                                                x</span>
-
-                                                                                                                                            <span
-                                                                                                                                                style="color:#2f313f;font-size:16px;line-height:24px;font-family:&#39;Google Sans&#39;,Helvetica,Arial;padding-left:4px">{{ $product->product->name }}</span>
-                                                                                                                                            <span
-                                                                                                                                                style="display:block;font-size:14px;line-height:24px;color:#818391;font-family:&#39;Google Sans&#39;,Helvetica,Arial;padding-left:39px">
-                                                                                                                                                {{ $product->options }}
-                                                                                                                                            </span>
-                                                                                                                                        </p>
-                                                                                                                                    </td>
-                                                                                                                                    <td
-                                                                                                                                        style="vertical-align:top;text-align:right;padding:0;table-layout:fixed;max-width:80px;width:80px">
-                                                                                                                                        <p
-                                                                                                                                            style="display:inline-block;color:#2f313f;font-size:16px;line-height:24px;font-family:&#39;Google Sans&#39;,Helvetica,Arial;margin-top:0;margin-bottom:0">
-                                                                                                                                            {{ currencyFormat($product->price) }}
-                                                                                                                                        </p>
-                                                                                                                                    </td>
-                                                                                                                                </tr>
-                                                                                                                            @endforeach
-
-                                                                                                                        @endif
-
-
-
-                                                                                                                        <!-- end -->
-                                                                                                                        <tr>
-                                                                                                                            <td colspan="2"
-                                                                                                                                style="padding-bottom:0;padding-top:0">
-                                                                                                                                <div
-                                                                                                                                    style="background:#f4f4f6;height:1px;width:100%;max-width:600px;margin:10px auto">
-                                                                                                                                </div>
-                                                                                                                            </td>
-                                                                                                                        </tr>
-                                                                                                                        {{-- subtotal --}}
-                                                                                                                        <tr>
-                                                                                                                            <td
-                                                                                                                                style="vertical-align:middle;padding:0">
-                                                                                                                                <p
-                                                                                                                                    style="margin-top:1px;margin-bottom:6px;color:#2f313f;font-size:16px;line-height:24px;font-family:&#39;Google Sans&#39;,Helvetica,Arial">
-                                                                                                                                    {{ __('Subtotal') }}
-                                                                                                                                </p>
-                                                                                                                            </td>
-                                                                                                                            <td
-                                                                                                                                style="vertical-align:middle;text-align:right;padding:0">
-                                                                                                                                <p
-                                                                                                                                    style="margin-top:1px;color:#2f313f;font-size:16px;line-height:24px;font-family:&#39;Google Sans&#39;,Helvetica,Arial">
-                                                                                                                                    {{ currencyFormat($order->sub_total ?? '0.00') }}
-                                                                                                                                </p>
-                                                                                                                            </td>
-                                                                                                                        </tr>
-                                                                                                                        {{-- discount --}}
-                                                                                                                        <tr>
-                                                                                                                            <td
-                                                                                                                                style="vertical-align:middle;padding:0">
-                                                                                                                                <p
-                                                                                                                                    style="margin-top:1px;margin-bottom:6px;color:#2f313f;font-size:16px;line-height:24px;font-family:&#39;Google Sans&#39;,Helvetica,Arial">
-                                                                                                                                    {{ __('Discount Amount') }}
-                                                                                                                                </p>
-                                                                                                                            </td>
-                                                                                                                            <td
-                                                                                                                                style="vertical-align:middle;text-align:right;padding:0">
-                                                                                                                                <p
-                                                                                                                                    style="margin-top:1px;color:#2f313f;font-size:16px;line-height:24px;font-family:&#39;Google Sans&#39;,Helvetica,Arial">
-                                                                                                                                    -
-                                                                                                                                    {{ currencyFormat($order->discount ?? '0.00') }}
-                                                                                                                                </p>
-                                                                                                                            </td>
-                                                                                                                        </tr>
-                                                                                                                        {{-- delivery fee --}}
-                                                                                                                        <tr>
-                                                                                                                            <td
-                                                                                                                                style="vertical-align:middle;padding:0">
-                                                                                                                                <p
-                                                                                                                                    style="margin-top:1px;margin-bottom:6px;color:#2f313f;font-size:16px;line-height:24px;font-family:&#39;Google Sans&#39;,Helvetica,Arial">
-                                                                                                                                    {{ __('Delivery fee') }}
-                                                                                                                                </p>
-                                                                                                                            </td>
-                                                                                                                            <td
-                                                                                                                                style="vertical-align:middle;text-align:right;padding:0">
-                                                                                                                                <p
-                                                                                                                                    style="margin-top:1px;color:#2f313f;font-size:16px;line-height:24px;font-family:&#39;Google Sans&#39;,Helvetica,Arial">
-                                                                                                                                    +
-                                                                                                                                    {{ currencyFormat($order->delivery_fee ?? '0.00') }}
-                                                                                                                                </p>
-                                                                                                                            </td>
-                                                                                                                        </tr>
-                                                                                                                        {{-- tax --}}
-                                                                                                                        <tr>
-                                                                                                                            <td
-                                                                                                                                style="vertical-align:middle;padding:0">
-                                                                                                                                <p
-                                                                                                                                    style="margin-top:1px;margin-bottom:6px;color:#2f313f;font-size:16px;line-height:24px;font-family:&#39;Google Sans&#39;,Helvetica,Arial">
-                                                                                                                                    {{ __('Tax') }}
-                                                                                                                                </p>
-                                                                                                                            </td>
-                                                                                                                            <td
-                                                                                                                                style="vertical-align:middle;text-align:right;padding:0">
-                                                                                                                                <p
-                                                                                                                                    style="margin-top:1px;color:#2f313f;font-size:16px;line-height:24px;font-family:&#39;Google Sans&#39;,Helvetica,Arial">
-                                                                                                                                    +
-                                                                                                                                    {{ currencyFormat($order->tax ?? '0.00') }}
-                                                                                                                                </p>
-                                                                                                                            </td>
-                                                                                                                        </tr>
-                                                                                                                        {{-- vendor fees --}}
-                                                                                                                        @foreach (json_decode($order->fees ?? '[]', true) as $orderFee)
-                                                                                                                            <tr>
-                                                                                                                                <td
-                                                                                                                                    style="vertical-align:middle;padding:0">
-                                                                                                                                    <p
-                                                                                                                                        style="margin-top:1px;margin-bottom:6px;color:#2f313f;font-size:16px;line-height:24px;font-family:&#39;Google Sans&#39;,Helvetica,Arial">
-                                                                                                                                        {{ $orderFee['name'] ?? '' }}
-                                                                                                                                    </p>
-                                                                                                                                </td>
-                                                                                                                                <td
-                                                                                                                                    style="vertical-align:middle;text-align:right;padding:0">
-                                                                                                                                    <p
-                                                                                                                                        style="margin-top:1px;color:#2f313f;font-size:16px;line-height:24px;font-family:&#39;Google Sans&#39;,Helvetica,Arial">
-                                                                                                                                        +
-                                                                                                                                        {{ currencyFormat($orderFee['amount'] ?? '0.00') }}
-                                                                                                                                    </p>
-                                                                                                                                </td>
-                                                                                                                            </tr>
-                                                                                                                        @endforeach
-
-                                                                                                                        <tr>
-                                                                                                                            <td colspan="2"
-                                                                                                                                style="padding:0">
-                                                                                                                                <div
-                                                                                                                                    style="background:#f4f4f6;height:1px;width:100%;max-width:600px;margin:10px auto">
-                                                                                                                                </div>
-                                                                                                                            </td>
-                                                                                                                        </tr>
-                                                                                                                        <tr>
-                                                                                                                            <td
-                                                                                                                                style="vertical-align:middle;padding:0">
-                                                                                                                                <p
-                                                                                                                                    style="margin-top:6px;margin-bottom:6px;font-family:&#39;Google Sans&#39;,Helvetica,Arial;color:#2f313f;font-size:20px;line-height:30px">
-                                                                                                                                    <b>{{ __('Total charged') }}:</b>
-                                                                                                                                </p>
-                                                                                                                            </td>
-                                                                                                                            <td
-                                                                                                                                style="vertical-align:middle;text-align:right;padding:0">
-                                                                                                                                <p
-                                                                                                                                    style="margin-top:6px;margin-bottom:6px;font-size:16px;line-height:24px;font-family:&#39;Google Sans&#39;,Helvetica,Arial;color:#2f313f;white-space:nowrap">
-                                                                                                                                    <b>{{ currencyFormat($order->total ?? '0.00') }}</b>
-                                                                                                                                </p>
-                                                                                                                            </td>
-                                                                                                                        </tr>
-                                                                                                                        <tr>
-                                                                                                                            <td
-                                                                                                                                style="vertical-align:middle;padding:0">
-                                                                                                                                <p
-                                                                                                                                    style="margin-top:6px;margin-bottom:6px;color:#2f313f;font-size:16px;line-height:24px;font-family:&#39;Google Sans&#39;,Helvetica,Arial">
-                                                                                                                                    {{ __('Payment Method') }}
-                                                                                                                                </p>
-                                                                                                                            </td>
-                                                                                                                            <td
-                                                                                                                                style="vertical-align:middle;text-align:right;padding:0">
-                                                                                                                                <p
-                                                                                                                                    style="margin-top:6px;color:#2f313f;font-size:16px;line-height:24px;font-family:&#39;Google Sans&#39;,Helvetica,Arial">
-                                                                                                                                    {{ $order->payment_method->name ?? '' }}
-                                                                                                                                </p>
-                                                                                                                            </td>
-                                                                                                                        </tr>
-                                                                                                                    </tbody>
-                                                                                                                </table>
-                                                                                                            </td>
-                                                                                                        </tr>
-                                                                                                    </tbody>
-                                                                                                </table>
-                                                                                            </td>
-                                                                                        </tr>
-                                                                                        <tr>
-                                                                                            <td class="m_-7689638270191332508under-footer"
-                                                                                                colspan="3"
-                                                                                                style="color:#7c7d86;font-size:12px;height:18px;line-height:14px;padding-bottom:40px;padding-top:32px;text-align:center;width:540px">
-                                                                                                © {{ date('Y') }}
-                                                                                                {{ setting('websiteName', env('APP_NAME')) }}
-                                                                                            </td>
-                                                                                        </tr>
-                                                                                    </tbody>
-                                                                                </table>
-                                                                            </td>
-                                                                        </tr>
-                                                                    </tbody>
-                                                                </table>
-                                                            </div>
-                                                        </center>
-                                                    </div>
-                                                </font>
-                                            </div>
+                                        <td style="padding:15px;Margin:0;background-color:#fefdfd" bgcolor="#fefdfd"
+                                            align="left">
+                                            <!--[if mso]><table style="width:570px" cellpadding="0"
+                            cellspacing="0"><tr><td style="width:105px" valign="top"><![endif]-->
+                                            <table class="es-left" cellspacing="0" cellpadding="0" align="left"
+                                                style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;float:left">
+                                                <tr>
+                                                    <td class="es-m-p0r es-m-p20b" valign="top" align="center"
+                                                        style="padding:0;Margin:0;width:105px">
+                                                        <table width="100%" cellspacing="0" cellpadding="0"
+                                                            role="presentation"
+                                                            style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                                                            <tr>
+                                                                <td class="es-m-txt-l"
+                                                                    style="padding:0;Margin:0;font-size:0px"
+                                                                    align="left"><img
+                                                                        src="{{ url(setting('websiteLogo', asset('images/logo.png'))) }}"
+                                                                        alt="logo"
+                                                                        style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic"
+                                                                        height="40" width="40"></td>
+                                                            </tr>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                            <!--[if mso]></td><td style="width:20px"></td><td style="width:445px" valign="top"><![endif]-->
+                                            <table class="es-right" cellspacing="0" cellpadding="0" align="right"
+                                                style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;float:right">
+                                                <tr>
+                                                    <td align="left" style="padding:0;Margin:0;width:445px">
+                                                        <table width="100%" cellspacing="0" cellpadding="0"
+                                                            role="presentation"
+                                                            style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                                                            <tr>
+                                                                <td align="right" style="padding:0;Margin:0">
+                                                                    <p
+                                                                        style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#9ca3af;font-size:14px;margin-left:80px">
+                                                                        {{ $order->updated_at->format('Y-m-d') }}
+                                                                        {{ __('at') }}
+                                                                        {{ $order->updated_at->format('h:ia') }}<br
+                                                                            type="_moz"></p>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                            <!--[if mso]></td></tr></table><![endif]-->
                                         </td>
                                     </tr>
-                                </tbody>
-                            </table>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div id="extwaiokist" style="display:none" v="jjhpi" q="450d6f9d" c="192.2" i="198"
-            u="192.1" s="06022121" d="1" w="false" e="" m="BMe="
-            vn="3vdo1">
-            <div id="extwaigglbit" style="display:none" v="jjhpi" q="450d6f9d" c="192.2"
-                i="198" u="192.1" s="06022121" d="1" w="false" e=""
-                m="BMe="></div>
-        </div>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                    <table class="es-content" cellspacing="0" cellpadding="0" align="center"
+                        style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;table-layout:fixed !important;width:100%">
+                        <tr>
+                            <td align="center" style="padding:0;Margin:0">
+                                <table class="es-content-body" cellspacing="0" cellpadding="0" bgcolor="#ffffff"
+                                    align="center"
+                                    style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background-color:#FFFFFF;width:600px">
+                                    <tr>
+                                        <td align="left"
+                                            style="padding:0;Margin:0;padding-top:20px;padding-left:20px;padding-right:20px">
+                                            <table width="100%" cellspacing="0" cellpadding="0"
+                                                style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                                                <tr>
+                                                    <td valign="top" align="center"
+                                                        style="padding:0;Margin:0;width:560px">
+                                                        <table width="100%" cellspacing="0" cellpadding="0"
+                                                            role="presentation"
+                                                            style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                                                            <tr>
+                                                                <td align="left" style="padding:0;Margin:0">
+                                                                    <h3
+                                                                        style="Margin:0;line-height:24px;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:20px;font-style:normal;font-weight:normal;color:#333333">
+                                                                        {{ __('Hi') }} {{ $order->user->name }},
+                                                                    </h3>
+                                                                    <p
+                                                                        style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#333333;font-size:14px">
+                                                                        {{ __('This is your receipt.') }}</p>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                    <table class="es-footer" cellspacing="0" cellpadding="0" align="center"
+                        style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;table-layout:fixed !important;width:100%;background-color:transparent;background-repeat:repeat;background-position:center top">
+                        <tr>
+                            <td align="center" style="padding:0;Margin:0">
+                                <table class="es-footer-body" cellspacing="0" cellpadding="0" bgcolor="#ffffff"
+                                    align="center"
+                                    style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background-color:#FFFFFF;width:600px">
+                                    <tr>
+                                        <td align="left" style="padding:0;Margin:0">
+                                            <table width="100%" cellspacing="0" cellpadding="0"
+                                                style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                                                <tr>
+                                                    <td valign="top" align="center"
+                                                        style="padding:0;Margin:0;width:600px">
+                                                        <table width="100%" cellspacing="0" cellpadding="0"
+                                                            role="presentation"
+                                                            style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                                                            <tr>
+                                                                <td style="padding:0;Margin:0;padding-bottom:10px;padding-top:20px;font-size:0"
+                                                                    align="center">
+                                                                    <table width="100%" height="100%"
+                                                                        cellspacing="0" cellpadding="0"
+                                                                        border="0" role="presentation"
+                                                                        style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                                                                        <tr>
+                                                                            <td
+                                                                                style="padding:0;Margin:0;border-bottom:1px solid #cccccc;background:unset;height:1px;width:100%;margin:0px">
+                                                                            </td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+
+
+
+                                    {{-- order details section --}}
+                                    @empty($order->vendor)
+                                        @include('view.emails.includes.taxi_order_details')
+                                    @else
+                                        {{-- regular order --}}
+                                        @empty($order->package_type)
+                                            @include('view.emails.includes.order_details')
+                                        @else
+                                            @include('view.emails.includes.package_order_details')
+                                        @endempty
+                                    @endempty
+
+
+                                    {{-- items section bottom divider --}}
+                                    <tr>
+                                        <td align="left" style="padding:0;Margin:0">
+                                            <table width="100%" cellspacing="0" cellpadding="0"
+                                                style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                                                <tr>
+                                                    <td valign="top" align="center"
+                                                        style="padding:0;Margin:0;width:600px">
+                                                        <table width="100%" cellspacing="0" cellpadding="0"
+                                                            role="presentation"
+                                                            style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                                                            <tr>
+                                                                <td style="padding:0;Margin:0;padding-top:10px;padding-bottom:10px;font-size:0"
+                                                                    align="center">
+                                                                    <table width="100%" height="100%"
+                                                                        cellspacing="0" cellpadding="0"
+                                                                        border="0" role="presentation"
+                                                                        style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                                                                        <tr>
+                                                                            <td
+                                                                                style="padding:0;Margin:0;border-bottom:1px solid #cccccc;background:unset;height:1px;width:100%;margin:0px">
+                                                                            </td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+
+                                    {{-- amount breakdown --}}
+                                    @include('view.emails.includes.order_amount_breakdown')
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                    <table class="es-footer" cellspacing="0" cellpadding="0" align="center"
+                        style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;table-layout:fixed !important;width:100%;background-color:transparent;background-repeat:repeat;background-position:center top">
+                        <tr>
+                            <td align="center" style="padding:0;Margin:0">
+                                <table class="es-footer-body" cellspacing="0" cellpadding="0" bgcolor="#ffffff"
+                                    align="center"
+                                    style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background-color:#FFFFFF;width:600px">
+                                    {{-- total --}}
+                                    <tr>
+                                        <td align="left"
+                                            style="Margin:0;padding-top:5px;padding-bottom:5px;padding-left:20px;padding-right:20px">
+                                            <!--[if mso]><table style="width:560px" cellpadding="0" cellspacing="0"><tr><td style="width:270px" valign="top"><![endif]-->
+                                            <table class="es-left" cellspacing="0" cellpadding="0" align="left"
+                                                style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;float:left">
+                                                <tr>
+                                                    <td class="es-m-p20b" align="left"
+                                                        style="padding:0;Margin:0;width:270px">
+                                                        <table width="100%" cellspacing="0" cellpadding="0"
+                                                            role="presentation"
+                                                            style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                                                            <tr>
+                                                                <td align="left" style="padding:0;Margin:0">
+                                                                    <h4
+                                                                        style="Margin:0;line-height:19px;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:16px">
+                                                                        {{ __('Total') }}<br type="_moz"></h4>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                            <!--[if mso]></td><td style="width:20px"></td><td style="width:270px" valign="top"><![endif]-->
+                                            <table class="es-right" cellspacing="0" cellpadding="0" align="right"
+                                                style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;float:right">
+                                                <tr>
+                                                    <td align="left" style="padding:0;Margin:0;width:270px">
+                                                        <table width="100%" cellspacing="0" cellpadding="0"
+                                                            role="presentation"
+                                                            style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                                                            <tr>
+                                                                <td align="right" style="padding:0;Margin:0">
+                                                                    <h4
+                                                                        style="Margin:0;line-height:18px;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:15px">
+                                                                        {{ currencyFormat($order->total) }}<br
+                                                                            type="_moz"></h4>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                            <!--[if mso]></td></tr></table><![endif]-->
+                                        </td>
+                                    </tr>
+                                    {{-- payment methods --}}
+                                    <tr>
+                                        <td align="left"
+                                            style="Margin:0;padding-top:20px;padding-bottom:20px;padding-left:20px;padding-right:20px">
+                                            <!--[if mso]><table style="width:560px" cellpadding="0" cellspacing="0"><tr><td style="width:270px" valign="top"><![endif]-->
+                                            <table class="es-left" cellspacing="0" cellpadding="0" align="left"
+                                                style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;float:left">
+                                                <tr>
+                                                    <td class="es-m-p20b" align="left"
+                                                        style="padding:0;Margin:0;width:270px">
+                                                        <table width="100%" cellspacing="0" cellpadding="0"
+                                                            role="presentation"
+                                                            style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                                                            <tr>
+                                                                <td align="left" style="padding:0;Margin:0">
+                                                                    <p
+                                                                        style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#333333;font-size:14px">
+                                                                        {{ __('Payment Method') }}<br type="_moz">
+                                                                    </p>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                            <!--[if mso]></td><td style="width:20px"></td><td style="width:270px" valign="top"><![endif]-->
+                                            <table class="es-right" cellspacing="0" cellpadding="0" align="right"
+                                                style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;float:right">
+                                                <tr>
+                                                    <td align="left" style="padding:0;Margin:0;width:270px">
+                                                        <table width="100%" cellspacing="0" cellpadding="0"
+                                                            role="presentation"
+                                                            style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                                                            <tr>
+                                                                <td align="right" style="padding:0;Margin:0">
+                                                                    <p
+                                                                        style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:23px;color:#333333;font-size:15px">
+                                                                        {{ $order->payment_method->name ?? '' }}</p>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                            <!--[if mso]></td></tr></table><![endif]-->
+                                        </td>
+                                    </tr>
+                                    {{-- copywrite --}}
+                                    <tr>
+                                        <td align="left"
+                                            style="Margin:0;padding-top:20px;padding-bottom:20px;padding-left:20px;padding-right:20px">
+                                            <table width="100%" cellspacing="0" cellpadding="0"
+                                                style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                                                <tr>
+                                                    <td align="left" style="padding:0;Margin:0;width:560px">
+                                                        <table width="100%" cellspacing="0" cellpadding="0"
+                                                            role="presentation"
+                                                            style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                                                            <tr>
+                                                                <td align="center" style="padding:0;Margin:0">
+                                                                    <p
+                                                                        style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#aaaaaa;font-size:14px">
+                                                                        © {{ date('Y') }}
+                                                                        {{ setting('websiteName', env('APP_NAME')) }}
+                                                                    </p>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
     </div>
 </body>
 

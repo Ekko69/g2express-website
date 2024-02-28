@@ -19,6 +19,7 @@ use App\Models\AutoAssignment;
 use App\Models\User;
 use App\Traits\GoogleMapApiTrait;
 use Carbon\Carbon;
+use App\Services\FirestoreCloudFunctionService;
 
 class VPSTaxiOrderMatchingJob implements ShouldQueue
 {
@@ -66,40 +67,49 @@ class VPSTaxiOrderMatchingJob implements ShouldQueue
             try {
                 $pickupLocationLat = $order->taxi_order->pickup_latitude;
                 $pickupLocationLng = $order->taxi_order->pickup_longitude;
+                $dropoffLocationLat = $order->taxi_order->dropoff_latitude;
+                $dropoffLocationLng = $order->taxi_order->dropoff_longitude;
                 //
                 $pickupLat = "" . $order->taxi_order->pickup_latitude . "," . $order->taxi_order->pickup_longitude;
                 $dropoffLat = "" . $order->taxi_order->dropoff_latitude . "," . $order->taxi_order->dropoff_longitude;
-                //earth distance of order
-                $geopointA = new GeoPoint($pickupLocationLat, $pickupLocationLng);
-                $geopointB = new GeoPoint(0.00, 0.00);
-                $earthDistance = $geopointA->distanceTo($geopointB, 'kilometers');
+                $driverSearchRadius = driverSearchRadius($order);
+                $rejectedDriversCount = AutoAssignment::where('order_id', $order->id)->count();
+                $maxDriverOrderNotificationAtOnce = (int) setting('maxDriverOrderNotificationAtOnce', 1) + $rejectedDriversCount;
 
+
+                //fetch driver in different ways
+                $fetchNearbyDriverSystem = setting('fetchNearbyDriverSystem', 0);
                 //
-                // $driverSearchRadius = setting('driverSearchRadius', 10);
-                //extra 20km range
-                $driverSearchRadius = setting('driverSearchRadius', 10) + 20;
-                $earthDistanceToNorth = $earthDistance + $driverSearchRadius;
-                $earthDistanceToSouth = $earthDistance - $driverSearchRadius;
-                //
-                $rejectedDriversCount = AutoAssignment::where(
-                    'order_id',
-                    $order->id,
-                )->count();
-                //find driver within that range
-                $firestoreRestService = new FirestoreRestService();
-                $driverDocuments = $firestoreRestService->whereAvailableTaxiDriversBetween(
-                    $earthDistanceToNorth,
-                    $earthDistanceToSouth,
-                    $order->taxi_order->vehicle_type_id,
-                    $rejectedDriversCount,
-                );
+                if ($fetchNearbyDriverSystem == 0) {
+                    //find driver within that range using: whereWithinGeohash
+                    $firestoreRestService = new FirestoreRestService();
+                    $driverDocuments = $firestoreRestService->whereWithinGeohash(
+                        $pickupLocationLat,
+                        $pickupLocationLng,
+                        $driverSearchRadius,
+                        $rejectedDriversCount,
+                        $order->taxi_order->vehicle_type_id,
+                    );
+                } else {
+                    //
+                    //find driver within that range using: firestoreCloudFunctionService
+                    $firestoreCloudFunctionService = new FirestoreCloudFunctionService();
+                    $driverDocuments = $firestoreCloudFunctionService->nearbyDriver(
+                        $pickupLocationLat,
+                        $pickupLocationLng,
+                        $driverSearchRadius,
+                        $maxDriverOrderNotificationAtOnce,
+                        $order->taxi_order->vehicle_type_id
+                    );
+                }
+
                 // logger("Drivers found for order =>" . $order->code . "", [$driverDocuments]);
 
                 //if no driver was found, create another delayed job
                 if (empty($driverDocuments)) {
                     // logger("No Driver found. Now rescheduling the order for another time");
                     VPSTaxiOrderMatchingJob::dispatch($order)
-                        ->delay(now()->addSeconds(setting('delayResearchTaxiMatching', 30)));
+                        ->delay((int) setting('delayResearchTaxiMatching', 30));
                     return;
                 }
 
@@ -115,7 +125,13 @@ class VPSTaxiOrderMatchingJob implements ShouldQueue
                     }
 
                     //check the distance between this driver and pickup location
-                    $tooFar = $this->isDriverFar($pickupLocationLat, $pickupLocationLng, $driverData["lat"], $driverData["long"]);
+                    $tooFar = $this->isDriverFar(
+                        $pickupLocationLat,
+                        $pickupLocationLng,
+                        $driverData["lat"],
+                        $driverData["long"],
+                        $order,
+                    );
                     if ($tooFar) {
                         $autoAssignment = new AutoAssignment();
                         $autoAssignment->order_id = $order->id;
@@ -175,12 +191,24 @@ class VPSTaxiOrderMatchingJob implements ShouldQueue
                             ]
                         );
 
+                        $driverDistanceToDropoff = $this->getDistance(
+                            [
+                                $pickupLocationLat,
+                                $pickupLocationLng
+                            ],
+                            [
+                                $dropoffLocationLat,
+                                $dropoffLocationLng
+                            ]
+                        );
+
 
                         //pickup data
                         $pickup = [
                             'lat' => $pickupLocationLat,
                             'lng' => $pickupLocationLng,
                             'address' => $order->taxi_order->pickup_address,
+                            "distance" => number_format($driverDistanceToPickup, 2),
                         ];
 
 
@@ -191,6 +219,7 @@ class VPSTaxiOrderMatchingJob implements ShouldQueue
                             'lat' => $dropoffLocationLat,
                             'lng' => $dropoffLocationLng,
                             'address' => $order->taxi_order->dropoff_address,
+                            "distance" => number_format($driverDistanceToDropoff, 2),
                         ];
 
 
@@ -258,13 +287,13 @@ class VPSTaxiOrderMatchingJob implements ShouldQueue
         return $nextTimestamp;
     }
 
-    public function isDriverFar($lat1, $long1, $lat2, $long2)
+    public function isDriverFar($lat1, $long1, $lat2, $long2, $order = null)
     {
         //check the distance between this driver and pickup location
         $geopointA = new GeoPoint($lat1, $long1);
         $geopointB = new GeoPoint($lat2, $long2);
         $driverToPickupDistance = $geopointA->distanceTo($geopointB, 'kilometers');
-        $actualSearchRadius = setting('driverSearchRadius', 10);
+        $actualSearchRadius = driverSearchRadius($order);
         return $driverToPickupDistance > $actualSearchRadius;
     }
 }

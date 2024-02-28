@@ -15,8 +15,10 @@ use App\Models\OrderStop;
 use App\Models\PackageTypePricing;
 use App\Models\Vendor;
 use App\Models\Coupon;
+use App\Models\CouponUser;
 use App\Traits\GoogleMapApiTrait;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 
 class PackageOrderController extends Controller
@@ -28,18 +30,21 @@ class PackageOrderController extends Controller
     {
 
         try {
+
+            // logger("fetchVendors request Data",[$request->all()]);
             //request data
             //locations
             //vendor_type_id
             //package_type_id
 
             //fetch vendor with the provided vendor type
-            $vendors = Vendor::where('vendor_type_id', $request->vendor_type_id)
+            $vendors = Vendor::with('package_types_pricing')->where('vendor_type_id', $request->vendor_type_id)
                 ->whereHas('package_types_pricing', function ($query) use ($request) {
                     $query->where('package_type_id', $request->package_type_id);
                 })
                 ->active()
                 ->get();
+
 
             //loop through vendors and create 2 array of vendor that support all locations and vendor that support at least one location
             $vendorsWithAllLocations = [];
@@ -266,6 +271,7 @@ class PackageOrderController extends Controller
             //total amount
             $subTotalAmount = $distanceAmount + $sizeAmount;
             $discount = 0;
+            $coupon = null;
             //if coupon is used
             if (!empty($request->coupon_code)) {
 
@@ -282,7 +288,12 @@ class PackageOrderController extends Controller
                 }
 
                 //also check if user has use this coupon before and if the coupon is not reusable
-
+                $usedTimes = CouponUser::where('coupon_id', $coupon->id)
+                    ->where('user_id', Auth::id())
+                    ->count() ?? 0;
+                if ($coupon->times != null && $usedTimes >= $coupon->times) {
+                    throw new \Exception(__("You have exceeded number of use"), 1);
+                }
 
                 //check if vendor id is in the list of allowed vendors for this coupon
                 $vendorIds = $coupon->vendors->pluck('id')->toArray();
@@ -309,7 +320,7 @@ class PackageOrderController extends Controller
 
 
                     //
-                    $subTotalAmount -= $discount;
+                    // $subTotalAmount -= $discount;
                 }
             }
 
@@ -318,7 +329,7 @@ class PackageOrderController extends Controller
 
             //
             $taxAmount = ($tax / 100) * $subTotalAmount;
-            $totalAmount = $taxAmount + $subTotalAmount;
+            $totalAmount = $taxAmount + ($subTotalAmount - $discount);
             //vendor fees
             $vendor = Vendor::find($request->vendor_id);
             $totalFee = 0;
@@ -352,6 +363,7 @@ class PackageOrderController extends Controller
                 "fees" => (float)$totalFee,
                 "vendor_fees" => $vendorFees,
                 "total" => $totalAmount,
+                "coupon" => $coupon ?? null,
             ];
             $token = \Crypt::encrypt($result);
             $result["token"] = $token;
@@ -441,11 +453,18 @@ class PackageOrderController extends Controller
         $deliveryAddress = DeliveryAddress::find($id);
 
         //check iof city is even in the system
-        $deliveryAddressCity = City::where('name', $deliveryAddress->city)->first();
+        $deliveryAddressCity = City::where('name', $deliveryAddress->city)
+            ->whereHas('state', function ($query) use ($deliveryAddress) {
+                return $query->whereHas('country', function ($query) use ($deliveryAddress) {
+                    return $query->where('name', "like", "%" . $deliveryAddress->country . "%");
+                });
+            })
+            ->first();
 
         if (!empty($deliveryAddressCity)) {
             $pickupLocationCityVendor = CityVendor::where('vendor_id', $vendorId)
                 ->where('city_id', $deliveryAddressCity->id)
+                ->where('is_active', "=", 1)
                 ->first();
 
             if (!empty($pickupLocationCityVendor)) {
@@ -455,10 +474,15 @@ class PackageOrderController extends Controller
 
 
         //now check if delivery state is in the system
-        $deliveryAddressState = State::where('name', $deliveryAddress->state)->first();
+        $deliveryAddressState = State::where('name', $deliveryAddress->state)
+            ->whereHas('country', function ($query) use ($deliveryAddress) {
+                return $query->where('name', "like", "%" . $deliveryAddress->country . "%");
+            })
+            ->first();
         if (!empty($deliveryAddressState)) {
             $pickupLocationStateVendor = StateVendor::where('vendor_id', $vendorId)
                 ->where('state_id', $deliveryAddressState->id)
+                ->where('is_active', "=", 1)
                 ->first();
             if (!empty($pickupLocationStateVendor)) {
                 return true;
@@ -470,6 +494,7 @@ class PackageOrderController extends Controller
         if (!empty($deliveryAddressCountry)) {
             $pickupLocationCountryVendor = CountryVendor::where('vendor_id', $vendorId)
                 ->where('country_id', $deliveryAddressCountry->id)
+                ->where('is_active', "=", 1)
                 ->first();
             if (!empty($pickupLocationCountryVendor)) {
                 return true;
@@ -486,12 +511,19 @@ class PackageOrderController extends Controller
         $state = $location["state"];
         $country = $location["country"];
         //check iof city is even in the system
-        $deliveryAddressCity = City::where('name', 'like', '%' . $city . '%')->first();
+        $deliveryAddressCity = City::where('name', 'like', '%' . $city . '%')
+            ->whereHas('state', function ($query) use ($country) {
+                return $query->whereHas('country', function ($query) use ($country) {
+                    return $query->where('name', "like", "%" . $country . "%");
+                });
+            })
+            ->first();
 
 
-        if (!empty($deliveryAddressCity)) {
+        if ($deliveryAddressCity != null || !empty($deliveryAddressCity)) {
             $pickupLocationCityVendor = CityVendor::where('vendor_id', $vendorId)
                 ->where('city_id', $deliveryAddressCity->id)
+                ->where('is_active', "=", 1)
                 ->first();
 
             if (!empty($pickupLocationCityVendor)) {
@@ -501,10 +533,16 @@ class PackageOrderController extends Controller
 
 
         //now check if delivery state is in the system
-        $deliveryAddressState = State::where('name', 'like', '%' . $state . '%')->first();
-        if (!empty($deliveryAddressState)) {
+        $deliveryAddressState = State::where('name', 'like', '%' . $state . '%')
+            ->whereHas('country', function ($query) use ($country) {
+                return $query->where('name', "like", "%" . $country . "%");
+            })
+            ->first();
+
+        if ($deliveryAddressState != null || !empty($deliveryAddressState)) {
             $pickupLocationStateVendor = StateVendor::where('vendor_id', $vendorId)
                 ->where('state_id', $deliveryAddressState->id)
+                ->where('is_active', "=", 1)
                 ->first();
             if (!empty($pickupLocationStateVendor)) {
                 return true;
@@ -513,9 +551,10 @@ class PackageOrderController extends Controller
 
         //now check if delivery country is in the system
         $deliveryAddressCountry = Country::where('name', 'like', '%' . $country . '%')->first();
-        if (!empty($deliveryAddressCountry)) {
+        if ($deliveryAddressCountry != null || !empty($deliveryAddressCountry)) {
             $pickupLocationCountryVendor = CountryVendor::where('vendor_id', $vendorId)
                 ->where('country_id', $deliveryAddressCountry->id)
+                ->where('is_active', "=", 1)
                 ->first();
             if (!empty($pickupLocationCountryVendor)) {
                 return true;

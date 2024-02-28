@@ -9,24 +9,19 @@ use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\AndroidConfig;
 use Kreait\Firebase\Messaging\ApnsConfig;
 use Kreait\Firebase\Messaging\WebPushConfig;
+use Kreait\Firebase\Exception\Messaging\InvalidMessage;
 
 trait FirebaseMessagingTrait
 {
 
-    use FirebaseAuthTrait, OrderNotificationStatusMessageTrait;
+    use FirebaseAuthTrait, OrderNotificationStatusMessageTrait, FirebaseNotificationValidateTrait;
     public $tempLocale;
 
-
-    //
-    private function sendFirebaseNotification(
+    private function sendPlainFirebaseNotification(
         $topic,
         $title,
         $body,
-        array $data = null,
-        bool $onlyData = true,
-        string $channel_id = "basic_channel",
-        bool $noSound = false,
-        String $image = null
+        $image = null,
     ) {
 
         // igNore in local
@@ -38,7 +33,88 @@ trait FirebaseMessagingTrait
         $messaging = $this->getFirebaseMessaging();
         $messagePayload = [
             'topic' => (string) $topic,
-            'notification' => $onlyData ? null : [
+            'notification' => [
+                'title' => $title,
+                'body' => $body,
+                'image' => $image,
+                'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
+            ],
+        ];
+
+        $message = CloudMessage::fromArray($messagePayload);
+
+        //android configuration
+        $androidConfig = [
+            'ttl' => '3600s',
+            'priority' => 'high',
+            'notification' => [
+                'title' => $title,
+                'body' => $body,
+                'image' => $image,
+            ],
+        ];
+
+        $apnConfig = ApnsConfig::fromArray([
+            'headers' => [
+                "apns-push-type" => "background",
+                'apns-priority' => '10',
+            ],
+            'payload' => [
+                'aps' => [
+                    'alert' => [
+                        'title' => $title,
+                        'body' => $body,
+                        'image' => $image,
+                    ],
+                ],
+            ],
+        ]);
+
+
+
+        $config = AndroidConfig::fromArray($androidConfig);
+        $message = $message->withAndroidConfig($config);
+        $message = $message->withApnsConfig($apnConfig);
+
+        // logger("sendFirebaseNotification", [$messagePayload]);
+        // logger("AndroidConfig", [$androidConfig]);
+        // logger("ApnsConfig", [$apnConfig]);
+        try {
+            $messaging->validate($message);
+            $messaging->send($message);
+        } catch (InvalidMessage $e) {
+            logger("InvalidMessage", [$e->getMessage(), $e]);
+        }
+    }
+
+    //
+    private function sendFirebaseNotification(
+        $topic,
+        $title,
+        $body,
+        array $data = null,
+        bool $onlyData = true,
+        string $channel_id = "basic_channel",
+        bool $noSound = false,
+        String $image = null,
+    ) {
+
+        // igNore in local
+        if (\App::environment('local')) {
+            return;
+        }
+
+        //check if notification has been sent before
+        if ($this->validateNotification($topic, $title, $body, $data, $onlyData, $channel_id, $noSound, $image)) {
+            return;
+        }
+
+        //getting firebase messaging
+        $messaging = $this->getFirebaseMessaging();
+        $messagePayload = [
+            'topic' => (string) $topic,
+            // 'notification' => $onlyData ? null : [
+            'notification' => [
                 'title' => $title,
                 'body' => $body,
                 'image' => $image,
@@ -69,6 +145,7 @@ trait FirebaseMessagingTrait
             }
             $messagePayload = [
                 'topic' => (string) $topic,
+                'notification' => $messagePayload['notification'],
                 'data' => $data,
             ];
         }
@@ -91,7 +168,7 @@ trait FirebaseMessagingTrait
 
         $apnConfig = ApnsConfig::fromArray([
             'headers' => [
-                // "apns-push-type": "background",
+                "apns-push-type" => "background",
                 'apns-priority' => '10',
             ],
             'payload' => [
@@ -100,11 +177,9 @@ trait FirebaseMessagingTrait
                         'title' => $title,
                         'body' => $body,
                         'image' => $image,
-                        // 'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
-                        // "channel_id" => $channel_id,
                     ],
                     // 'badge' => 42,
-                    "sound" => $noSound ? "" : "alert",
+                    "sound" => $noSound ? "default" : "alert",
                     "category" => "FLUTTER_NOTIFICATION_CLICK",
                 ],
                 "click_action" => "FLUTTER_NOTIFICATION_CLICK",
@@ -125,8 +200,88 @@ trait FirebaseMessagingTrait
         }
         $config = AndroidConfig::fromArray($androidConfig);
         $message = $message->withAndroidConfig($config);
-        // $message = $message->withApnsConfig($apnConfig);
-        $messaging->send($message);
+        $message = $message->withApnsConfig($apnConfig);
+
+        // logger("sendFirebaseNotification", [$messagePayload]);
+        // logger("AndroidConfig", [$androidConfig]);
+        // logger("ApnsConfig", [$apnConfig]);
+        try {
+            $messaging->validate($message);
+            $messaging->send($message);
+        } catch (InvalidMessage $e) {
+            logger("InvalidMessage", [$e->getMessage(), $e]);
+        }
+    }
+
+    private function sendOrderFirebaseNotification(
+        $topic,
+        $title,
+        $body,
+        array $data,
+        $deviceTokens = null,
+    ) {
+
+        // igNore in local
+        if (\App::environment('local')) {
+            return;
+        }
+
+        //getting firebase messaging
+        $messaging = $this->getFirebaseMessaging();
+        $messagePayload = [
+            'topic' => (string) $topic,
+            'data' => $data,
+        ];
+
+        if (empty($data["title"])) {
+            $data["title"] = $title;
+            $data["body"] = $body;
+        }
+        $messagePayload = [
+            'topic' => (string) $topic,
+            'data' => $data,
+        ];
+
+        $message = CloudMessage::fromArray($messagePayload);
+        //android configuration
+        $androidConfig = [
+            'ttl' => '3600s',
+            'priority' => 'high',
+            'data' => $data,
+        ];
+
+        $apnConfig = ApnsConfig::fromArray([
+            'headers' => [
+                "apns-push-type" => "background",
+                'apns-priority' => '10',
+            ],
+            'payload' => [
+                'aps' => [
+                    'alert' => [
+                        'title' => $title,
+                        'body' => $body,
+                    ],
+                    "content-available" => 1,
+                ],
+            ],
+        ]);
+
+
+        $config = AndroidConfig::fromArray($androidConfig);
+        $message = $message->withAndroidConfig($config);
+        $message = $message->withApnsConfig($apnConfig);
+
+        try {
+            //if array to tokens is provided
+            if ($deviceTokens != null && is_array($deviceTokens) && count($deviceTokens) > 0) {
+                $messaging->sendMulticast($message, $deviceTokens);
+            } else {
+                $messaging->validate($message);
+                $messaging->send($message);
+            }
+        } catch (InvalidMessage $e) {
+            logger("InvalidMessage", [$e->getMessage(), $e]);
+        }
     }
 
     private function sendFirebaseNotificationToTokens(array $tokens, $title, $body, array $data = null)
@@ -134,6 +289,11 @@ trait FirebaseMessagingTrait
 
         // igNore in local
         if (\App::environment('local')) {
+            return;
+        }
+
+        //check if notification has been sent before
+        if ($this->validateTokenNotification($tokens, $title, $body)) {
             return;
         }
 
@@ -168,7 +328,7 @@ trait FirebaseMessagingTrait
 
 
     //
-    public function sendOrderStatusChangeNotification(Order $order)
+    public function sendOrderStatusChangeNotification(Order $order, $status = null)
     {
 
         try {
@@ -180,6 +340,7 @@ trait FirebaseMessagingTrait
                 'is_order' => "1",
                 'order_id' => (string)$order->id,
                 'status' => $order->status,
+
             ];
             //for taxi orders
             if (!empty($order->taxi_order) || empty($order->vendor)) {
@@ -193,26 +354,55 @@ trait FirebaseMessagingTrait
 
             //notification message
             $notificationTitle = setting('websiteName', env("APP_NAME"));
-            $customerNotificationMessage = $this->getCustomerOrderNotificationMessage($order->status, $order);
+            $customerNotificationMessage = $this->getCustomerOrderNotificationMessage(
+                $status ?? $order->status,
+                $order,
+            );
             //customer
-            $this->sendFirebaseNotification($order->user_id, $notificationTitle, $customerNotificationMessage, $orderData);
+            $this->sendOrderFirebaseNotification(
+                $order->user_id,
+                $notificationTitle,
+                $customerNotificationMessage,
+                $orderData,
+                //user tokens
+                $order->user->notification_tokens ?? null,
+            );
             //vendor
             if (!empty($order->vendor_id)) {
                 // logger("send vendor notification", []);
-                $vendorNotificationMessage = $this->getVendorOrderNotificationMessage($order->status, $order);
+                $vendorNotificationMessage = $this->getVendorOrderNotificationMessage(
+                    $status ?? $order->status,
+                    $order,
+                );
                 $vendorTopic = "v_" . $order->vendor_id . "";
                 // logger("vendorTopic", [$vendorTopic]);
-                $this->sendFirebaseNotification($vendorTopic, $notificationTitle, $vendorNotificationMessage, $orderData);
+                $this->sendOrderFirebaseNotification(
+                    $vendorTopic,
+                    $notificationTitle,
+                    $vendorNotificationMessage,
+                    $orderData,
+                    //vendor manager tokens
+                    $managersTokens,
+                );
                 //vendor web
-                $this->sendFirebaseNotificationToTokens($managersTokens, $notificationTitle, $vendorNotificationMessage, [route('orders')]);
+                $this->sendFirebaseNotificationToTokens(
+                    $managersTokens,
+                    $notificationTitle,
+                    $vendorNotificationMessage,
+                    [
+                        "" . route('orders') . "?filters[search]=" . $order->code . ""
+                    ],
+                );
             }
             //driver
             if ($order->status == "delivered" && !empty($order->driver_id)) {
-                $this->sendFirebaseNotification(
+                $this->sendOrderFirebaseNotification(
                     $order->driver_id,
                     $notificationTitle,
                     $customerNotificationMessage,
-                    $orderData
+                    $orderData,
+                    //driver tokens
+                    $order->driver->notification_tokens ?? null,
                 );
             }
 
@@ -231,7 +421,9 @@ trait FirebaseMessagingTrait
                     $adminTokens,
                     __("Order Notification"),
                     __("Order #") . $order->code . " " . __("with") . " " . $order->vendor->name . " " . __("is now:") . " " . $order->status,
-                    [route('orders')]
+                    [
+                        "" . route('orders') . "?filters[search]=" . $order->code . ""
+                    ],
                 );
             }
             //city-admin
@@ -243,7 +435,9 @@ trait FirebaseMessagingTrait
                     $cityAdminTokens,
                     __("Order Notification"),
                     __("Order #") . $order->code . " " . __("with") . " " . $order->vendor->name . " " . __("is now:") . " " . $order->status,
-                    [route('orders')]
+                    [
+                        "" . route('orders') . "?filters[search]=" . $order->code . ""
+                    ],
                 );
             }
             $this->resetLocale();
@@ -262,6 +456,7 @@ trait FirebaseMessagingTrait
             'is_order' => "0",
             'order_id' => (string)$order->id,
             'status' => $order->status,
+
         ];
 
         $pendingMsg = setting('taxi.msg.pending', __("Searching for driver"));
@@ -275,20 +470,20 @@ trait FirebaseMessagingTrait
 
         //'pending','preparing','ready','enroute','delivered','failed','cancelled'
         if ($order->status == "pending") {
-            $this->sendFirebaseNotification($order->user_id, $notificationTitle, $pendingMsg, $orderData);
+            $this->sendOrderFirebaseNotification($order->user_id, $notificationTitle, $pendingMsg, $orderData);
         } else if ($order->status == "preparing") {
-            $this->sendFirebaseNotification($order->user_id, $notificationTitle, $preparingMsg, $orderData);
+            $this->sendOrderFirebaseNotification($order->user_id, $notificationTitle, $preparingMsg, $orderData);
         } else if ($order->status == "ready") {
-            $this->sendFirebaseNotification($order->user_id, $notificationTitle, $readyMsg, $orderData);
+            $this->sendOrderFirebaseNotification($order->user_id, $notificationTitle, $readyMsg, $orderData);
         } else if ($order->status == "enroute") {
 
             //user
-            $this->sendFirebaseNotification($order->user_id, $notificationTitle, $enrouteMsg, $orderData);
+            $this->sendOrderFirebaseNotification($order->user_id, $notificationTitle, $enrouteMsg, $orderData);
         } else if ($order->status == "delivered") {
 
 
             //user/customer
-            $this->sendFirebaseNotification(
+            $this->sendOrderFirebaseNotification(
                 $order->user_id,
                 $notificationTitle,
                 $completedMsg,
@@ -319,7 +514,7 @@ trait FirebaseMessagingTrait
                 $customerOverDraftMsg = str_replace(":bal", $bal, $customerOverDraftMsg);
                 $customerOverDraftMsg = str_replace(":pai", $pai, $customerOverDraftMsg);
                 //
-                $this->sendFirebaseNotification(
+                $this->sendOrderFirebaseNotification(
                     $order->user_id,
                     $notificationTitle,
                     $customerOverDraftMsg,
@@ -329,7 +524,7 @@ trait FirebaseMessagingTrait
 
             //driver
             if (!empty($order->driver_id)) {
-                $this->sendFirebaseNotification(
+                $this->sendOrderFirebaseNotification(
                     $order->driver_id,
                     $notificationTitle,
                     $completedMsg,
@@ -337,11 +532,11 @@ trait FirebaseMessagingTrait
                 );
             }
         } else if ($order->status == "failed") {
-            $this->sendFirebaseNotification($order->user_id, $notificationTitle, $failedMsg, $orderData);
+            $this->sendOrderFirebaseNotification($order->user_id, $notificationTitle, $failedMsg, $orderData);
         } else if ($order->status == "cancelled") {
-            $this->sendFirebaseNotification($order->user_id, $notificationTitle, $cancelledMsg, $orderData);
+            $this->sendOrderFirebaseNotification($order->user_id, $notificationTitle, $cancelledMsg, $orderData);
         } else if (!empty($order->status)) {
-            $this->sendFirebaseNotification($order->user_id, $notificationTitle, __("Trip #") . $order->code . __(" has been ") . __($order->status) . "", $orderData);
+            $this->sendOrderFirebaseNotification($order->user_id, $notificationTitle, __("Trip #") . $order->code . __(" has been ") . __($order->status) . "", $orderData);
         }
 
 
@@ -372,6 +567,7 @@ trait FirebaseMessagingTrait
             'is_order' => "1",
             'order_id' => (string)$order->id,
             'status' => $order->status,
+
         ];
 
         //aviod send order details notification data when order is taxi
@@ -381,7 +577,7 @@ trait FirebaseMessagingTrait
 
         //
         $this->loadLocale();
-        $this->sendFirebaseNotification(
+        $this->sendOrderFirebaseNotification(
             $order->driver_id,
             __("Order Update"),
             __("Order #") . $order->code . __(" has been assigned to you"),
@@ -389,8 +585,6 @@ trait FirebaseMessagingTrait
         );
         $this->resetLocale();
     }
-
-
 
 
 

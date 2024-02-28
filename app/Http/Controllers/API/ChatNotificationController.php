@@ -25,8 +25,8 @@ class ChatNotificationController extends Controller
             $peer["role"] = "manager";
         }
         $peer = json_encode($peer);
-        $topic = str_ireplace("vendor_","v_",$request->topic);
-        
+        $topic = str_ireplace("vendor_", "v_", $request->topic);
+
 
         //
         try {
@@ -35,8 +35,11 @@ class ChatNotificationController extends Controller
                 'path' => $request->path,
                 'user' => $peer,
                 'peer' => json_encode($request->user),
+                'title' => $request->title,
+                'body' => $request->body,
             ];
-            $this->sendFirebaseNotification($topic, $request->title, $request->body, $orderData, true);
+            // logger("Chat Notification Data", $orderData);
+            $this->sendOrderFirebaseNotification($topic, $request->title, $request->body, $orderData);
 
             //
             // logger("Chat Data", $orderData);

@@ -2,14 +2,14 @@ function otpForm() {
     return {
         show: false,
         loading: false,
-        errorMessage:"",
+        errorMessage: "",
         openVerify() { this.show = true },
         closeVerify() { this.show = false },
         isVerifyOpen() { return this.show === true },
-        clearError(){
+        clearError() {
             this.errorMessage = "";
         },
-        init(){
+        init() {
             //
             window.addEventListener('show-verify', event => {
                 this.clearError();
@@ -40,15 +40,15 @@ function otpForm() {
     }
 }
 
-$(function() {
+$(function () {
 
     //
-    function showLoading(){
-        window.dispatchEvent( new CustomEvent('show-loading'));
+    function showLoading() {
+        window.dispatchEvent(new CustomEvent('show-loading'));
     }
 
-    function hideLoading(){
-        window.dispatchEvent( new CustomEvent('hide-loading'));
+    function hideLoading() {
+        window.dispatchEvent(new CustomEvent('hide-loading'));
     }
 
 
@@ -57,17 +57,17 @@ $(function() {
 
         var config = {
             apiKey: data,
-          };
+        };
         firebase.initializeApp(config);
 
         // Create a Recaptcha verifier instance globally
         window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
-            "recaptcha-container",{
-                size: "normal",
-                callback: function(response) {
-                    submitPhoneNumberAuth();
-                }
+            "recaptcha-container", {
+            size: "normal",
+            callback: function (response) {
+                submitPhoneNumberAuth();
             }
+        }
         );
 
     });
@@ -78,18 +78,18 @@ $(function() {
         showLoading();
         var appVerifier = window.recaptchaVerifier;
         firebase
-          .auth()
-          .signInWithPhoneNumber(phoneNumber, appVerifier)
-          .then(function(confirmationResult) {
-            window.confirmationResult = confirmationResult;
-            hideLoading();
-            window.dispatchEvent( new CustomEvent('show-verify'));
-          })
-          .catch(function(error) {
-            console.log("Error ==> "+error+"");
-            hideLoading();
-            window.dispatchEvent( new CustomEvent('error-', {detail: error}));
-          });
+            .auth()
+            .signInWithPhoneNumber(phoneNumber, appVerifier)
+            .then(function (confirmationResult) {
+                window.confirmationResult = confirmationResult;
+                hideLoading();
+                window.dispatchEvent(new CustomEvent('show-verify'));
+            })
+            .catch(function (error) {
+                console.log("Error ==> " + error + "");
+                hideLoading();
+                window.dispatchEvent(new CustomEvent('error-', { detail: error }));
+            });
 
     });
 
@@ -98,18 +98,18 @@ $(function() {
 
         showLoading();
         confirmationResult
-          .confirm(otp)
-          .then(function(result) {
-            var user = result.user;
-            console.log(user);
-            hideLoading();
-            livewire.emit('allowReset', user.refreshToken );
-          })
-          .catch(function(error) {
-            console.log("Error ==> "+error+"");
-            hideLoading();
-            window.dispatchEvent( new CustomEvent('error-', {detail: "Verification Code is incorrect/invalid"}));
-          });
+            .confirm(otp)
+            .then(function (result) {
+                var user = result.user;
+                console.log(user);
+                hideLoading();
+                livewire.emit('allowReset', user.refreshToken);
+            })
+            .catch(function (error) {
+                console.log("Error ==> " + error + "");
+                hideLoading();
+                window.dispatchEvent(new CustomEvent('error-', { detail: "Verification Code is incorrect/invalid" }));
+            });
 
     });
 

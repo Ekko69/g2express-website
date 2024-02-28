@@ -52,7 +52,7 @@ class WalletTransferController extends Controller
                 if (substr($keyword, 0, strlen("+")) != "+") {
                     $phoneKeywrod = "+" . $phoneKeywrod;
                 }
-                $phoneKeywrod = (string) PhoneNumber::make($phoneKeywrod, setting('countryCode', "GH"))->formatE164();
+                $phoneKeywrod = (string) (new PhoneNumber($phoneKeywrod, setting('countryCode', "GH")))->formatE164();
             } catch (\Exception $ex) {
                 // logger("Error", [$ex]);
             }

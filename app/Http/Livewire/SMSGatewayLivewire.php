@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\DB;
 use App\Models\SmsGateway;
 use Aloha\Twilio\Twilio;
 use App\Services\OTPService;
-use GeoSot\EnvEditor\Facades\EnvEditor;
 
 class SMSGatewayLivewire extends BaseLivewireComponent
 {
@@ -55,31 +54,31 @@ class SMSGatewayLivewire extends BaseLivewireComponent
 
         //
         if ($this->selectedModel->slug == "twilio") {
-            $this->accountId = setting("sms_gateways.twilio.accountId");
-            $this->token = setting("sms_gateways.twilio.token");
-            $this->fromNumber = setting("sms_gateways.twilio.fromNumber");
+            $this->accountId = env("TWILIO_ACCOUNT_SID");
+            $this->token = env("TWILIO_AUTH_TOKEN");
+            $this->fromNumber = env("TWILIO_FROM");
         } else if ($this->selectedModel->slug == "msg91") {
-            $this->authkey = setting("sms_gateways.msg91.authkey");
-            $this->template_id = setting("sms_gateways.msg91.template_id");
-            $this->sender = setting("sms_gateways.msg91.sender");
-            $this->route = setting("sms_gateways.msg91.route");
-            $this->template = setting("sms_gateways.msg91.template");
+            $this->authkey = env("MSG91_AUTHKEY");
+            $this->template_id = env("MSG91_TEMPLATE_ID");
+            $this->sender = env("MSG91_SENDER");
+            $this->route = env("MSG91_ROUTE");
+            $this->template = env("MSG91_TEMPLATE");
         } else if ($this->selectedModel->slug == "gatewayapi") {
-            $this->authkey = setting("sms_gateways.gatewayapi.authkey");
-            $this->sender = setting("sms_gateways.gatewayapi.sender");
-            $this->authSecret = setting("sms_gateways.gatewayapi.authSecret");
-            $this->token = setting("sms_gateways.gatewayapi.token");
+            $this->authkey = env("GATEWAYAPI_AUTHKEY");
+            $this->sender = env("GATEWAYAPI_SENDER");
+            $this->authSecret = env("GATEWAYAPI_AUTHSECRET");
+            $this->token = env("GATEWAYAPI_TOKEN");
         } else if ($this->selectedModel->slug == "termii") {
-            $this->authkey = setting("sms_gateways.termii.authkey");
-            $this->sender = setting("sms_gateways.termii.sender");
+            $this->authkey = env("TERMII_AUTHKEY");
+            $this->sender = env("TERMII_SENDER");
         } else if ($this->selectedModel->slug == "africastalking") {
-            $this->authkey = setting("sms_gateways.africastalking.authkey");
-            $this->token = setting("sms_gateways.africastalking.token");
-            $this->sender = setting("sms_gateways.africastalking.sender");
+            $this->authkey = env("AFRICASTALKING_AUTHKEY");
+            $this->token = env("AFRICASTALKING_TOKEN");
+            $this->sender = env("AFRICASTALKING_SENDER");
         } else if ($this->selectedModel->slug == "hubtel") {
-            $this->authkey = setting("sms_gateways.hubtel.authkey");
-            $this->token = setting("sms_gateways.hubtel.token");
-            $this->sender = setting("sms_gateways.hubtel.sender");
+            $this->authkey = env("HUBTEL_AUTHKEY");
+            $this->token = env("HUBTEL_TOKEN");
+            $this->sender = env("HUBTEL_SENDER");
         }
         //edit custom code
         $this->emit('showEditModal');
@@ -102,47 +101,40 @@ class SMSGatewayLivewire extends BaseLivewireComponent
 
             //
             if ($this->selectedModel->slug == "twilio") {
-                setting([
-                    'sms_gateways.twilio.accountId' =>  $this->accountId,
-                    'sms_gateways.twilio.token' =>  $this->token,
-                    'sms_gateways.twilio.fromNumber' =>  $this->fromNumber,
-                ])->save();
+                setEnv("TWILIO_ACCOUNT_SID", $this->accountId, "TWILIO");
+                setEnv("TWILIO_AUTH_TOKEN", $this->token, "TWILIO");
+                setEnv("TWILIO_FROM", $this->fromNumber, "TWILIO");
             } else if ($this->selectedModel->slug == "msg91") {
-                setting([
-                    'sms_gateways.msg91.authkey' =>  $this->authkey,
-                    'sms_gateways.msg91.template_id' =>  $this->template_id,
-                    'sms_gateways.msg91.sender' =>  $this->sender,
-                    'sms_gateways.msg91.route' =>  $this->route,
-                    'sms_gateways.msg91.template' =>  $this->template,
-                ])->save();
+                $group = "MSG91";
+                setEnv("MSG91_AUTHKEY", $this->authkey, $group);
+                setEnv("MSG91_TEMPLATE_ID", $this->template_id, $group);
+                setEnv("MSG91_SENDER", $this->sender, $group);
+                setEnv("MSG91_ROUTE", $this->route, $group);
+                setEnv("MSG91_TEMPLATE", "{$this->template}", $group);
             } else if ($this->selectedModel->slug == "gatewayapi") {
                 //
-                setting([
-                    'sms_gateways.gatewayapi.authkey' =>  $this->authkey,
-                    'sms_gateways.gatewayapi.sender' =>  $this->sender,
-                    'sms_gateways.gatewayapi.authSecret' =>  $this->authSecret,
-                    'sms_gateways.gatewayapi.token' =>  $this->token,
-                ])->save();
+                $group = "GATEWAYAPI";
+                setEnv("GATEWAYAPI_AUTHKEY", $this->authkey, $group);
+                setEnv("GATEWAYAPI_SENDER", $this->sender, $group);
+                setEnv("GATEWAYAPI_AUTHSECRET", $this->authSecret, $group);
+                setEnv("GATEWAYAPI_TOKEN", $this->token, $group);
             } else if ($this->selectedModel->slug == "termii") {
-                //
-                setting([
-                    'sms_gateways.termii.authkey' =>  $this->authkey,
-                    'sms_gateways.termii.sender' =>  $this->sender,
-                ])->save();
+
+                $group = "TERMII";
+                setEnv("TERMII_AUTHKEY", $this->authkey, $group);
+                setEnv("TERMII_SENDER", $this->sender, $group);
             } else if ($this->selectedModel->slug == "africastalking") {
+
+                $group = "AFRICASTALKING";
+                setEnv("AFRICASTALKING_AUTHKEY", $this->authkey, $group);
+                setEnv("AFRICASTALKING_SENDER", $this->sender, $group);
+                setEnv("AFRICASTALKING_TOKEN", $this->token, $group);
                 //
-                setting([
-                    'sms_gateways.africastalking.authkey' =>  $this->authkey,
-                    'sms_gateways.africastalking.sender' =>  $this->sender,
-                    'sms_gateways.africastalking.token' =>  $this->token,
-                ])->save();
             } else if ($this->selectedModel->slug == "hubtel") {
-                //
-                setting([
-                    'sms_gateways.hubtel.authkey' =>  $this->authkey,
-                    'sms_gateways.hubtel.token' =>  $this->token,
-                    'sms_gateways.hubtel.sender' =>  $this->sender,
-                ])->save();
+                $group = "HUBTEL";
+                setEnv("HUBTEL_AUTHKEY", $this->authkey, $group);
+                setEnv("HUBTEL_TOKEN", $this->token, $group);
+                setEnv("HUBTEL_SENDER", $this->sender, $group);
             }
             //custom code
 
@@ -162,11 +154,23 @@ class SMSGatewayLivewire extends BaseLivewireComponent
 
     public function testSMS()
     {
+        if ($this->inDemo()) {
+            $this->showErrorAlert(__("This action is not allowed in demo mode"));
+            return;
+        }
 
+        //validate
+        $this->validate([
+            "phoneNumber" => "required|phone:" . setting('countryCode', "GH") . "",
+            "testMessage" => "required|string",
+        ]);
+
+
+        //
         if ($this->selectedModel->slug == "twilio") {
-            $accountId = setting("sms_gateways.twilio.accountId");
-            $token = setting("sms_gateways.twilio.token");
-            $fromNumber = setting("sms_gateways.twilio.fromNumber");
+            $accountId = env("TWILIO_ACCOUNT_SID");
+            $token = env("TWILIO_AUTH_TOKEN");
+            $fromNumber = env("TWILIO_FROM");
             //
             $twilio = new Twilio($accountId, $token, $fromNumber);
             //send sms

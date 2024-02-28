@@ -52,17 +52,21 @@ class VendorEarningHistoryTable extends BaseDataTableComponent
         return [
             Column::make(__('ID'), "id")->searchable()->sortable(),
             Column::make(__('Vendor'), "earnings.vendor.name")->searchable()->sortable(),
+            Column::make(__('Commission'), "rate")->format(function ($value, $column, $row) {
+                return view('components.table.plain', $data = [
+                    "model" => $row,
+                    "text" => $row->rate != null ? "" . $row->rate . "%" : "",
+                ]);
+            })->searchable()->sortable(),
+
             Column::make(__('Earning'), "earning")->format(function ($value, $column, $row) {
                 return view('components.table.price', $data = [
                     "model" => $row,
                     "value" => $value,
                 ]);
             })->searchable()->sortable(),
-            Column::make(__('Commission'), "commission")->format(function ($value, $column, $row) {
+            Column::make(__('Admin Earned'), "commission")->format(function ($value, $column, $row) {
                 $text = currencyFormat($value);
-                if (!empty($row->rate)) {
-                    $text .= "  -  (" . $row->rate . "%)";
-                }
                 return view('components.table.plain', $data = [
                     "model" => $row,
                     "text" => $text,

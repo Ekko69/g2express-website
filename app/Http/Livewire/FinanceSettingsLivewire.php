@@ -28,6 +28,11 @@ class FinanceSettingsLivewire extends BaseLivewireComponent
     public $autoRefund;
     public $collectDeliveryCash;
 
+    // payment timeout
+    public $orderOnlinePaymentTimeout;
+    public $walletTopupPaymentTimeout;
+    public $vendorSubscriptionPaymentTimeout;
+
     //
     public $generalTax;
     public $minOrderAmount;
@@ -71,7 +76,7 @@ class FinanceSettingsLivewire extends BaseLivewireComponent
         $this->orderStatues = config("backend.order.statuses") ?? [];
         $this->driverSelfPay = (bool) setting('finance.driverSelfPay', false);
         $this->autoRefund = (bool) setting('finance.autoRefund', true);
-        // 
+        //
         $this->generalTax = setting('finance.generalTax', 0);
         $this->minOrderAmount = setting('finance.minOrderAmount', 0);
         $this->maxOrderAmount = setting('finance.maxOrderAmount', 1000000);
@@ -86,6 +91,12 @@ class FinanceSettingsLivewire extends BaseLivewireComponent
         $this->delivery_fee = setting('finance.delivery.delivery_fee');
         $this->delivery_range = setting('finance.delivery.delivery_range');
         $this->collectDeliveryCash = (bool) setting('finance.delivery.collectDeliveryCash', 0);
+
+        //
+        $this->orderOnlinePaymentTimeout = setting('finance.orderOnlinePaymentTimeout', 10);
+        $this->walletTopupPaymentTimeout = setting('finance.walletTopupPaymentTimeout', 10);
+        $this->vendorSubscriptionPaymentTimeout = setting('finance.vendorSubscriptionPaymentTimeout', 10);
+        //
     }
 
     public function render()
@@ -136,6 +147,11 @@ class FinanceSettingsLivewire extends BaseLivewireComponent
                         'delivery_range' =>  $this->delivery_range,
                         'collectDeliveryCash' =>  $this->collectDeliveryCash,
                     ],
+                    //payment timeout
+                    'orderOnlinePaymentTimeout' =>  $this->orderOnlinePaymentTimeout,
+                    'walletTopupPaymentTimeout' =>  $this->walletTopupPaymentTimeout,
+                    'vendorSubscriptionPaymentTimeout' =>  $this->vendorSubscriptionPaymentTimeout,
+
                 ],
             ];
 

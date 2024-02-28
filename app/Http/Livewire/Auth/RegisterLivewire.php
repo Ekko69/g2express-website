@@ -67,8 +67,8 @@ class RegisterLivewire extends BaseLivewireComponent
         try {
 
             //
-            $phone = PhoneNumber::make($this->phone);
-            $vendorPhone = PhoneNumber::make($this->vendor_phone);
+            $phone = new PhoneNumber($this->phone);
+            $vendorPhone = new PhoneNumber($this->vendor_phone);
             //
             $user = User::where('phone', $phone)->first();
             if (!empty($user)) {
@@ -84,7 +84,7 @@ class RegisterLivewire extends BaseLivewireComponent
             $user->email = $this->email;
             $user->phone = $phone;
             $user->creator_id = Auth::id();
-            $user->commission = 0.00;
+            $user->commission = Null;
             $user->password = Hash::make($this->password);
             $user->is_active = false;
             $user->save();
@@ -104,19 +104,21 @@ class RegisterLivewire extends BaseLivewireComponent
 
                 $vendor->clearMediaCollection("documents");
                 foreach ($this->vendorDocuments as $vendorDocument) {
-                    $vendor->addMedia($vendorDocument)->toMediaCollection("documents");
+                    $vendor->addMedia($vendorDocument)
+                        ->usingFileName(genFileName($vendorDocument))
+                        ->toMediaCollection("documents");
                 }
                 $this->vendorDocuments = null;
             }
 
-            //assign manager to vendor 
+            //assign manager to vendor
             $user->vendor_id = $vendor->id;
             $user->save();
 
             DB::commit();
             $this->showSuccessAlert(__("Account Created Successfully. Your account will be reviewed and you will be notified via email/sms when account gets approved. Thank you"), 100000);
             $this->reset();
-        } catch (Exception $error) {
+        } catch (\Exception $error) {
             DB::rollback();
             $this->showErrorAlert($error->getMessage() ?? __("An error occurred please try again later"), 100000);
         }

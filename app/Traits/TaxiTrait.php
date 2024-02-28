@@ -14,9 +14,12 @@ trait TaxiTrait
 
         //distance of trip
         $distance = $this->getRelativeDistance($pickup, $dropoff);
+        //2 decimal places
+        $distance = round($distance, 2);
         $drivingSpeed = setting("taxi.drivingSpeed", 50);
         //calculate the driving time and convert to minutes from hours
         $drivingTime = ($distance / $drivingSpeed) * 60;
+        $drivingTime = ceil($drivingTime);
 
         $timeFare = $vehicleType->time_fare * $drivingTime;
         $distanceFare = $distance * $vehicleType->distance_fare;
@@ -44,12 +47,14 @@ trait TaxiTrait
         }
         //distance of trip
         $distance = $this->getRelativeDistance($pickup, $dropoff);
+        //2 decimal places
+        $distance = round($distance, 2);
         $drivingSpeed = setting("taxi.drivingSpeed", 50);
         //calculate the driving time and convert to minutes from hours
         $drivingTime = ($distance / $drivingSpeed) * 60;
         //check for the total new time for the trip
         $newDrivingTime = now()->diffInMinutes($order->getOriginal('updated_at'));
-        // //check if 
+        // //check if
         // if (setting("taxi.drivingSpeed", 50)) {
         //     if ($drivingTime < $newDrivingTime) {
         //         $drivingTime = $newDrivingTime;
@@ -60,6 +65,7 @@ trait TaxiTrait
 
         //
         $drivingTime = $newDrivingTime;
+        $drivingTime = ceil($drivingTime);
 
         $vehicleType = VehicleType::find($order->taxi_order->vehicle_type_id);
         $timeFare = $vehicleType->time_fare * $drivingTime;
@@ -71,5 +77,42 @@ trait TaxiTrait
         } else {
             return  $totalTripFare;
         }
+    }
+
+
+
+
+    public function getFareBreakdown($vehicleType, $pickup, $dropoff)
+    {
+        //distance of trip
+        $distance = $this->getRelativeDistance($pickup, $dropoff);
+        //2 decimal places
+        $distance = round($distance, 2);
+        $drivingSpeed = setting("taxi.drivingSpeed", 50);
+        //calculate the driving time and convert to minutes from hours
+        $drivingTime = ($distance / $drivingSpeed) * 60;
+        $drivingTime = ceil($drivingTime);
+        $vehicleType->trip_distance = $distance;
+        $vehicleType->trip_time = $drivingTime;
+        return $vehicleType;
+    }
+
+    public function getRecalculatedTaxiOrderBreakdown($order)
+    {
+        //Must return taxi_order
+        $taxiOrder = $order->taxi_order;
+        //distance of trip
+        $pickup = $taxiOrder->pickup_latitude . "," . $taxiOrder->pickup_longitude;
+        $dropoff = $taxiOrder->dropoff_latitude . "," . $taxiOrder->dropoff_longitude;
+        $distance = $this->getRelativeDistance($pickup, $dropoff);
+        //2 decimal places
+        $distance = round($distance, 2);
+        $drivingSpeed = setting("taxi.drivingSpeed", 50);
+        //calculate the driving time and convert to minutes from hours
+        $drivingTime = ($distance / $drivingSpeed) * 60;
+        $drivingTime = ceil($drivingTime);
+        $taxiOrder->trip_distance = $distance;
+        $taxiOrder->trip_time = $drivingTime;
+        return $taxiOrder;
     }
 }

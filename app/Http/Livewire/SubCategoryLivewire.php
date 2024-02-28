@@ -17,18 +17,24 @@ class SubCategoryLivewire extends BaseLivewireComponent
     public $name;
     public $category_id;
     public $isActive;
+    public $categories;
 
     protected $rules = [
         "name" => "required|string",
         "category_id" => "required|exists:categories,id",
     ];
 
+    public function mount()
+    {
+        $this->categories = Category::get();
+    }
+
     public function render()
     {
-
-        return view('livewire.subcategories', [
-            "categories" => Category::get(),
-        ]);
+        if ($this->categories == null || empty($this->categories)) {
+            $this->categories = Category::get();
+        }
+        return view('livewire.subcategories');
     }
 
     public function showCreateModal()
@@ -63,7 +69,7 @@ class SubCategoryLivewire extends BaseLivewireComponent
             DB::commit();
 
             $this->dismissModal();
-            $this->reset();
+            $this->resetExcept("categories");
             $this->showSuccessAlert(__("Subcategory") . " " . __('created successfully!'));
             $this->emit('refreshTable');
         } catch (Exception $error) {
@@ -77,7 +83,7 @@ class SubCategoryLivewire extends BaseLivewireComponent
         $this->selectedModel = $this->model::find($id);
         $this->name = $this->selectedModel->name;
         $this->isActive = $this->selectedModel->is_active;
-        $this->category_id = $this->selectedModel->category_id;
+        $this->category_id = $this->selectedModel->category_id ?? $this->categories->first()->id ?? null;
         $this->emit('showEditModal');
     }
 
@@ -107,7 +113,8 @@ class SubCategoryLivewire extends BaseLivewireComponent
             DB::commit();
 
             $this->dismissModal();
-            $this->reset();
+            //reset except categories
+            $this->resetExcept("categories");
             $this->showSuccessAlert(__("Subcategory") . " " . __('updated successfully!'));
             $this->emit('refreshTable');
         } catch (Exception $error) {

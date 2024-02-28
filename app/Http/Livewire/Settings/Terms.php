@@ -8,6 +8,8 @@ class Terms extends BaseSettingsComponent
 
     //
     public $terms;
+    //set listeners to emtpy
+    protected $listeners = [];
 
 
     public function mount()
@@ -30,6 +32,12 @@ class Terms extends BaseSettingsComponent
         $this->terms = file_get_contents($filePath) ?? "";
     }
 
+    public function setupData()
+    {
+        $this->emit('loadSummerNote', "termsEdit", $this->terms);
+    }
+
+
     public function saveTermsSettings()
     {
 
@@ -40,11 +48,10 @@ class Terms extends BaseSettingsComponent
             file_put_contents($filePath, $this->terms);
 
             $this->showSuccessAlert(__("Terms & conditions saved successfully!"));
-            $this->goback();
-        } catch (Exception $error) {
+            $this->setupData();
+        } catch (\Exception $error) {
             $this->showErrorAlert($error->getMessage() ?? __("Terms & conditions save failed!"));
+            $this->setupData();
         }
     }
-
-
 }

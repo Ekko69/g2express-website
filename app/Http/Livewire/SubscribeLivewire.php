@@ -79,6 +79,9 @@ class SubscribeLivewire extends BaseLivewireComponent
                 setting('websiteName', env("APP_NAME")),
                 setting('websiteLogo', asset('images/logo.png')),
                 $razorpayOrderData[1],
+                //callback url
+                route('api.subscription.callback', ["code" => $razorpayOrderData[0], "status" => "success"]),
+                //redirect url
                 route('subscription.callback', ["code" => $razorpayOrderData[0], "status" => "success"]),
             ]);
         } else if ($paymentMethodSlug == "paystack") {

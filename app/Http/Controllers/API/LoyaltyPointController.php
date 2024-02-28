@@ -32,9 +32,17 @@ class LoyaltyPointController extends Controller
     {
         try {
 
+
+
             $enableLoyalty = (bool) setting('finance.enableLoyalty', false);
             if (!$enableLoyalty) {
                 throw new \Exception(__("Loyalty Points can't be redeemed. Please contact support"), 1);
+            }
+
+            $points = $request->points;
+            //throw exception if points is not numeric, negative or zero
+            if (!is_numeric($points) || $points <= 0) {
+                throw new \Exception(__("Invalid Points"), 1);
             }
 
             DB::beginTransaction();
@@ -44,13 +52,13 @@ class LoyaltyPointController extends Controller
                 ['user_id' =>  \Auth::id()],
                 ['balance' => 0.00]
             );
-            $points = $request->points;
+
             //check if user has enough in wallet
             if ($loyaltyPoint->points < $points) {
                 throw new \Exception(__('Insufficient Points'), 1);
             }
-            
-            //convert points to amount 
+
+            //convert points to amount
             $convertedPointsToAmount = setting('finance.point_to_amount', 0.001) * $points;
             //update user wallet
             $newWalletBalance = $myWallet->balance + $convertedPointsToAmount;
@@ -63,7 +71,7 @@ class LoyaltyPointController extends Controller
             $loyaltyPoint->points -= $points;
             $loyaltyPoint->save();
 
-            //record the report 
+            //record the report
             $loyaltyPointReport = new LoyaltyPointReport();
             $loyaltyPointReport->loyalty_point_id = $loyaltyPoint->id;
             $loyaltyPointReport->points = $points;

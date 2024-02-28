@@ -42,10 +42,16 @@
                             @foreach ($products as $key => $product)
                                 <tr class=" {{ $key % 2 == 1 ? 'bg-gray-100' : 'bg-white' }} ">
                                     <td colspan="3" class="{{ $cellClasses }}">
-                                        {{ $product['product']['name'] ?? '' }}
+                                        {{ $product['name'] ?? '' }}
                                     </td>
                                     <td class="{{ $cellClasses }}">
-                                        @foreach ($product['selected_options'] ?? [] as $option)
+                                        @php
+                                            $selected_options = $product['selected_options'] ?? [];
+                                            if (is_string($selected_options)) {
+                                                $selected_options = json_decode($selected_options, true);
+                                            }
+                                        @endphp
+                                        @foreach ($selected_options ?? [] as $option)
                                             {{ $option['name'] ?? '' }}{{ !$loop->last ? ',' : '' }}
                                         @endforeach
                                     </td>
@@ -130,7 +136,7 @@
 
 
 
-    {{-- details moal --}}
+    {{-- options modal --}}
     <div x-data="{ open: @entangle('showDetails') }">
         <x-modal action="addOptionsToProduct" confirmText="{{ __('Add') }}">
             <p class="text-xl font-semibold">{{ __('Product Options') }}</p>
@@ -212,10 +218,16 @@
                                 <span>{{ $key + 1 }}</span>
                             </td>
                             <td class="items-center w-2/12 px-2 py-1 border-b">
-                                {{ $product['product']['name'] ?? '' }}
+                                {{ $product['name'] ?? '' }}
                             </td>
                             <td class="items-center w-4/12 px-2 py-1 border-b">
-                                @foreach ($product['selected_options'] ?? [] as $option)
+                                @php
+                                    $selected_options = $product['selected_options'] ?? [];
+                                    if (is_string($selected_options)) {
+                                        $selected_options = json_decode($selected_options, true);
+                                    }
+                                @endphp
+                                @foreach ($selected_options ?? [] as $option)
                                     {{ $option['name'] ?? '' }}{{ !$loop->last ? ',' : '' }}
                                 @endforeach
                             </td>

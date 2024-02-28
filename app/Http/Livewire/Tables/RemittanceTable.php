@@ -6,6 +6,8 @@ namespace App\Http\Livewire\Tables;
 use App\Models\Remittance;
 use Rappasoft\LaravelLivewireTables\Views\Column;
 use Rappasoft\LaravelLivewireTables\Views\Filter;
+//import Auth facade
+use Illuminate\Support\Facades\Auth;
 
 class RemittanceTable extends BaseDataTableComponent
 {

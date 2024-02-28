@@ -14,6 +14,7 @@ use App\Traits\FirebaseAuthTrait;
 use App\Traits\FirebaseDBTrait;
 use App\Traits\OrderFCMTrait;
 use App\Traits\OrderTrait;
+use App\Traits\OrderJobTrait;
 use App\Traits\DigitalOrderTrait;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
@@ -23,19 +24,20 @@ class OrderObserver
 
     use FirebaseDBTrait, FirebaseAuthTrait, FirebaseDBTrait;
     use OrderTrait, OrderFCMTrait, DigitalOrderTrait;
+    use OrderJobTrait;
 
     public function creating(Order $model)
     {
         // logger("Pending Order", [$model]);
         if ((bool) setting('enableNumericOrderCode')) {
-            $model->code = $this->generateOrderCode(10);
+            $model->code ??= $this->generateOrderCode(10);
             $model->verification_code = $this->generateOrderCode(5, $check = false);
         } else {
-            $model->code = Str::random(10);
+            $model->code ??= Str::random(10);
             $model->verification_code = $this->generateRandomString(5);
         }
         if (empty($model->user_id)) {
-            $model->user_id = Auth::id();
+            $model->user_id ??= Auth::id();
         }
     }
 
@@ -49,12 +51,8 @@ class OrderObserver
         $this->clearAutoAssignment($model);
         $this->pushOrderToFCM($model);
         $this->handleDigitalOrder($model);
-
-        //TODO: remove in future update
-        // //for taxi booking
-        // if (!empty($model->taxi_order)) {
-        //     (new JobHandlerService())->uploadTaxiOrderJob($model);
-        // }
+        //Sending regular order to job for driver assignment
+        $this->handleRegularAssignmentJob($model);
     }
 
     public function updating(Order $model)
@@ -78,6 +76,8 @@ class OrderObserver
         } elseif (in_array($model->status, ['failed', 'cancelled'])) {
             $this->deleteFirestoreOrderNode($model);
         }
+        //Sending regular order to job for driver assignment
+        $this->handleRegularAssignmentJob($model);
         //payment request notification
         $this->paymentRequestNotification($model);
         //payment status change notification
@@ -97,13 +97,6 @@ class OrderObserver
         $this->clearFirestore($model);
         $this->handleDigitalOrder($model);
 
-
-        //TODO: remove in future update
-        //for taxi booking
-        // if (!empty($model->taxi_order)) {
-        //     (new JobHandlerService())->uploadTaxiOrderJob($model);
-        // }
-
         //revert qty of cancelled order
         $model->refundVendorProducts();
         // $this->resetOrderQty($model);
@@ -117,10 +110,6 @@ class OrderObserver
         if (in_array($model->status, ['delivered'])) {
             //send mail
             try {
-                // \Mail::to($model->user->email)
-                //     ->cc([$model->vendor->email])
-                //     ->send(new OrderUpdateMail($model));
-
                 MailHandlerService::sendMail(
                     new OrderUpdateMail($model),
                     $model->user->email,
@@ -148,8 +137,11 @@ class OrderObserver
             && ($packageTypePricing->auto_assignment ?? 0)
             && ($order->payment_method != null && $order->payment_method->is_cash || $order->payment_status == "successful")
         ) {
-            // logger("Auto move to ready kicked in");
-            $order->setStatus("ready");
+            //ignore if status is already ready
+            if ($order->status != "ready") {
+                // logger("Auto move to ready kicked in");
+                $order->setStatus("ready");
+            }
         }
     }
 
@@ -161,7 +153,11 @@ class OrderObserver
             && ($order->vendor->auto_accept ?? 0)
             && ($order->payment_method != null && $order->payment_method->is_cash || $order->payment_status == "successful")
         ) {
-            $order->setStatus("preparing");
+            //ignore if status is already preparing
+            if ($order->status != "preparing") {
+                // logger("Auto move to preparing kicked in");
+                $order->setStatus("preparing");
+            }
         }
     }
 
@@ -205,7 +201,7 @@ class OrderObserver
     function userIsReady($model)
     {
         if (empty($model->user->phone)) {
-            throw new \Exception(__("User can't place order. Please complete profile setup"), 1);
+            throw new \Exception(__("User can't place order. Please complete profile setup"), 200203,);
         }
     }
 }

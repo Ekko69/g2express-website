@@ -47,8 +47,8 @@ class PartnerController extends Controller
         //
         try {
             //
-            $phone = PhoneNumber::make($request->phone);
-            $vendorPhone = PhoneNumber::make($request->vendor_phone);
+            $phone = new PhoneNumber($request->phone);
+            $vendorPhone = new PhoneNumber($request->vendor_phone);
             //
             $user = User::where('phone', $phone)->first();
             if (!empty($user)) {
@@ -63,7 +63,7 @@ class PartnerController extends Controller
             $user->email = $request->email;
             $user->phone = $phone;
             $user->country_code = $phone->getCountry() ?? "";
-            $user->commission = 0.00;
+            $user->commission = null;
             $user->password = Hash::make($request->password);
             $user->is_active = false;
             $user->save();
@@ -77,6 +77,9 @@ class PartnerController extends Controller
             $vendor->phone = $vendorPhone;
             $vendor->is_active = false;
             $vendor->vendor_type_id = $request->vendor_type_id;
+            $vendor->address = $request->address;
+            $vendor->latitude = $request->latitude;
+            $vendor->longitude = $request->longitude;
             $vendor->save();
 
             if ($request->hasFile("documents")) {
@@ -86,7 +89,7 @@ class PartnerController extends Controller
                 }
             }
 
-            //assign manager to vendor 
+            //assign manager to vendor
             $user->vendor_id = $vendor->id;
             $user->save();
 
@@ -130,7 +133,7 @@ class PartnerController extends Controller
         try {
 
             //
-            $phone = PhoneNumber::make($request->phone);
+            $phone = new PhoneNumber($request->phone);
             //
             $user = User::where('phone', $phone)->first();
             if (!empty($user)) {
@@ -145,14 +148,14 @@ class PartnerController extends Controller
             $user->email = $request->email;
             $user->phone = $phone;
             $user->country_code = $phone->getCountry() ?? "";
-            $user->commission = 0.00;
+            $user->commission = null;
             $user->password = Hash::make($request->password);
             $user->is_active = false;
             $user->save();
             //assign role
             $user->assignRole('driver');
 
-            //taxi section 
+            //taxi section
             if ($request->driver_type == "taxi") {
                 $vehicle = new Vehicle();
                 $vehicle->car_model_id = $request->car_model_id;

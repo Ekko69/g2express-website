@@ -9,17 +9,35 @@ class MailHandlerService
 
     public static function sendMail($mailable, $email, $ccs = [])
     {
-        $mail = Mail::to($email);
-        if (!empty($ccs)) {
-            $mail = $mail->cc($ccs);
+
+        //disable mail unless in production
+        if (env('APP_ENV') != 'production') {
+            return;
         }
 
-        $adminEmails = explode(",", env('SYSTEM_EMAIL', ''));
-        if (!empty($adminEmails)) {
-            $mail = $mail->bcc($adminEmails);
-        }
+        try {
+            $mail = Mail::to($email);
 
-        //
-        $mail->send($mailable);
+            try {
+                if (!empty($ccs)) {
+                    $mail = $mail->cc($ccs);
+                }
+            } catch (\Exception $ex) {
+            }
+
+            try {
+                $adminEmails = explode(",", env('SYSTEM_EMAIL', ''));
+                if (!empty($adminEmails)) {
+                    $mail = $mail->bcc($adminEmails);
+                }
+            } catch (\Exception $ex) {
+                //
+            }
+
+            //
+            $mail->send($mailable);
+        } catch (\Exception $ex) {
+            \Log::error($ex);
+        }
     }
 }

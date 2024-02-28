@@ -10,6 +10,8 @@ use App\Models\AutoAssignment;
 use App\Services\AutoAssignmentService;
 use App\Services\FirestoreRestService;
 use App\Traits\FirebaseAuthTrait;
+use App\Services\FirestoreCloudFunctionService;
+
 
 class AssignOrder extends Command
 {
@@ -47,13 +49,21 @@ class AssignOrder extends Command
     public function handle()
     {
 
+        //if communitcate via job is enabled
+        $useFCMJob = (bool) setting('useFCMJob', "0");
+        if ($useFCMJob) {
+            return;
+        }
+
+
+        ///regular cron job matching
         $autoAsignmentStatus = setting('autoassignment_status', "ready");
         //get orders in ready state
         $orders = Order::currentStatus($autoAsignmentStatus)
             ->whereHas('vendor', function ($query) {
                 return $query->where('auto_assignment', 1)
                     ->whereHas('vendor_type', function ($query) {
-                        //avoid sending 
+                        //avoid sending
                         return $query->whereNotIn('slug', ["booking", "service"]);
                     });
             })
@@ -72,29 +82,39 @@ class AssignOrder extends Command
             //
 
             try {
+                //get the pickup location
                 $pickupLocationLat = $order->type != "parcel" ? $order->vendor->latitude : $order->pickup_location->latitude;
                 $pickupLocationLng = $order->type != "parcel" ? $order->vendor->longitude : $order->pickup_location->longitude;
-                //earth distance of order
-                $geopointA = new GeoPoint($pickupLocationLat, $pickupLocationLng);
-                $geopointB = new GeoPoint(0.00, 0.00);
-                $earthDistance = $geopointA->distanceTo($geopointB, 'kilometers');
+                $maxOnOrderForDriver = maxDriverOrderAtOnce($order);
+                $driverSearchRadius = driverSearchRadius($order);
+                $rejectedDriversCount = AutoAssignment::where('order_id', $order->id)->count();
+                $maxDriverOrderNotificationAtOnce = ((int) maxDriverOrderNotificationAtOnce($order)) + ((int) $rejectedDriversCount);
+
+                ////fetch driver in different ways
+                $fetchNearbyDriverSystem = setting('fetchNearbyDriverSystem', 0);
+                if ($fetchNearbyDriverSystem == 0) {
+                    //find driver within that range
+                    $firestoreRestService = new FirestoreRestService();
+                    $driverDocuments = $firestoreRestService->whereWithinGeohash(
+                        $pickupLocationLat,
+                        $pickupLocationLng,
+                        $driverSearchRadius,
+                        $rejectedDriversCount,
+                    );
+                } else {
+                    // logger("data from ==> firebaseCloudFunctionService->nearbyDriver");
+                    //find driver within that range
+                    $firebaseCloudFunctionService = new FirestoreCloudFunctionService();
+                    $driverDocuments = $firebaseCloudFunctionService->nearbyDriver(
+                        $pickupLocationLat,
+                        $pickupLocationLng,
+                        $driverSearchRadius,
+                        $limit = $maxDriverOrderNotificationAtOnce,
+                    );
+                }
 
                 //
-                $maxOnOrderForDriver = setting('maxDriverOrderAtOnce', 1);
-                // $driverSearchRadius = setting('driverSearchRadius', 10);
-                //extra 20km range
-                $driverSearchRadius = setting('driverSearchRadius', 10) + 100;
-                $earthDistanceToNorth = $earthDistance + $driverSearchRadius;
-                $earthDistanceToSouth = $earthDistance - $driverSearchRadius;
-                //
-                $rejectedDriversCount = AutoAssignment::where(
-                    'order_id',
-                    $order->id,
-                )->count();
-                //find driver within that range
-                $firestoreRestService = new FirestoreRestService();
-                $driverDocuments = $firestoreRestService->whereBetween($earthDistanceToNorth, $earthDistanceToSouth, $rejectedDriversCount);
-                // logger("Drivers found for order =>" . $order->code . "", [$driverDocuments]);
+                // logger("Drivers data", [$driverDocuments]);
 
                 //
                 foreach ($driverDocuments as $driverData) {
@@ -107,7 +127,13 @@ class AssignOrder extends Command
                     }
 
                     //check the distance between this driver and pickup location
-                    $tooFar = $this->isDriverFar($pickupLocationLat, $pickupLocationLng, $driverData["lat"], $driverData["long"]);
+                    $tooFar = $this->isDriverFar(
+                        $pickupLocationLat,
+                        $pickupLocationLng,
+                        $driverData["lat"],
+                        $driverData["long"],
+                        $order,
+                    );
                     if ($tooFar) {
                         $autoAssignment = new AutoAssignment();
                         $autoAssignment->order_id = $order->id;
@@ -203,6 +229,7 @@ class AssignOrder extends Command
                         $newOrderData = [
                             "pickup" => json_encode($pickup),
                             "dropoff" => json_encode($dropoff),
+                            "pickup_distance"   => number_format($driverDistanceToPickup, 2),
                             'amount' => (string)$order->delivery_fee,
                             'total' => (string)$order->total,
                             'vendor_id' => (string)$order->vendor_id,
@@ -214,18 +241,13 @@ class AssignOrder extends Command
                         ];
                         //send the new order to driver via push notification
                         $autoAssignmentSerivce = new AutoAssignmentService();
-                        // $autoAssignmentSerivce->sendNewOrderNotification(
-                        //     $driver,
-                        //     $newOrderData,
-                        //     $pickup["address"],
-                        //     $driverDistanceToPickup
-                        // );
                         $autoAssignmentSerivce->saveNewOrderToFirebaseFirestore(
                             $driver,
                             $newOrderData,
                             $pickup["address"],
                             $driverDistanceToPickup
                         );
+                        // $autoAssignmentSerivce->sendNewOrderNotification($driver,$newOrderData,$pickup["address"],$driverDistanceToPickup);
                     }
                 }
             } catch (\Exception $ex) {
@@ -236,13 +258,13 @@ class AssignOrder extends Command
     }
 
 
-    public function isDriverFar($lat1, $long1, $lat2, $long2)
+    public function isDriverFar($lat1, $long1, $lat2, $long2, $order = null)
     {
         //check the distance between this driver and pickup location
         $geopointA = new GeoPoint($lat1, $long1);
         $geopointB = new GeoPoint($lat2, $long2);
         $driverToPickupDistance = $geopointA->distanceTo($geopointB, 'kilometers');
-        $actualSearchRadius = setting('driverSearchRadius', 10);
+        $actualSearchRadius = driverSearchRadius($order);
         return $driverToPickupDistance > $actualSearchRadius;
     }
 

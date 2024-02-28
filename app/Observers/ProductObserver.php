@@ -5,6 +5,7 @@ namespace App\Observers;
 use App\Models\Product;
 use App\Models\Vendor;
 use App\Models\SubscriptionVendor;
+use App\Models\User;
 
 class ProductObserver
 {
@@ -15,9 +16,6 @@ class ProductObserver
         if ($model->discount_price == null) {
             $model->discount_price = 0;
         }
-
-
-
 
         //check if vendor uses subscription
         $vendor = Vendor::find($model->vendor_id);
@@ -41,6 +39,34 @@ class ProductObserver
             } else {
                 throw new \Exception(__("Vendor requires subscription"), 1);
             }
+        }
+
+        //set approved to true if user has admin role or auto-approve-product permission
+        $this->handleProductApproval($model);
+    }
+
+    public function updating(Product $model)
+    {
+        //set approved to true if user has admin role or auto-approve-product permission
+        $this->handleProductApproval($model);
+    }
+
+
+    public function handleProductApproval(Product $model)
+    {
+        //ge user from api guard or web guard
+        $user = auth()->user();
+        if (empty($user)) {
+            $user = auth('api')->user();
+        }
+
+        //
+        $userModel = User::find($user->id);
+        //set approved to true if user has admin role or auto-approve-product permission
+        if ($userModel->hasRole('admin') || $userModel->hasPermissionTo('auto-approve-product')) {
+            $model->approved = true;
+        } else {
+            $model->approved = false;
         }
     }
 }

@@ -21,7 +21,12 @@ class WalletTransactionLivewire extends BaseLivewireComponent
     public $amount;
     public $note;
 
-
+    public function getListeners()
+    {
+        return $this->listeners + [
+            'user_idUpdated' => 'userIdUpdated',
+        ];
+    }
 
     public function mount()
     {
@@ -34,14 +39,19 @@ class WalletTransactionLivewire extends BaseLivewireComponent
     }
 
 
-    public function autocompleteUserSelected($user)
+    public function userIdUpdated($selected)
     {
-        $this->wallet = Wallet::firstOrCreate([
-            "user_id" => $user['id']
-        ],[
-            "balance" => 0.00,
-        ]);
-        $this->user_id = $user['id'];
+        $userId = $selected['value'];
+        $this->user_id = $userId;
+        $this->wallet = Wallet::where("user_id", $userId)->first();
+        if ($this->wallet == null) {
+            $this->wallet = new Wallet();
+            $this->wallet->user_id = $userId;
+            $this->wallet->balance = 0.00;
+            $this->wallet->save();
+            //
+            $this->wallet->refresh();
+        }
     }
 
 
@@ -81,7 +91,6 @@ class WalletTransactionLivewire extends BaseLivewireComponent
             $this->showSuccessAlert(__("Wallet") . " " . __('updated successfully!'));
             $this->emit('clearAutocompleteFieldsEvent');
             $this->emit('refreshTable');
-
         } catch (\Exception $ex) {
             DB::rollback();
             $this->showErrorAlert($ex->getMessage() ?? __('Failed'));

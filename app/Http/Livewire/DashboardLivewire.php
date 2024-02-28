@@ -6,9 +6,12 @@ use App\Models\Earning;
 use App\Models\Vendor;
 use App\Models\Order;
 use App\Models\Commission;
+use App\Models\Product;
 use App\Models\User;
-use Asantibanez\LivewireCharts\Models\LineChartModel;
+use Asantibanez\LivewireCharts\Models\PieChartModel;
+use Asantibanez\LivewireCharts\Models\ColumnChartModel;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Numbers\Number;
 use Livewire\Component;
 
@@ -60,6 +63,8 @@ class DashboardLivewire extends Component
             "usersChart" => $this->usersChart(),
             "vendorsChart" => $this->vendorsChart(),
             "ordersChart" => $this->ordersChart(),
+            "topSaleDaysChart" => $this->topOrderDaysChart(),
+            "userRolesChart" => $this->userRolesChart(),
         ]);
     }
 
@@ -70,7 +75,7 @@ class DashboardLivewire extends Component
     {
 
         //
-        $chart = (new LineChartModel())->setTitle(__('Total Earning') . ' (' . Date("Y") . ')')->withoutLegend();
+        $chart = (new ColumnChartModel())->setTitle(__('Total Earning') . ' (' . Date("Y") . ')')->withoutLegend();
         $user = User::find(\Auth::id());
 
         for ($loop = 0; $loop < 12; $loop++) {
@@ -100,7 +105,7 @@ class DashboardLivewire extends Component
             $data = number_format($data, 2, ".", ",");
 
             //
-            $chart->addPoint(
+            $chart->addColumn(
                 $formattedDate,
                 $data,
                 $this->genColor(),
@@ -115,7 +120,7 @@ class DashboardLivewire extends Component
     {
 
         //
-        $chart = (new LineChartModel())->setTitle(__('Users This Week'))->withoutLegend();
+        $chart = (new ColumnChartModel())->setTitle(__('Users This Week'))->withoutLegend();
 
         for ($loop = 0; $loop < 7; $loop++) {
             $date = Carbon::now()->startOfWeek()->addDays($loop);
@@ -123,7 +128,7 @@ class DashboardLivewire extends Component
             $data = User::whereDate("created_at", $date)->count();
 
             //
-            $chart->addPoint(
+            $chart->addColumn(
                 $formattedDate,
                 $data,
                 $this->genColor(),
@@ -138,7 +143,7 @@ class DashboardLivewire extends Component
     {
 
         //
-        $chart = (new LineChartModel())->setTitle(__('Vendors This Year'))->withoutLegend();
+        $chart = (new ColumnChartModel())->setTitle(__('Vendors This Year'))->withoutLegend();
 
         for ($loop = 0; $loop < 12; $loop++) {
             $date = Carbon::now()->firstOfYear()->addMonths($loop);
@@ -146,7 +151,7 @@ class DashboardLivewire extends Component
             $data = Vendor::whereMonth("created_at", $date)->whereYear('created_at', $date)->count();
 
             //
-            $chart->addPoint(
+            $chart->addColumn(
                 $formattedDate,
                 $data,
                 $this->genColor(),
@@ -162,7 +167,7 @@ class DashboardLivewire extends Component
     {
 
         //
-        $chart = (new LineChartModel())->setTitle(__('Total Orders') . ' (' . Date("Y") . ')')->withoutLegend();
+        $chart = (new ColumnChartModel())->setTitle(__('Total Orders') . ' (' . Date("Y") . ')')->withoutLegend();
 
         for ($loop = 0; $loop < 12; $loop++) {
             $date = Carbon::now()->firstOfYear()->addMonths($loop);
@@ -170,7 +175,7 @@ class DashboardLivewire extends Component
             $data = Order::mine()->whereMonth("created_at", $date)->whereYear('created_at', $date)->count();
 
             //
-            $chart->addPoint(
+            $chart->addColumn(
                 $formattedDate,
                 $data,
                 $this->genColor(),
@@ -180,12 +185,110 @@ class DashboardLivewire extends Component
         return $chart;
     }
 
+    public function userRolesChart()
+    {
+
+        //
+        $chart = (new PieChartModel())->setTitle(__('User Statistics') . ' (' . Date("Y") . ')')->withoutLegend();
+        $roles = \Spatie\Permission\Models\Role::all();
+        foreach ($roles as $role) {
+            $data = User::role($role->name)->count();
+            $chart->addSlice(
+                $role->name,
+                $data,
+                $this->genColor(),
+            );
+        }
 
 
 
+
+        return $chart;
+    }
+
+
+    public function topOrderDaysChart()
+    {
+        //
+        $chart = (new ColumnChartModel())->setTitle(__('Total Ordering Days') . ' (' . Date("Y") . ')')->withoutLegend();
+        $currentDate = Carbon::now();
+        $firstDayOfWeek = $currentDate->startOfWeek();
+
+        // Loop through each day of the week (assuming 1 is Sunday, 2 is Monday, ..., 7 is Saturday)
+        for ($dayOfWeek = 1; $dayOfWeek <= 7; $dayOfWeek++) {
+            // Fetch results for the current day
+            $results = Order::mine()
+                ->select(DB::raw('DAYOFWEEK(created_at) as day_of_week'), DB::raw('COUNT(*) as total'))
+                ->where(DB::raw('DAYOFWEEK(created_at)'), $dayOfWeek)
+                ->groupBy(DB::raw('DAYOFWEEK(created_at)'))
+                ->first();
+            // Store the results in the array
+            //convert day of week to name of day
+            $currentDayName = $firstDayOfWeek->format('l');
+            $totalOrders = $results ? $results->total : 0;
+            //
+            $chart->addColumn(
+                $currentDayName,
+                $totalOrders,
+                $this->genColor(),
+            );
+            // Move to the next day
+            $firstDayOfWeek->addDay();
+        }
+
+        return $chart;
+    }
 
     public function genColor()
     {
         return '#' . substr(str_shuffle('ABCDEF0123456789'), 0, 6);
+    }
+
+
+
+
+
+
+    //
+    public $topSellingVendors;
+    public $topRatedVendors;
+    public $topCustomers;
+    public function fetchTopSellingVendors()
+    {
+        $this->topSellingVendors = Vendor::mine()->withCount('successful_sales')->orderBy('successful_sales_count', 'desc')->limit(6)->get();
+    }
+
+    public function fetchTopRatedVendors()
+    {
+        $this->topRatedVendors = Vendor::mine()
+            ->withCount('ratings')->orderBy('ratings_count', 'desc')
+            ->limit(6)->get();
+    }
+
+    public function fetchTopCustomers()
+    {
+        $this->topCustomers = User::withCount('orders')->orderBy('orders_count', 'desc')->limit(6)->get();
+    }
+
+    //
+    public $myTopSellingProducts;
+    public $topSellingProducts;
+    public function fetchMyTopSellingProducts()
+    {
+        $this->myTopSellingProducts = Product::mine()->withCount('sales')->orderBy('sales_count', 'desc')->limit(6)->get();
+    }
+    public function fetchTopSellingProducts()
+    {
+        $this->topSellingProducts = Product::mine()->withCount('sales')->orderBy('sales_count', 'desc')->limit(6)->get();
+    }
+
+    public $userRolesSummary;
+    public function fetchUserRoleSummary()
+    {
+        $roles = \Spatie\Permission\Models\Role::all();
+        $this->userRolesSummary = [];
+        foreach ($roles as $role) {
+            $this->userRolesSummary[$role->name] = User::role($role->name)->count();
+        }
     }
 }

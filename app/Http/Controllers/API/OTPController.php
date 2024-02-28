@@ -10,7 +10,7 @@ use App\Models\Otp;
 use App\Traits\FirebaseAuthTrait;
 use Illuminate\Support\Facades\Validator;
 use Propaganistas\LaravelPhone\PhoneNumber;
-use App\Models\WalletTransaction;
+
 
 class OTPController extends Controller
 {
@@ -24,8 +24,7 @@ class OTPController extends Controller
 
         //is_login
         //phone
-
-        //verifiy that the number exists 
+        //verifiy that the number exists
         if (!empty($request->is_login)) {
             //
             $user = User::where('phone', $request->phone)->first();
@@ -67,7 +66,7 @@ class OTPController extends Controller
 
         //is_login
         //phone
-        //code 
+        //code
 
         //
         $otp = Otp::where(
@@ -89,8 +88,16 @@ class OTPController extends Controller
         //
         $otp->delete();
         if (empty($request->is_login)) {
+            $phoneNumber = $request->phone;
+            //remove white spaces
+            $phoneNumber = str_replace(' ', '', $phoneNumber);
+            $verificationData = [
+                "phone" => $phoneNumber,
+                "code" => $request->code,
+            ];
             return response()->json([
                 "message" => __('OTP verification successful'),
+                "token" => encrypt($verificationData)
             ], 200);
         } else {
             //
@@ -121,7 +128,7 @@ class OTPController extends Controller
         }
 
         //
-        $phone = PhoneNumber::make($request->phone);
+        $phone = new PhoneNumber($request->phone);
         $user = User::where('phone', 'like', '%' . $phone . '')->first();
 
         if (empty($user)) {
@@ -134,7 +141,7 @@ class OTPController extends Controller
         try {
 
             //
-            $phone = PhoneNumber::make($request->phone);
+            $phone = new PhoneNumber($request->phone);
 
             if (!empty($request->firebase_id_token)) {
                 $firebaseUser = $this->verifyFirebaseIDToken($request->firebase_id_token);
@@ -162,6 +169,4 @@ class OTPController extends Controller
             ], 400);
         }
     }
-
-
 }

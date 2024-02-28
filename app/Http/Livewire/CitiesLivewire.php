@@ -18,6 +18,8 @@ class CitiesLivewire extends BaseLivewireComponent
     public $name;
     public $country_id;
     public $state_id;
+    public $states = [];
+    public $countries = [];
 
     protected $rules = [
         "name" => "required|string",
@@ -25,30 +27,36 @@ class CitiesLivewire extends BaseLivewireComponent
     ];
 
 
+    public function mount()
+    {
+        $this->countries = Country::get();
+        $this->country_id = $this->countries->first()->id ?? null;
+        $this->updatedCountryId($this->country_id);
+    }
+
     public function render()
     {
 
-        //
-        $countries = Country::get();
-
-        //
-        if( $this->country_id != null ){
-            $states = State::where('country_id', $this->country_id )->get();
-        }else{
-            $states = State::where('country_id', $countries->first()->id )->get();
+        if (empty($this->countries)) {
+            $this->mount();
         }
 
-        return view('livewire.cities',[
-            "countries" => $countries,
-            "states" => $states,
-        ]);
+        return view('livewire.cities');
     }
 
-    public function save(){
+
+    public function updatedCountryId($country_id)
+    {
+        $this->states = State::where('country_id', $country_id)->get();
+        $this->state_id = $this->states->first()->id ?? null;
+    }
+
+    public function save()
+    {
         //validate
         $this->validate();
 
-        try{
+        try {
 
             DB::beginTransaction();
             $model = new City();
@@ -60,19 +68,16 @@ class CitiesLivewire extends BaseLivewireComponent
 
             $this->dismissModal();
             $this->reset();
-            $this->showSuccessAlert(__("City")." ".__('created successfully!'));
             $this->emit('refreshTable');
-
-
-        }catch(Exception $error){
+            $this->showSuccessAlert(__("City") . " " . __('created successfully!'));
+        } catch (Exception $error) {
             DB::rollback();
-            $this->showErrorAlert( $error->getMessage() ?? __("City")." ".__('creation failed!'));
-
+            $this->showErrorAlert($error->getMessage() ?? __("City") . " " . __('creation failed!'));
         }
-
     }
 
-    public function initiateEdit($id){
+    public function initiateEdit($id)
+    {
         $this->selectedModel = $this->model::find($id);
         $this->name = $this->selectedModel->name;
         $this->state_id = $this->selectedModel->state_id;
@@ -80,11 +85,12 @@ class CitiesLivewire extends BaseLivewireComponent
         $this->emit('showEditModal');
     }
 
-    public function update(){
+    public function update()
+    {
         //validate
         $this->validate();
 
-        try{
+        try {
 
             DB::beginTransaction();
             $model = $this->selectedModel;
@@ -96,18 +102,11 @@ class CitiesLivewire extends BaseLivewireComponent
 
             $this->dismissModal();
             $this->reset();
-            $this->showSuccessAlert(__("City")." ".__('updated successfully!'));
             $this->emit('refreshTable');
-
-
-        }catch(Exception $error){
+            $this->showSuccessAlert(__("City") . " " . __('updated successfully!'));
+        } catch (Exception $error) {
             DB::rollback();
-            $this->showErrorAlert( $error->getMessage() ?? __("City")." ".__('updated failed!'));
-
+            $this->showErrorAlert($error->getMessage() ?? __("City") . " " . __('updated failed!'));
         }
-
     }
-
-
-
 }

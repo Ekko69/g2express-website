@@ -2,25 +2,26 @@
 
 namespace App\Http\Livewire\Select;
 
-use Asantibanez\LivewireSelect\LivewireSelect;
 use Illuminate\Support\Collection;
 use App\Models\DeliveryAddress;
 
 
-class NewOrderDeliveryAddressSelect extends LivewireSelect
+class NewOrderDeliveryAddressSelect extends BaseLivewireSelect
 {
     public function options($searchTerm = null): Collection
     {
-        $userId = $this->getDependingValue('userId') ?? 0;
-        return DeliveryAddress::where('name', 'like', '%' . $searchTerm . '%')
-            ->orwhere('address', 'like', '%' . $searchTerm . '%')
+        $userId = $this->getDependingValue('user_id') ?? 0;
+        return DeliveryAddress::where(function ($query) use ($searchTerm) {
+            $query->where('name', 'like', '%' . $searchTerm . '%')
+                ->orwhere('address', 'like', '%' . $searchTerm . '%');
+        })
             ->where('user_id', $userId)
             ->limit(20)
             ->get()
             ->map(function ($model) {
                 return [
                     'value' => $model->id,
-                    'description' => $model->name,
+                    'description' => $model->name . ' - ' . $model->address,
                 ];
             });
     }

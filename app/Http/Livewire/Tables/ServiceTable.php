@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Rappasoft\LaravelLivewireTables\Views\Column;
 
-class ServiceTable extends BaseDataTableComponent
+class ServiceTable extends OrderingBaseDataTableComponent
 {
 
     public $model = Service::class;
@@ -34,12 +34,12 @@ class ServiceTable extends BaseDataTableComponent
             Column::make(__('ID'), 'id')->searchable()->sortable(),
             Column::make(__('Name'), 'name')->addClass('break-all p-2 w-64 md:w-5/12')->searchable()->sortable(),
             Column::make(__('Duration Type'), 'duration')->addClass('')->searchable()->sortable(),
-            Column::make(__('Price'),'price')->format(function ($value, $column, $row) {
+            Column::make(__('Price'), 'price')->format(function ($value, $column, $row) {
                 return view('components.table.price', $data = [
                     "model" => $row,
                 ]);
             })->searchable()->sortable(),
-            Column::make(__('Discount Price'),'discount_price')->format(function ($value, $column, $row) {
+            Column::make(__('Discount Price'), 'discount_price')->format(function ($value, $column, $row) {
                 return view('components.table.discount_price', $data = [
                     "model" => $row
                 ]);

@@ -68,7 +68,7 @@ class TaxiOrderMatchingJob implements ShouldQueue
 
 
                 //add the new order to it
-                $driverSearchRadius = setting('driverSearchRadius', 10);
+                $driverSearchRadius = driverSearchRadius($order);
                 //pickup data
                 $pickup = [
                     'lat' => $pickupLocationLat,

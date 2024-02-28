@@ -17,3 +17,7 @@ lang.txt
 storage/app/vault/firebase_service.json
 storage/framework/*
 lang-full.txt
+website-lang-full.txt
+website-lang.txt
+resources/lang/website/*
+resources/lang/web/*

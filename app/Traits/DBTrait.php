@@ -17,11 +17,20 @@ trait DBTrait
         }
     }
 
-    public function clearTableRecords($column)
+    public function clearTableRecords($column, $truncate = true)
     {
         $tables = $this->getTablesWithColumn($column);
         foreach ($tables as $key => $table) {
-            DB::table($table)->truncate();
+            if ($truncate) {
+                try {
+                    DB::table($table)->truncate();
+                } catch (\Exception $e) {
+                    //delete instead of truncate
+                    DB::table($table)->delete();
+                }
+            } else {
+                DB::table($table)->delete();
+            }
         }
     }
 
@@ -42,5 +51,17 @@ trait DBTrait
         $tables = DB::select('SHOW TABLES');
         $tables = array_map('current', $tables);
         return $tables;
+    }
+
+
+    function removeRecordsFromDB($tables, $column, $value)
+    {
+        if (is_string($tables)) {
+            $tables = [$tables];
+        }
+        foreach ($tables as $key => $table) {
+            $statement = "delete from $table where $column = $value";
+            DB::statement($statement);
+        }
     }
 }

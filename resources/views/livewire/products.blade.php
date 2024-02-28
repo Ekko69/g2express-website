@@ -9,6 +9,12 @@
     <div x-data="{ open: @entangle('showCreate') }">
         <x-modal-lg confirmText="{{ __('Save') }}" action="save" :clickAway="false">
             <p class="text-xl font-semibold">{{ __('Create Product') }}</p>
+
+            {{-- vendor --}}
+            <livewire:component.autocomplete-input title="{{ __('Vendor') }}" column="name" model="Vendor"
+                emitFunction="autocompleteVendorSelected" initialEmit="preselectedVendorEmit"
+                disable="{{ auth()->user()->hasRole('manager') ?? 'false' }}" />
+            {{--  --}}
             <div class="grid grid-cols-3 gap-4">
                 <div class="col-span-2">
                     <x-input title="{{ __('Name') }}" name="name" />
@@ -21,13 +27,12 @@
             </div>
 
             <x-input.filepond wire:model="photos" title="{{ __('Photo(s)') }}"
-                acceptedFileTypes="['image/png', 'image/jpg']" allowImagePreview="true" imagePreviewMaxHeight="80"
-                grid="3" multiple="true" allowFileSizeValidation="true"
+                acceptedFileTypes="['image/png', 'image/jpeg', 'image/jpg']" allowImagePreview="true"
+                imagePreviewMaxHeight="80" grid="3" multiple="true" allowFileSizeValidation="true"
                 maxFileSize="{{ setting('filelimit.product_image_size', 200) }}kb" />
-
             <x-input-error message="{{ $errors->first('photos') }}" />
 
-            <x-textarea h="h-56" title="{{ __('Description') }}" name="description" />
+            <x-input.summernote name="description" title="{{ __('Description') }}" id="newContent" />
 
             <div class="grid grid-cols-2 gap-4">
                 <x-input title="{{ __('Price') }}" name="price" />
@@ -48,21 +53,48 @@
                     placeholder="{{ __('Number of item available qty') }}" />
             </div>
 
-            {{-- vendor --}}
-            <livewire:component.autocomplete-input title="{{ __('Vendor') }}" column="name" model="Vendor"
-                emitFunction="autocompleteVendorSelected" initialEmit="preselectedVendorEmit"
-                disable="{{ auth()->user()->hasRole('manager') ?? 'false' }}" />
-
 
             {{-- categories --}}
-            <livewire:component.autocomplete-input title="{{ __('Categories') }}" column="name" model="Category"
-                emitFunction="autocompleteCategorySelected" updateQueryClauseName="categoryQueryClasueUpdate"
-                :clear="true" :queryClause="$categorySearchClause ?? ''" onclearCalled="clearAutocompleteFieldsEvent" />
+            <div class="">
+                <livewire:component.autocomplete-input title="{{ __('Categories') }}" column="name" model="Category"
+                    customQuery="vendor_vendor_typecategories" emitFunction="autocompleteCategorySelected"
+                    updateQueryClauseName="categoryQueryClasueUpdate" :clear="true" :queryClause="$categorySearchClause ?? ''"
+                    onclearCalled="clearAutocompleteFieldsEvent" />
 
-            {{-- selected categories --}}
-            <x-item-chips :items="$selectedCategories ?? []" onRemove="removeSelectedCategory" />
+                {{-- selected categories --}}
+                <x-item-chips :items="$selectedCategories ?? []" onRemove="removeSelectedCategory" />
+            </div>
 
-            {{-- </div> --}}
+            {{-- show menu if the vendor doesn't use subcategories --}}
+            @if ($vendor != null && !$vendor->has_sub_categories)
+                {{-- menu --}}
+                <x-label for="menu" title="{{ __('Menu') }}">
+                    <livewire:select.vendor-menu-select name="menu_id" placeholder="{{ __('Select Menu') }}"
+                        :multiple="true" :searchable="true" :depends-on="['vendor_id']" />
+                    {{-- selected menu --}}
+                    <x-item-chips :items="$selectedMenus ?? []" onRemove="removeSelectedMenu" />
+                </x-label>
+            @elseif ($vendor != null && $vendor->has_sub_categories)
+                {{-- subcategories --}}
+                <x-label for="subcategories" title="{{ __('Subcategories') }}">
+                    <livewire:select.multiple-subcategory-select name="subcategory_id"
+                        placeholder="{{ __('Select Subcategory') }}" :multiple="true" :searchable="true"
+                        :depends-on="['category_id']" />
+                    {{-- selected menu --}}
+                    <x-item-chips :items="$selectedSubcategories ?? []" onRemove="removeSelectedSubcategory" />
+                </x-label>
+            @endif
+
+
+            {{-- tags --}}
+            <x-label for="tags" title="{{ __('Tags') }}">
+                <livewire:select.tag-select name="tag_id" placeholder="{{ __('Select Tag') }}" :multiple="true"
+                    :searchable="true" :depends-on="['vendor_type_id']" />
+                {{-- selected Services --}}
+                <x-item-chips :items="$selectedTags ?? []" onRemove="removeSelectedTag" />
+            </x-label>
+
+            <hr class="my-2" />
 
             <div class="grid items-center grid-cols-2 gap-4">
                 <x-checkbox title="{{ __('Plus Option') }}" name="plus_option"
@@ -71,7 +103,7 @@
                     description="{{ __('If product can be delivered to customers') }}" :defer="false" />
             </div>
 
-            <div class="p-2 my-4 border rounded">
+            <div class="px-4 my-4 border rounded">
                 <x-checkbox title="{{ __('Digital') }}" name="digital"
                     description="{{ __('If product is digital and can be downloaded') }}" :defer="false" />
                 @if ($digital)
@@ -80,6 +112,9 @@
                 @endif
             </div>
 
+            <x-checkbox title="{{ __('Age Restriction') }}" name="age_restricted"
+                description="{{ __('Customer will be informed they must be of legal age when buying this product') }}"
+                :defer="false" />
 
             <x-checkbox title="{{ __('Active') }}" name="isActive" :defer="false" />
         </x-modal-lg>
@@ -89,6 +124,12 @@
     <div x-data="{ open: @entangle('showEdit') }">
         <x-modal-lg confirmText="{{ __('Update') }}" action="update">
             <p class="text-xl font-semibold">{{ __('Update Product') }}</p>
+
+            {{-- vendor --}}
+            <livewire:component.autocomplete-input title="{{ __('Vendor') }}" column="name" model="Vendor"
+                emitFunction="autocompleteVendorSelected" initialEmit="preselectedVendorEmit"
+                disable="{{ auth()->user()->hasRole('manager') ?? 'false' }}" />
+
             <div class="grid grid-cols-3 gap-4">
                 <div class="col-span-2">
                     <x-input title="{{ __('Name') }}" name="name" />
@@ -101,12 +142,11 @@
             </div>
 
             <x-input.filepond wire:model="photos" title="{{ __('Photo(s)') }}" id="editProductInput"
-                allowAddFileEvent="true" acceptedFileTypes="['image/png', 'image/jpg']" allowImagePreview
-                multiple="true" allowFileSizeValidation imagePreviewMaxHeight="80"
+                allowAddFileEvent="true" acceptedFileTypes="['image/png', 'image/jpeg', 'image/jpg']"
+                allowImagePreview multiple="true" allowFileSizeValidation imagePreviewMaxHeight="80"
                 maxFileSize="{{ setting('filelimit.product_image_size', 200) }}kb" />
 
-            <x-textarea h="h-56" title="{{ __('Description') }}" name="description"
-                id="editProductDescription" />
+            <x-input.summernote name="description" title="{{ __('Description') }}" id="editContent" />
 
             <div class="grid grid-cols-2 gap-4">
                 <x-input title="{{ __('Price') }}" name="price" />
@@ -127,18 +167,46 @@
                     placeholder="{{ __('Number of item available qty') }}" />
             </div>
 
-            {{-- vendor --}}
-            <livewire:component.autocomplete-input title="{{ __('Vendor') }}" column="name" model="Vendor"
-                emitFunction="autocompleteVendorSelected" initialEmit="preselectedVendorEmit"
-                disable="{{ auth()->user()->hasRole('manager') ?? 'false' }}" />
-
             {{-- categories --}}
-            <livewire:component.autocomplete-input title="{{ __('Categories') }}" column="name" model="Category"
-                emitFunction="autocompleteCategorySelected" updateQueryClauseName="categoryQueryClasueUpdate"
-                :clear="true" :queryClause="$categorySearchClause ?? ''" onclearCalled="clearAutocompleteFieldsEvent" />
+            <div class="">
+                <livewire:component.autocomplete-input title="{{ __('Categories') }}" column="name"
+                    model="Category" customQuery="vendor_vendor_typecategories"
+                    emitFunction="autocompleteCategorySelected" updateQueryClauseName="categoryQueryClasueUpdate"
+                    :clear="true" :queryClause="$categorySearchClause ?? ''" onclearCalled="clearAutocompleteFieldsEvent" />
 
-            {{-- selected categories --}}
-            <x-item-chips :items="$selectedCategories ?? []" onRemove="removeSelectedCategory" />
+                {{-- selected categories --}}
+                <x-item-chips :items="$selectedCategories ?? []" onRemove="removeSelectedCategory" />
+            </div>
+
+            {{-- show menu if the vendor doesn't use subcategories --}}
+            @if ($vendor != null && !$vendor->has_sub_categories)
+                {{-- menu --}}
+                <x-label for="menu" title="{{ __('Menu') }}">
+                    <livewire:select.vendor-menu-select name="menu_id" placeholder="{{ __('Select Menu') }}"
+                        :multiple="true" :searchable="true" :depends-on="['vendor_id']" />
+                    {{-- selected menu --}}
+                    <x-item-chips :items="$selectedMenus ?? []" onRemove="removeSelectedMenu" />
+                </x-label>
+            @elseif ($vendor != null && $vendor->has_sub_categories)
+                {{-- subcategories --}}
+                <x-label for="subcategories" title="{{ __('Subcategories') }}">
+                    <livewire:select.multiple-subcategory-select name="subcategory_id"
+                        placeholder="{{ __('Select Subcategory') }}" :multiple="true" :searchable="true"
+                        :depends-on="['category_id']" />
+                    {{-- selected menu --}}
+                    <x-item-chips :items="$selectedSubcategories ?? []" onRemove="removeSelectedSubcategory" />
+                </x-label>
+            @endif
+
+            {{-- tags --}}
+            <x-label for="tags" title="{{ __('Tags') }}">
+                <livewire:select.tag-select name="tag_id" placeholder="{{ __('Select Tag') }}" :multiple="true"
+                    :searchable="true" :depends-on="['vendor_type_id']" />
+                {{-- selected Services --}}
+                <x-item-chips :items="$selectedTags ?? []" onRemove="removeSelectedTag" />
+            </x-label>
+
+            <hr class="my-2" />
 
             <div class="grid items-center grid-cols-2 gap-4">
                 <x-checkbox title="{{ __('Plus Option') }}" name="plus_option"
@@ -157,6 +225,9 @@
                 @endif
             </div>
 
+            <x-checkbox title="{{ __('Age Restriction') }}" name="age_restricted"
+                description="{{ __('Customer will be informed they must be of legal age when buying this product') }}"
+                :defer="false" />
             <x-checkbox title="{{ __('Active') }}" name="isActive" :defer="false" />
 
         </x-modal-lg>
@@ -204,7 +275,7 @@
                 <x-details.item title="{{ __('SKU') }}" text="{{ $selectedModel->sku ?? '' }}" />
             </div>
             <x-details.item title="{{ __('Description') }}" text="">
-                {{ $selectedModel->description ?? '' }}
+                {!! $selectedModel->description ?? '' !!}
             </x-details.item>
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <x-details.item title="{{ __('Price') }}"
@@ -235,14 +306,53 @@
 
             </div>
             <x-details.item title="{{ __('Photos') }}" text="">
-                <div class="flex flex-wrap space-x-3 space-y-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     @foreach ($selectedModel->photos ?? [] as $photo)
                         <a href="{{ $photo }}" target="_blank"><img src="{{ $photo }}"
                                 class="w-24 h-24 mx-2 rounded-sm" /></a>
                     @endforeach
                 </div>
             </x-details.item>
+            {{-- list option groups and options --}}
+            @if ($selectedModel->has_options ?? false)
+                <div>
+                    <hr class="my-4" />
+                    {{-- <p class="font-medium my-2">{{ __('Option Groups') }}</p> --}}
+                    <table class="w-full table-auto border-collapse border border-slate-500">
+                        <thead class="bg-slate-400">
+                            <tr class="bg-slate-400">
+                                <th class="p-2 border border-slate-400 bg-gray-100">{{ __('Option Group') }}</th>
+                                <th class="p-2 border border-slate-400 bg-gray-100 w-20">{{ __('Active') }}</th>
+                                <th class="p-2 border border-slate-400 bg-gray-100">{{ __('Options') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($selectedModel->option_groups ?? [] as $optionGroup)
+                                <tr>
+                                    <td class="p-2 border border-slate-400">{{ $optionGroup->name }}</td>
+                                    <td class="p-2 border border-slate-400">
+                                        @if ($optionGroup->is_active)
+                                            <x-table.check />
+                                        @else
+                                            <x-table.close />
+                                        @endif
+                                    </td>
+                                    <td class="p-2 border border-slate-400 wrap space-x-2">
+                                        @foreach ($optionGroup->options ?? [] as $option)
+                                            <span class="rounded-full bg-gray-200 px-2 text-sm">
+                                                {{ $option->name }}
+                                            </span>
+                                        @endforeach
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+
             @if ($selectedModel->digital ?? false)
+                <hr class="my-4" />
                 <x-details.item title="{{ __('File') }}" text="">
                     <div class="space-y-3">
                         @foreach ($selectedModel->digital_files ?? [] as $file)

@@ -28,12 +28,18 @@
 
 </div>
 <div class="mt-5 border-t">
-    <x-details.item title="{{ __('Note') }}" text="{{ $selectedModel->note ?? '--' }}" />
+    <x-details.item title="{{ __('Note') }}">
+        <p class="break-words overflow-clip"> {{ $selectedModel->note ?? '--' }}</p>
+    </x-details.item>
+    @if ($selectedModel != null && $selectedModel->status == 'cancelled')
+        <x-details.item title="{{ __('Cancel Reason') }}" text="{!! $selectedModel->reason ?? '--' !!}" />
+    @endif
 </div>
 <div class="grid grid-cols-1 gap-4 mt-5 border-t md:grid-cols-2 lg:grid-cols-3">
 
     <x-details.item title="{{ __('Vendor') }}" text="{{ $selectedModel->vendor->name ?? '' }}" />
     <x-details.item title="{{ __('Vendor Address') }}" text="{{ $selectedModel->vendor->address ?? '' }}" />
+    <x-details.item title="{{ __('Vendor Phone') }}" text="{{ $selectedModel->vendor->phone ?? '' }}" />
 
 
     <x-details.item title="{{ __('Date of order') }}"

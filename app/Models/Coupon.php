@@ -9,10 +9,14 @@ class Coupon extends BaseModel
 {
     use HasTranslations;
     public $translatable = ["description"];
+    protected $appends = ['formatted_expires_on', 'use_left', 'expired', 'photo'];
 
-    protected $appends = ['formatted_expires_on','use_left','expired','photo'];
+    protected $casts = [
+        'for_delivery' => 'boolean',
+    ];
 
-    public function getFormattedExpiresOnAttribute(){
+    public function getFormattedExpiresOnAttribute()
+    {
         return Carbon::parse($this->expires_on)->format('d M Y');
     }
 
@@ -36,10 +40,10 @@ class Coupon extends BaseModel
     public function getUseLeftAttribute()
     {
 
-        if(empty($this->times)){
+        if (empty($this->times)) {
             return 1;
         }
-        
+
         $couponUses = CouponUser::where([
             'coupon_id' => $this->id,
             'user_id' => auth('api')->user()->id ?? null,

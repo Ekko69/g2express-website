@@ -15,12 +15,14 @@ class DeliveryZoneLivewire extends BaseLivewireComponent
 
     public $model = DeliveryZone::class;
     public $name;
+    public $delivery_fee;
     public $is_active;
     public $coordinates;
     public $coordinateCollection;
 
     protected $rules = [
         "name" => "required",
+        "delivery_fee" => "nullable|numeric",
         "coordinates" => "required",
     ];
 
@@ -64,7 +66,7 @@ class DeliveryZoneLivewire extends BaseLivewireComponent
                 return;
             }
 
-            // 
+            //
             $centerCoordinate = $this->getCenter($this->coordinateCollection);
             $centerCoordinateDistance = $this->getLinearDistance(
                 "" . $centerCoordinate[0] . "," . $centerCoordinate[1] . "",
@@ -74,6 +76,7 @@ class DeliveryZoneLivewire extends BaseLivewireComponent
             DB::beginTransaction();
             $deliveryZone = new DeliveryZone();
             $deliveryZone->name = $this->name;
+            $deliveryZone->delivery_fee = $this->delivery_fee;
 
             $deliveryZone->latitude = $centerCoordinate[0];
             $deliveryZone->longitude = $centerCoordinate[1];
@@ -109,6 +112,7 @@ class DeliveryZoneLivewire extends BaseLivewireComponent
     {
         $this->selectedModel = $this->model::find($id);
         $this->name = $this->selectedModel->name;
+        $this->delivery_fee = $this->selectedModel->delivery_fee;
         $this->is_active = $this->selectedModel->is_active;
 
         //
@@ -133,7 +137,7 @@ class DeliveryZoneLivewire extends BaseLivewireComponent
 
         try {
 
-            // 
+            //
             $centerCoordinate = $this->getCenter($this->coordinateCollection);
             $centerCoordinateDistance = $this->getLinearDistance(
                 "" . $centerCoordinate[0] . "," . $centerCoordinate[1] . "",
@@ -144,6 +148,7 @@ class DeliveryZoneLivewire extends BaseLivewireComponent
             DB::beginTransaction();
             $deliveryZone = $this->selectedModel;
             $deliveryZone->name = $this->name;
+            $deliveryZone->delivery_fee = $this->delivery_fee;
 
             $deliveryZone->latitude = $centerCoordinate[0];
             $deliveryZone->longitude = $centerCoordinate[1];
@@ -175,6 +180,4 @@ class DeliveryZoneLivewire extends BaseLivewireComponent
             $this->showErrorAlert($ex->getMessage() ?? __("Delivery Zone") . " " . __('creation failed!'));
         }
     }
-
-    
 }

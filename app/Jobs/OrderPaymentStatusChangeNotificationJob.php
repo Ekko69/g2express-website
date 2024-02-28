@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\UserToken;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -41,9 +42,21 @@ class OrderPaymentStatusChangeNotificationJob implements ShouldQueue
         $headings = "#{$this->order->code} " . __("Order Payment Update");
         $message = __("Order payment status changed:") . " " . __($this->order->payment_status);
         //customer
-        $this->sendFirebaseNotification($this->order->user_id, $headings, $message, [], $onlyData = false);
-        //vendor
-        $this->sendFirebaseNotification("v_" . $this->order->vendor_id, $headings, $message, [], $onlyData = false);
+        $this->sendFirebaseNotification(
+            $this->order->user_id,
+            $headings,
+            $message,
+            [],
+            $onlyData = false,
+        );
+        //
+        $this->sendFirebaseNotification(
+            "v_" . $this->order->vendor_id,
+            $headings,
+            $message,
+            [],
+            $onlyData = false,
+        );
         //
         $this->resetLocale();
     }

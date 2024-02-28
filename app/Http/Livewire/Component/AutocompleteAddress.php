@@ -2,7 +2,9 @@
 
 namespace App\Http\Livewire\Component;
 
+use App\Http\Controllers\API\GeocoderController;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Request;
 use Livewire\Component;
 
 class AutocompleteAddress extends Component
@@ -12,6 +14,7 @@ class AutocompleteAddress extends Component
     public $name;
     public $addresses = [];
     public $address;
+    public $extraData;
 
     protected $listeners = [
         'initialAddressSelected' => 'initialAddressSelected',
@@ -27,29 +30,35 @@ class AutocompleteAddress extends Component
 
     public function updatedAddress()
     {
-        if(!empty($this->address)){
-        $this->googlePlaces();
+        if (!empty($this->address)) {
+            $this->fetchPlaces();
         }
     }
-    //call google place api key to give you result base on when you entered
-    private function googlePlaces()
+    //call rightful api geoservice
+    private function fetchPlaces()
     {
-
-        $response = Http::get('https://maps.googleapis.com/maps/api/place/autocomplete/json', [
-            "input" => $this->address,
-            "key" => env('googleMapKey'),
-        ]);
         $this->addresses = [];
-
-        if ($response->successful()) {
-            $predictions = $response->json()["predictions"];
-            foreach ($predictions as $prediction) {
-                array_push($this->addresses, [
-                    "name" => $prediction["description"],
-                    "id" => $prediction["place_id"],
-                ]);
-            }
+        $geocoderController = new GeocoderController();
+        $request = new Request();
+        $request->replace([
+            'keyword' => $this->address,
+            'locoation' => null,
+        ]);
+        $addresses = $geocoderController->reverse($request)->getData()->data;
+        $addresses = json_decode(json_encode($addresses), true);
+        foreach ($addresses as $prediction) {
+            array_push($this->addresses, [
+                "name" => $prediction["description"] ?? $prediction['formatted_address'] ?? "",
+                "id" => $prediction["place_id"] ?? null,
+                "address" => $prediction['formatted_address'],
+                "latitude" => $prediction["geometry"]["location"]["lat"],
+                "longitude" => $prediction["geometry"]["location"]["lng"],
+                "city" => $prediction['subLocality'] ?? $prediction['locality'] ?? "",
+                "state" => $prediction['administrative_area_level_1'] ?? $prediction['administrative_area_level_2'] ?? "",
+                "country" => $prediction['country'] ?? "",
+            ]);
         }
+
 
         //emit raw data enatered by user
         if (empty($this->addresses)) {
@@ -80,6 +89,26 @@ class AutocompleteAddress extends Component
             return;
         }
 
+        //if id is null
+        if ($this->addresses[$selectedIndex]["id"] == null) {
+            $mAddress = $this->addresses[$selectedIndex];
+            $this->address = $mAddress['address'];
+            $fullAddressData = [
+                "address" => $mAddress['address'],
+                "latitude" => $mAddress['latitude'],
+                "longitude" => $mAddress['longitude'],
+                "city" => $mAddress['city'],
+                "state" => $mAddress['state'],
+                "country" => $mAddress['country'],
+            ];
+
+            $this->emitUp('autocompleteAddressSelected', $fullAddressData, $this->extraData);
+            $this->addresses = [];
+            return;
+        }
+
+
+        //only for google useage
         $response = Http::get('https://maps.googleapis.com/maps/api/place/details/json', [
             "placeid" => $this->addresses[$selectedIndex]["id"],
             "key" => env('googleMapKey'),
@@ -120,7 +149,7 @@ class AutocompleteAddress extends Component
                 "country" => $country,
             ];
 
-            $this->emitUp('autocompleteAddressSelected', $fullAddressData);
+            $this->emitUp('autocompleteAddressSelected', $fullAddressData, $this->extraData);
         } else {
             // emit error to view
         }

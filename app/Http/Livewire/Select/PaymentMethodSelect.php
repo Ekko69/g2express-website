@@ -2,13 +2,13 @@
 
 namespace App\Http\Livewire\Select;
 
-use Asantibanez\LivewireSelect\LivewireSelect;
+
 use Illuminate\Support\Collection;
 use App\Models\VendorPaymentMethod;
 use App\Models\PaymentMethod;
 
 
-class PaymentMethodSelect extends LivewireSelect
+class PaymentMethodSelect extends BaseLivewireSelect
 {
     public function options($searchTerm = null): Collection
     {

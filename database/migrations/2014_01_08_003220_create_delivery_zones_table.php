@@ -13,13 +13,15 @@ class CreateDeliveryZonesTable extends Migration
      */
     public function up()
     {
-        
+
         Schema::create('delivery_zones', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('latitude')->nullable();
             $table->string('longitude')->nullable();
             $table->double('radius')->nullable();
+            //delivery_fee
+            $table->double('delivery_fee')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

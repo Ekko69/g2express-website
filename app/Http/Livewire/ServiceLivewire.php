@@ -25,6 +25,7 @@ class ServiceLivewire extends BaseLivewireComponent
     public $duration;
     public $location;
     public $is_active;
+    public $age_restricted = 0;
     public $category_id;
     public $subcategory_id;
     public $photos = [];
@@ -95,6 +96,7 @@ class ServiceLivewire extends BaseLivewireComponent
         $this->vendor_id = Auth::user()->vendor_id ?? null;
         $this->showCreate = true;
         $this->stopRefresh = true;
+        $this->emit('loadSummerNote', "newContent", "");
     }
 
     public function save()
@@ -111,6 +113,7 @@ class ServiceLivewire extends BaseLivewireComponent
             DB::beginTransaction();
             $model = new Service($allData);
             $model->discount_price = $model->discount_price == null ? 0 : $model->discount_price;
+            $model->age_restricted = $this->age_restricted;
             $model->save();
 
             if ($this->photos) {
@@ -149,7 +152,10 @@ class ServiceLivewire extends BaseLivewireComponent
         $this->category_id = $this->selectedModel->category_id;
         $this->autocompleteCategorySelected(["id" => $this->category_id]);
         $this->subcategory_id = $this->selectedModel->subcategory_id;
+        $this->age_restricted = $this->selectedModel->age_restricted;
 
+        //load summernote with selected product description
+        $this->emit('loadSummerNote', "editContent", $this->description);
         $this->emit('preselectedVendorEmit', \Str::ucfirst($this->selectedModel->vendor->name ?? ''));
         $this->emit('preselectedCategoryEmit', \Str::ucfirst($this->selectedModel->category->name ?? ''));
         $this->emit('showEditModal');
@@ -168,6 +174,7 @@ class ServiceLivewire extends BaseLivewireComponent
             DB::beginTransaction();
             $model = $this->selectedModel;
             $model->fill($allData);
+            $model->age_restricted = $this->age_restricted;
             $model->save();
 
             if ($this->photos) {

@@ -24,7 +24,8 @@
 
 
             <div class="grid grid-cols-2 gap-4">
-                <x-input title="{{ __('Phone') }}" name="phone" />
+                {{-- <x-input title="{{ __('Phone') }}" name="phone" /> --}}
+                <x-phoneselector />
                 <x-input title="{{ __('Email') }}" name="email" />
             </div>
 
@@ -122,12 +123,22 @@
                 :multiple="true" width="100" :ignore="true" />
             <hr class="mt-4" />
 
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <x-media-upload title="{{ __('Logo') }}" name="photo" :photo="$photo" :photoInfo="$photoInfo"
+                    types="PNG or JPEG" rules="image/*" />
 
-            <x-media-upload title="{{ __('Logo') }}" name="photo" :photo="$photo" :photoInfo="$photoInfo"
-                types="PNG or JPEG" rules="image/*" />
-
-            <x-media-upload title="{{ __('Featured Image') }}" name="secondPhoto" :photo="$secondPhoto"
-                :photoInfo="$secondPhotoInfo" types="PNG or JPEG" rules="image/*" />
+                <x-media-upload title="{{ __('Featured Image') }}" name="secondPhoto" :photo="$secondPhoto"
+                    :photoInfo="$secondPhotoInfo" types="PNG or JPEG" rules="image/*" />
+            </div>
+            {{-- document changing --}}
+            @can('modify-vendor-document')
+                <div class="border-t border-b py-6 my-2">
+                    <x-label title="{{ __('Documents') }}" />
+                    <x-input.filepond wire:model="documents" name="documents" multiple="true"
+                        acceptedFileTypes="['image/*','application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document']"
+                        allowImagePreview="false" allowFileSizeValidation="true" maxFileSize="10mb" />
+                </div>
+            @endcan
 
             @hasanyrole('city-admin|admin')
                 <x-checkbox title="{{ __('Active') }}" name="isActive" :defer="false" />
@@ -144,38 +155,67 @@
             <p class="text-xl font-semibold">{{ __('Update Vendor') }}</p>
             <div class="flex space-x-2">
                 <div class="grow">
-                    <x-input title="{{ __('Name') }}" name="name" />
+                    @hasanyrole('city-admin|admin')
+                        <x-input title="{{ __('Name') }}" name="name" />
+                    @else
+                        <x-label title="{{ __('Name') }}">
+                            <p class="font-medium text-base">{{ $selectedModel->name ?? '' }} </p>
+                        </x-label>
+                    @endhasanyrole
                 </div>
                 <div class="flex-none">
-                    <x-input title="{{ __('In Order Number') }}" name="in_order" />
+                    @hasanyrole('city-admin|admin')
+                        <x-input title="{{ __('In Order Number') }}" name="in_order" :disable="true" />
+                    @endhasanyrole
                 </div>
             </div>
 
-            {{-- vendor type --}}
-            <x-select title="{{ __('Vendor Type') }}" :options='$vendorTypes ?? []' name="vendor_type_id" :defer="false" />
+            @hasanyrole('city-admin|admin')
+                {{-- vendor type --}}
+                <x-select title="{{ __('Vendor Type') }}" :options='$vendorTypes ?? []' name="vendor_type_id" :defer="false" />
+            @else
+                <x-label title="{{ __('Vendor Type') }}">
+                    <p class="font-medium text-base">{{ $selectedModel->vendor_type->name ?? '' }} </p>
+                </x-label>
+            @endhasanyrole
             <x-input title="{{ __('Description') }}" name="description" />
 
             <div class="grid grid-cols-2 gap-4">
-                <x-input title="{{ __('Phone') }}" name="phone" />
+                {{-- <x-input title="{{ __('Phone') }}" name="phone" /> --}}
+                <x-phoneselector inputId="phoneEdit" />
                 <x-input title="{{ __('Email') }}" name="email" />
             </div>
 
 
-
             <div class="p-2 mt-4 bg-gray-100 border border-gray-300 rounded">
-                <livewire:component.autocomplete-address title="{{ __('Address') }}" name="address"
-                    address="{{ $address ?? '' }}" />
-                <x-input-error message="{{ $errors->first('address') }}" />
-                <div class="grid grid-cols-2 gap-4">
-                    <x-input title="{{ __('Latitude') }}" name="latitude" />
-                    <x-input title="{{ __('Longitude') }}" name="longitude" />
-                </div>
+                @hasanyrole('city-admin|admin')
+                    <livewire:component.autocomplete-address title="{{ __('Address') }}" name="address"
+                        address="{{ $address ?? '' }}" />
+                    <x-input-error message="{{ $errors->first('address') }}" />
+                    <div class="grid grid-cols-2 gap-4">
+                        <x-input title="{{ __('Latitude') }}" name="latitude" />
+                        <x-input title="{{ __('Longitude') }}" name="longitude" />
+                    </div>
+                @else
+                    <x-label title="{{ __('Address') }}">
+                        <p class="font-medium text-base">{{ $selectedModel->address ?? '' }} </p>
+                    </x-label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <x-label title="{{ __('Latitude') }}">
+                            <p class="font-medium text-base">{{ $selectedModel->latitude ?? '' }} </p>
+                        </x-label>
+                        <x-label title="{{ __('Longitude') }}">
+                            <p class="font-medium text-base">{{ $selectedModel->longitude ?? '' }} </p>
+                        </x-label>
+                    </div>
+                @endhasanyrole
                 {{-- delivery zones --}}
                 <div class="{{ !$isPackageVendor ? 'block' : 'hidden' }} grid items-center grid-cols-1 gap-4">
                     <x-select2 title="{{ __('Delivery Zone') }}" :options="$deliveryZones ?? []" name="deliveryZonesIDs"
                         id="editDeliveryZonesSelect2" :multiple="true" width="100" :ignore="true" />
                 </div>
             </div>
+
 
             {{-- categories --}}
             <livewire:component.autocomplete-input title="{{ __('Categories') }}" column="name" model="Category"
@@ -207,8 +247,10 @@
                 @endshowDeliveryFeeSetting
                 <div class="grid grid-cols-2 gap-4">
                     <x-input title="{{ __('Delivery Range(KM)') }}" name="delivery_range" />
+                    @showDeliveryFeeSetting
                     <x-checkbox title="{{ __('Charge per KM') }}" name="charge_per_km"
                         description="{{ __('Delivery fee will be per KM') }}" :defer="false" />
+                    @endshowDeliveryFeeSetting
                 </div>
                 <div class="{{ !$isServiceVendor ? 'block' : 'hidden' }} grid items-center grid-cols-2 gap-4">
                     <x-checkbox title="{{ __('Pickup') }}" name="pickup"
@@ -255,12 +297,28 @@
                     :multiple="true" width="100" :ignore="true" />
                 <hr class="mt-4" />
             @endrole
-            <x-media-upload title="{{ __('Logo') }}" name="photo" preview="{{ $selectedModel->logo ?? '' }}"
-                :photo="$photo" :photoInfo="$photoInfo" types="PNG or JPEG" rules="image/*" />
 
-            <x-media-upload title="{{ __('Featured Image') }}" name="secondPhoto"
-                preview="{{ $selectedModel->feature_image ?? '' }}" :photo="$secondPhoto" :photoInfo="$secondPhotoInfo"
-                types="PNG or JPEG" rules="image/*" />
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <x-media-upload title="{{ __('Logo') }}" name="photo"
+                    preview="{{ $selectedModel->logo ?? '' }}" :photo="$photo" :photoInfo="$photoInfo"
+                    types="PNG or JPEG" rules="image/*" />
+
+                <x-media-upload title="{{ __('Featured Image') }}" name="secondPhoto"
+                    preview="{{ $selectedModel->feature_image ?? '' }}" :photo="$secondPhoto" :photoInfo="$secondPhotoInfo"
+                    types="PNG or JPEG" rules="image/*" />
+
+            </div>
+            {{-- document changing --}}
+            @can('modify-vendor-document')
+                <div class="border-t border-b py-6 my-2">
+                    <x-label title="{{ __('Documents') }}" />
+                    <x-input.filepond wire:model="documents" name="documents" multiple="true"
+                        acceptedFileTypes="['image/*','application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document']"
+                        allowImagePreview="false" allowFileSizeValidation="true" maxFileSize="10mb" />
+                </div>
+            @endcan
+
+            <hr />
             @hasanyrole('city-admin|admin')
                 <x-checkbox title="{{ __('Active') }}" name="isActive" :defer="false" />
                 <x-checkbox title="{{ __('Featured') }}" name="featured" :defer="false" />
@@ -290,10 +348,16 @@
 
             <p class="text-xl font-semibold">
                 {{ $selectedModel != null ? $selectedModel->name : '' }}
-                {{ __('Details') }}</p>
+                {{ __('Details') }}
+            </p>
+            {{--  --}}
+            <x-details.item title="{{ __('Name') }}" text="{{ $selectedModel->name ?? '' }}" />
+            <x-details.item title="{{ __('Description') }}">
+                <div>
+                    {!! $selectedModel->description ?? '' !!}
+                </div>
+            </x-details.item>
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <x-details.item title="{{ __('Name') }}" text="{{ $selectedModel->name ?? '' }}" />
-                <x-details.item title="{{ __('Description') }}" text="{{ $selectedModel->description ?? '' }}" />
 
                 <x-details.item title="{{ __('Phone') }}" text="{{ $selectedModel->phone ?? '' }}" />
                 <x-details.item title="{{ __('Email') }}" text="{{ $selectedModel->email ?? '' }}" />
@@ -368,14 +432,58 @@
             @endif
 
             <hr class="my-4" />
-            <p class="font-light">{{ __('Documents') }}</p>
-            <div class="grid grid-cols-1 gap-4 pt-4 mt-4 md:grid-cols-2 lg:grid-cols-3">
-                @foreach ($selectedModel->documents ?? [] as $document)
-                    <img src="{{ $document }}" />
-                @endforeach
-
+            <p class="font-semibold text-sm mb-2">{{ __('Documents') }}</p>
+            @if (!empty($selectedModel->documents ?? []))
+                <div class="mt-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    @if ($selectedModel != null)
+                        @foreach ($selectedModel->getMedia('documents') ?? [] as $document)
+                            @if (isMediaImage($document))
+                                <a href="{{ $document->getUrl() }}" target="_blank">
+                                    <img src="{{ $document->getUrl() }}"
+                                        class="h-24 rounded-sm object-cover w-full" />
+                                </a>
+                            @else
+                                <a href="{{ $document->getUrl() }}" target="_blank">
+                                    <div class="h-24 border rounded overflow-hidden p-2 border-primary-500">
+                                        <p class="line-clamp-1">
+                                            <span class='font-bold'>{{ __('Name') }}</span>:
+                                            {{ $document->file_name }}
+                                        </p>
+                                        <p>
+                                            <span class='font-bold'>{{ __('Size') }}</span>:
+                                            {{ $document->human_readable_size }}
+                                        </p>
+                                        <p class="text-sm italic text-primary-500 hover:underline">
+                                            {{ __('Click to download/preview') }}
+                                        </p>
+                                    </div>
+                                </a>
+                            @endif
+                        @endforeach
+                    @endif
+                </div>
+            @endif
+            <div class="my-2">
+                @if ($selectedModel != null && $selectedModel->document_requested)
+                    <div class="border p-2 text-center rounded text-sm space-y-2 py-4">
+                        <p>{{ __('Driver has been notified to upload documents') }}</p>
+                        {{-- cancel request button --}}
+                        <div class="flex justify-center">
+                            <x-buttons.plain wireClick="cancelDocumentRequest">
+                                {{ __('Cancel Request') }}
+                            </x-buttons.plain>
+                        </div>
+                    </div>
+                @else
+                    <div class="flex justify-end w-full md:w-6/12 lg:w-4/12 mx-auto">
+                        <x-buttons.primary wireClick="requestDocuments">
+                            {{ __('Request Documents') }}
+                        </x-buttons.primary>
+                    </div>
+                @endif
             </div>
 
         </x-modal-lg>
     </div>
 </div>
+@include('layouts.partials.phoneselector')

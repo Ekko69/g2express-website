@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Traits\GoogleMapApiTrait;
 use App\Traits\VendorAttributeTrait;
+use App\Traits\DocumentRequestTrait;
 use Malhal\Geographical\Geographical;
 use Illuminate\Support\Facades\Auth;
 use willvincent\Rateable\Rateable;
@@ -17,7 +18,8 @@ class Vendor extends BaseModel
 
     use  Geographical, Rateable, PowerJoins, GoogleMapApiTrait;
     use VendorAttributeTrait;
-    
+    use DocumentRequestTrait;
+
     protected static $kilometers = true;
     protected $casts = [
         'id' => 'integer',
@@ -29,9 +31,14 @@ class Vendor extends BaseModel
         'pickup' => 'int',
         'delivery' => 'int',
         'is_active' => 'int',
+        'reviews_count' => 'int',
+        'is_open' => 'boolean',
     ];
-    protected $appends = ['formatted_date', 'logo', 'feature_image', 'rating', 'can_rate', 'is_open', 'slots', 'is_package_vendor', 'has_subscription'];
-    protected $with = ['vendor_type','fees'];
+    protected $appends = [
+        'formatted_date', 'logo', 'feature_image', 'rating', 'can_rate', 'slots', 'is_package_vendor', 'has_subscription',
+        'document_requested', 'pending_document_approval'
+    ];
+    protected $with = ['vendor_type', 'fees'];
     protected $withCount = ['reviews'];
 
     protected $fillable = [
@@ -157,22 +164,22 @@ class Vendor extends BaseModel
     }
 
 
-    public function getIsOpenAttribute($value)
-    {
-        $value = $this->getRawOriginal('is_open');
-        // if ($this->id == 175) {
-        //     logger("openNow", [$this->openNow]);
-        // }
-        if (!$value) {
-            return false;
-        } else if (count($this->days) == 0) {
-            return true;
-        } else if (count($this->openToday) > 0 && count($this->openNow) > 0) {
-            return true;
-        } else {
-            return false;
-        }
-    }
+    // public function getIsOpenAttribute($value)
+    // {
+    //     $value = $this->getRawOriginal('is_open');
+    //     // if ($this->id == 175) {
+    //     //     logger("openNow", [$this->openNow]);
+    //     // }
+    //     if (!$value) {
+    //         return false;
+    //     } else if (count($this->days) == 0) {
+    //         return true;
+    //     } else if (count($this->openToday) > 0 && count($this->openNow) > 0) {
+    //         return true;
+    //     } else {
+    //         return false;
+    //     }
+    // }
 
     public function getCanRateAttribute()
     {
@@ -317,7 +324,7 @@ class Vendor extends BaseModel
 
     public function menus()
     {
-        return $this->hasMany('App\Models\Menu')->where('is_active', 1);
+        return $this->hasMany('App\Models\Menu')->where('is_active', 1)->orderBy('in_order', 'asc');
     }
 
     public function cities()

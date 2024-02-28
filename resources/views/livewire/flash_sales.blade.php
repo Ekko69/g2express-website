@@ -6,7 +6,7 @@
     </x-baseview>
 
     <div x-data="{ open: @entangle('showCreate') }">
-        <x-modal confirmText="{{ __('Save') }}" action="save">
+        <x-modal confirmText="{{ __('Save') }}" action="save" :clickAway="false">
             <p class="text-xl font-semibold">{{ __('New Flash Sale') }}</p>
             <x-input name="title" title="{{ __('Title') }}" />
             {{-- vendor type  --}}
@@ -55,7 +55,7 @@
     </div>
 
     <div x-data="{ open: @entangle('showEdit') }">
-        <x-modal confirmText="{{ __('Update') }}" action="update">
+        <x-modal confirmText="{{ __('Update') }}" action="update" :clickAway="false">
             <p class="text-xl font-semibold">{{ __('Edit Flash Sale') }}</p>
             <x-input name="title" title="{{ __('Title') }}" />
             {{-- vendor type  --}}

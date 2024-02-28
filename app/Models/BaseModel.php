@@ -17,7 +17,7 @@ class BaseModel extends Model implements HasMedia
     use HasFactory, InteractsWithMedia;
     use SoftDeletes, EloquentRelationshipTrait;
 
-    protected $appends = ['formatted_date', 'formatted_updated_date', 'photo'];
+    protected $appends = ['formatted_date_time', 'formatted_date', 'formatted_updated_date', 'photo'];
     protected $casts = ['id' => 'integer'];
     protected $hidden = ['media'];
 
@@ -65,12 +65,12 @@ class BaseModel extends Model implements HasMedia
 
     public function getFormattedTimeAttribute()
     {
-        return $this->created_at != null ? $this->created_at->translatedFormat('h:i A') : '';
+        return $this->created_at != null ? $this->created_at->translatedFormat('h:i a') : '';
     }
 
     public function getFormattedDateTimeAttribute()
     {
-        return $this->created_at != null ? $this->created_at->translatedFormat('d M Y \a\t h:i A') : '';
+        return $this->created_at != null ? $this->created_at->translatedFormat('d M Y \a\t h:i a') : '';
     }
 
     public function getFormattedUpdatedDateAttribute()
@@ -97,16 +97,32 @@ class BaseModel extends Model implements HasMedia
     }
 
 
-    public static function getPossibleEnumValues($name)
+    public static function getPossibleEnumValues($column)
     {
         $instance = new static; // create an instance of the model to be able to get the table name
-        $type = \DB::select(\DB::raw('SHOW COLUMNS FROM ' . $instance->getTable() . ' WHERE Field = "' . $name . '"'))[0]->Type;
-        preg_match('/^enum\((.*)\)$/', $type, $matches);
-        $enum = array();
-        foreach (explode(',', $matches[1]) as $value) {
-            $v = trim($value, "'");
-            $enum[] = $v;
+        $tableName = $instance->getTable();
+        $enumValues = [];
+
+        $raw = "SHOW COLUMNS FROM {$tableName} WHERE Field = '{$column}'";
+        $columnInfo = collect(\DB::select($raw))->first();
+
+        // Extract enum values from the column type definition
+        if ($columnInfo) {
+            preg_match('/^enum\((.*)\)$/', $columnInfo->Type, $matches);
+            if (isset($matches[1])) {
+                $enumValues = str_getcsv($matches[1], ',', "'");
+            }
         }
-        return $enum;
+        return $enumValues;
+
+
+        // $type = \DB::select(\DB::raw('SHOW COLUMNS FROM ' . $instance->getTable() . ' WHERE Field = "' . $name . '"'))[0]->Type;
+        // preg_match('/^enum\((.*)\)$/', $type, $matches);
+        // $enum = array();
+        // foreach (explode(',', $matches[1]) as $value) {
+        //     $v = trim($value, "'");
+        //     $enum[] = $v;
+        // }
+        // return $enum;
     }
 }

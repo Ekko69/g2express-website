@@ -12,7 +12,7 @@ trait OrderAttributeTrait
     //TAX
     public function getCodeOrderTypeAttribute()
     {
-        if ($this->vendor_id) {
+        if ($this->vendor_id != null) {
             return \Str::upper(substr($this->vendor->vendor_type->slug, 0, 1));
         }
         if ($this->taxi_order) {

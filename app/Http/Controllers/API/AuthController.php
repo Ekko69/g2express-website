@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Propaganistas\LaravelPhone\PhoneNumber;
+use App\Models\VendorManager;
 
 
 
@@ -147,13 +148,13 @@ class AuthController extends Controller
         }
 
         //
-        $phone = PhoneNumber::make($request->phone);
+        $phone = new PhoneNumber($request->phone);
         $user = User::where('phone', 'like', '%' . $phone . '')->first();
 
         if (!empty($user)) {
 
             //
-            $internationalFormat = PhoneNumber::make($phone, setting('countryCode', "GH"))->formatInternational();
+            $internationalFormat = (new PhoneNumber($phone, setting('countryCode', "GH")))->formatInternational();
             return response()->json([
                 "phone" => $internationalFormat
             ], 200);
@@ -186,7 +187,7 @@ class AuthController extends Controller
         }
 
         //
-        $phone = PhoneNumber::make($request->phone);
+        $phone = new PhoneNumber($request->phone);
         $user = User::where('phone', 'like', '%' . $phone . '')->first();
 
         if (empty($user)) {
@@ -199,7 +200,7 @@ class AuthController extends Controller
         try {
 
             //
-            $phone = PhoneNumber::make($request->phone);
+            $phone = new PhoneNumber($request->phone);
 
             if (!empty($request->firebase_id_token)) {
                 $firebaseUser = $this->verifyFirebaseIDToken($request->firebase_id_token);
@@ -220,7 +221,12 @@ class AuthController extends Controller
                         "message" => __("Password Reset Failed"),
                     ], 400);
                 }
-            } else {
+            } else if (!empty($request->verification_token)) {
+                $tokenData = decrypt($request->verification_token);
+                $encryptedPhone = $tokenData["phone"];
+                if ($encryptedPhone != $phone) {
+                    throw new Exception(__("Invalid verification token"), 1);
+                }
                 //verify that the token belongs to the right user
                 $user = User::where("phone", $phone)->firstorfail();
                 $user->password = Hash::make($request->password);
@@ -229,6 +235,8 @@ class AuthController extends Controller
                 return response()->json([
                     "message" => __("Account Password Updated Successfully"),
                 ], 200);
+            } else {
+                //throw error
             }
         } catch (\Expection $ex) {
             return response()->json([
@@ -265,9 +273,9 @@ class AuthController extends Controller
         try {
 
             //
-            $phone = PhoneNumber::make($request->phone);
-            // $rawPhone = PhoneNumber::make($request->phone, setting('countryCode', "GH"))->formatNational();
-            // $phone = str_replace(' ', '', $rawPhone); 
+            $phone = new PhoneNumber($request->phone);
+            // $rawPhone = new PhoneNumber($request->phone, setting('countryCode', "GH"))->formatNational();
+            // $phone = str_replace(' ', '', $rawPhone);
             // logger("Phone", [$request->phone, $phone]);
 
             //
@@ -329,6 +337,16 @@ class AuthController extends Controller
     public function profileUpdate(Request $request)
     {
 
+        //if enableProfileUpdate is false, then return error
+        $enableProfileUpdate = (bool) setting('enableProfileUpdate', 1);
+        if (!$enableProfileUpdate) {
+            return response()->json([
+                "message" => __("Profile update is disabled"),
+            ], 400);
+        }
+
+
+        //
         $validator = Validator::make(
             $request->all(),
             [
@@ -409,7 +427,7 @@ class AuthController extends Controller
             ], 400);
         }
 
-        //check old password 
+        //check old password
         if (!Hash::check($request->password, Auth::user()->password)) {
             return response()->json([
                 "message" => __("Invalid Current Password"),
@@ -453,6 +471,8 @@ class AuthController extends Controller
                 $user->save();
             }
             $request->user()->currentAccessToken()->delete();
+            //remove device tokens
+            $user->deListTokens();
             return response()->json([
                 "message" => __("Logout successful")
             ]);
@@ -478,6 +498,21 @@ class AuthController extends Controller
         $vendor = Vendor::find($user->vendor_id);
         $vehicle = Vehicle::active()->where('driver_id', $user->id)->first();
         $token = $user->createToken($user->name)->plainTextToken;
+        $user->has_multiple_vendors = false;
+        //adding has_multiple_vendors to user object
+        //first check the user is a manager
+        if ($user->hasRole('manager')) {
+            //check if the manager has multiple vendors
+            $hasManyVendor = VendorManager::where('user_id', $user->id)->count() > 1;
+            $user->has_multiple_vendors = $hasManyVendor;
+            //append the permissions to the user object
+            $user->permissions = $user->getAllPermissions();
+        }
+
+        //store/sync firebase tokens for the user
+        $user->syncFCMTokens();
+
+
         return response()->json([
             "token" => $token,
             "fb_token" => $this->fbToken($user),

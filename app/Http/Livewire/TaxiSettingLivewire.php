@@ -21,7 +21,7 @@ class TaxiSettingLivewire extends BaseLivewireComponent
     public $completed;
     public $cancelled;
     public $failed;
-    
+
     public $cash_overdraft_completed;
     public $overdraft_completed;
 
@@ -33,6 +33,8 @@ class TaxiSettingLivewire extends BaseLivewireComponent
     public $requestBookingCode;
     public $bookingCodeOptions = ["none", "before", "after"];
     public $recalculateFare;
+    public $showTaxiPickupInfo;
+    public $showTaxiDropoffInfo;
 
 
     public function mount()
@@ -58,6 +60,9 @@ class TaxiSettingLivewire extends BaseLivewireComponent
         $this->delayResearchTaxiMatching = setting('delayResearchTaxiMatching', 30);
         $this->requestBookingCode = setting('taxi.requestBookingCode');
         $this->recalculateFare = (bool) setting('taxi.recalculateFare', false);
+        //
+        $this->showTaxiPickupInfo = (bool) setting('taxi.showTaxiPickupInfo', true);
+        $this->showTaxiDropoffInfo = (bool) setting('taxi.showTaxiDropoffInfo', true);
     }
 
     public function render()
@@ -74,9 +79,20 @@ class TaxiSettingLivewire extends BaseLivewireComponent
 
         try {
 
+            $alertDuration = setting('alertDuration', 5);
+            if ($this->delayResearchTaxiMatching < ($alertDuration * 2)) {
+                $this->addError('delayResearchTaxiMatching', __("Delay same order subsequent Search must be at least twice the alert duration!"));
+                $this->showErrorAlert(__("Delay same order subsequent Search must be at least twice the alert duration!"));
+                return;
+            }
+
+
             $this->isDemo();
 
             $appSettings = [
+                'taxi.showTaxiPickupInfo' =>  (bool) $this->showTaxiPickupInfo,
+                'taxi.showTaxiDropoffInfo' =>  (bool) $this->showTaxiDropoffInfo,
+                //
                 'taxi.cancelPendingTaxiOrderTime' =>  $this->cancelPendingTaxiOrderTime,
                 'taxi.drivingSpeed' =>  $this->drivingSpeed,
                 'taxi.msg.pending' =>  $this->pending,
@@ -86,7 +102,7 @@ class TaxiSettingLivewire extends BaseLivewireComponent
                 'taxi.msg.completed' =>  $this->completed,
                 'taxi.msg.cancelled' =>  $this->cancelled,
                 'taxi.msg.failed' =>  $this->failed,
-                
+
                 'taxi.msg.cash_overdraft_completed' =>  $this->cash_overdraft_completed,
                 'taxi.msg.overdraft_completed' =>  $this->overdraft_completed,
 
@@ -104,7 +120,7 @@ class TaxiSettingLivewire extends BaseLivewireComponent
             setting($appSettings)->save();
 
             //
-            if($this->recalculateFare){
+            if ($this->recalculateFare) {
                 //auto enable allow wallet once the recalculateFare is enabled
                 setting([
                     "finance.allowWallet" => $this->recalculateFare

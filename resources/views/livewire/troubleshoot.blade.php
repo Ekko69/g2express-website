@@ -43,6 +43,11 @@
                 <x-heroicon-o-globe-alt class="w-5 h-5 rtl:ml-4 ltr:mr-4" />
             </x-settings-item>
 
+            {{-- Product Translations --}}
+            <x-settings-item title="{{ __('Product Translations') }}" wireClick="fixProductTranslations">
+                <x-heroicon-o-globe-alt class="w-5 h-5 rtl:ml-4 ltr:mr-4" />
+            </x-settings-item>
+
             {{-- Model Translations Fallback --}}
             <x-settings-item title="{{ __('Model Translations Fallback') }}" wireClick="fixTranslationFallback">
                 <x-heroicon-o-globe-alt class="w-5 h-5 rtl:ml-4 ltr:mr-4" />
@@ -53,7 +58,26 @@
                 <x-heroicon-o-globe-alt class="w-5 h-5 rtl:ml-4 ltr:mr-4" />
             </x-settings-item>
 
+            {{-- generate firebase indexes --}}
+            <x-settings-item title="{{ __('Generate Firestore Indexes Links') }}" wireClick="fixFirestoreIndexesLink">
+                <x-heroicon-o-link class="w-5 h-5 rtl:ml-4 ltr:mr-4" />
+            </x-settings-item>
 
+            {{-- update driver records in firebase --}}
+            <x-settings-item title="{{ __('Fix Regular Driver Firebase Issue') }}"
+                wireClick="fixFirebaseDriverRecords">
+                <x-heroicon-o-link class="w-5 h-5 rtl:ml-4 ltr:mr-4" />
+                <x-slot name="info">
+                    <div class="text-xs p-2">
+                        <p>
+                            {{ __('This will try fix the regular drivers record in the firebase that was setting wrongly') }}
+                        </p>
+                        <p class="text-red-500">
+                            {{ __('These process might be longer depending on the size of your driver record') }}
+                        </p>
+                    </div>
+                </x-slot>
+            </x-settings-item>
 
 
 

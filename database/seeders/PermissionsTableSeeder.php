@@ -53,6 +53,9 @@ view-customers-report
 view-subscriptions-report
 view-in-app-support
 set-in-app-support
+modify-vendor-document
+change-order-cancel-reason
+view-driver-documents
 
 ------------ CITYADMIN-\ADMIN-------
 view-coupon-report
@@ -72,6 +75,7 @@ view-tags
         $fleetManagerPermissions = ["manage-fleet", "view-fleets"];
         //admin only permissions
         $adminRolePermissions = [
+            "assign-permissions",
             "manager-fleets",
             "manage-subscriptions",
             "view-vendor-types",
@@ -112,6 +116,15 @@ view-tags
             "new-package-order",
             "view-wallet-transactions",
             "view-payment-accounts",
+            //
+            "view-driver-incentives",
+            "view-drivers",
+            "edit-driver",
+            "delete-driver",
+            "modify-vendor-document",
+            "change-order-cancel-reason",
+            "view-driver-documents",
+            "view-vendor-documents",
         ];
         //managers roles only
         $managerRolePermissions = ["manager-fleets", "my-subscription", 'my-earning'];

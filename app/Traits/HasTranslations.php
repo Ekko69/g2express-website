@@ -4,7 +4,7 @@ namespace App\Traits;
 
 use Spatie\Translatable\HasTranslations as BaseHasTranslations;
 use Illuminate\Support\Str;
-use Spatie\Translatable\Events\TranslationHasBeenSet;
+use Spatie\Translatable\Events\TranslationHasBeenSetEvent;
 use Spatie\Translatable\Exceptions\AttributeIsNotTranslatable;
 
 trait HasTranslations
@@ -38,11 +38,13 @@ trait HasTranslations
             $value = $this->attributes[$key];
         }
 
+        //value replace " with \" to fix the issue with arabic characters
+        $value = str_replace('"', "\"", $value);
         $translations[$locale] = $value;
         $jsonValue = json_encode($translations, JSON_UNESCAPED_UNICODE);
         $this->attributes[$key] = $jsonValue;
 
-        event(new TranslationHasBeenSet($this, $key, $locale, $oldValue, $value));
+        event(new TranslationHasBeenSetEvent($this, $key, $locale, $oldValue, $value));
 
         return $this;
     }

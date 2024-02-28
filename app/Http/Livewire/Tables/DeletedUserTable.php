@@ -56,12 +56,16 @@ class DeletedUserTable extends BaseDataTableComponent
     {
         $columns = [
             Column::make(__('ID'), "id")->searchable()->sortable(),
-            Column::make(__('Name'), 'name')->searchable()->sortable(),
+            Column::make(__('Name'), 'name')
+                ->format(function ($value, $column, $row) {
+                    return view('components.table.user', $data = [
+                        "value" => $value,
+                        "model" => $row,
+                    ]);
+                })->searchable()->sortable(),
         ];
 
-        if (!$this->inDemo()) {
-            $columns[] = Column::make(__('Phone'), 'phone')->searchable()->sortable();
-        }
+
 
         $mColumns = [
             $this->customColumn(__('Wallet'), 'components.table.wallet'),
@@ -76,7 +80,7 @@ class DeletedUserTable extends BaseDataTableComponent
     }
 
 
-    
+
     //
     public function deleteModel()
     {

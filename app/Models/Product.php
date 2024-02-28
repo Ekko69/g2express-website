@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Traits\HasTranslations;
 use App\Traits\ProductAttributeTrait;
+use App\Traits\ModelTokenizedAttributeTrait;
 use Illuminate\Support\Facades\Auth;
 use Kirschbaum\PowerJoins\PowerJoins;
 
@@ -13,21 +14,35 @@ class Product extends BaseModel
     use PowerJoins;
     use ProductAttributeTrait;
     use HasTranslations;
+    use ModelTokenizedAttributeTrait;
     public $translatable = ['name', "description"];
 
     protected $fillable = [
-        "id", "name", "description", "price", "discount_price", "capacity", "unit", "package_count", "available_qty", "featured", "deliverable", "is_active", "vendor_id"
+        "id", "name", "description", "price", "discount_price",
+        "capacity", "unit", "package_count", "available_qty",
+        "featured", "deliverable", "is_active", "vendor_id"
     ];
 
-    protected $appends = ['formatted_date', 'sell_price', 'photo', 'is_favourite', 'rating', 'option_groups', 'photos', 'digital_files'];
-    protected $with = ['vendor'];
+    protected $appends = ['formatted_date', 'sell_price', 'photo', 'is_favourite', 'rating', 'option_groups', 'photos', 'digital_files', 'token'];
+    protected $with = ['vendor', 'tags'];
     protected $withCount = ['reviews'];
+    protected $casts = [
+        'age_restricted' => "bool",
+    ];
 
     public function scopeActive($query)
     {
-        return $query->where('is_active', 1)->whereHas('vendor', function ($q) {
+        $query->where('is_active', 1)->whereHas('vendor', function ($q) {
             $q->where('is_active', 1);
         });
+
+        //check if products table has approved column
+        if (\Schema::hasColumn('products', 'approved')) {
+            $query->where('approved', 1);
+        }
+
+        //
+        return $query;
     }
 
     public function scopeMine($query)
@@ -116,14 +131,24 @@ class Product extends BaseModel
 
         $optionGroupIds = Option::whereHas('products', function ($query) {
             return $query->where('product_id', "=", $this->id);
-        })->pluck('option_group_id');
-
+        })->active()->pluck('option_group_id');
         //
-        return OptionGroup::with(['options' => function ($query) {
-            $query->whereHas('products', function ($query) {
-                return $query->where('product_id', "=", $this->id);
-            });
-        }])->whereIn('id', $optionGroupIds)->get();
+        $models = OptionGroup::with([
+            'options' => function ($query) {
+                return $query->whereHas('products', function ($query) {
+                    return $query->where('product_id', "=", $this->id);
+                });
+            }
+        ])
+            ->whereIn('id', $optionGroupIds)
+            ->active()
+            ->get();
+        return $models;
+    }
+
+    public function getHasOptionsAttribute()
+    {
+        return $this->options()->count() > 0;
     }
 
     public function reviews()

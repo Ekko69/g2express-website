@@ -1,13 +1,14 @@
 <?php
 
 namespace App\Models;
+
 use App\Traits\HasTranslations;
 
 class VendorType extends BaseModel
 {
 
     use HasTranslations;
-    public $translatable = ['name','description'];
+    public $translatable = ['name', 'description'];
 
     protected $fillable = ['name', 'description', 'slug', 'is_active', 'color'];
     protected $appends = ['formatted_date', 'logo', 'website_header', 'has_banners'];
@@ -66,5 +67,18 @@ class VendorType extends BaseModel
     public function scopeSales($query)
     {
         return $query->whereNotIn('slug', ["taxi", "booking", "service", "parcel"]);
+    }
+
+    //delivery_zones
+    public function delivery_zones()
+    {
+        return $this->belongsToMany('App\Models\DeliveryZone', 'delivery_zone_vendor_type', 'vendor_type_id', 'delivery_zone_id');
+    }
+
+    //delivery_zones flatten
+    public function getDeliveryZoneNamesAttribute()
+    {
+        $names = $this->delivery_zones->pluck('name')->toArray();
+        return implode(", ", $names);
     }
 }

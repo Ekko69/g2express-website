@@ -6,7 +6,7 @@
     </x-baseview>
     {{-- new form --}}
     <div x-data="{ open: @entangle('showCreate') }">
-        <x-modal confirmText="{{ __('Save') }}" action="save" :clickAway="false">
+        <x-modal-lg confirmText="{{ __('Save') }}" action="save" :clickAway="false">
             <p class="text-xl font-semibold">{{ __('Create Services/Booking') }}</p>
             {{-- show all errors --}}
             <x-form-errors />
@@ -26,7 +26,8 @@
             <x-select title="{{ __('Subcategory') }}" name="subcategory_id" :options="$subcategories" :noPreSelect="true" />
 
             <x-input title="{{ __('Name') }}" name="name" />
-            <x-textarea title="{{ __('Description') }}" name="description" />
+            <x-input.summernote name="description" title="{{ __('Description') }}" id="newContent" />
+
             {{-- photos --}}
             <livewire:component.multiple-media-upload title="{{ __('Images') }}" name="photos" types="PNG or JPEG"
                 fileTypes="image/*" emitFunction="photoSelected" max="{{ setting('filelimit.max_service_images', 3) }}"
@@ -43,12 +44,16 @@
                 <x-checkbox title="{{ __('Active') }}" name="is_active" :defer="false" />
             </div>
 
-        </x-modal>
+            <x-checkbox title="{{ __('Age Restriction') }}" name="age_restricted"
+                description="{{ __('Customer will be informed they must be of legal age when buying this service') }}"
+                :defer="false" />
+
+        </x-modal-lg>
     </div>
 
     {{-- edit service --}}
     <div x-data="{ open: @entangle('showEdit') }">
-        <x-modal confirmText="{{ __('Update') }}" action="update" :clickAway="false">
+        <x-modal-lg confirmText="{{ __('Update') }}" action="update" :clickAway="false">
             <p class="text-xl font-semibold">{{ __('Edit Services/Booking') }}</p>
             {{-- show all errors --}}
             <x-form-errors />
@@ -71,7 +76,7 @@
             <x-select title="{{ __('Subcategory') }}" name="subcategory_id" :options="$subcategories" :noPreSelect="true" />
 
             <x-input title="{{ __('Name') }}" name="name" />
-            <x-textarea title="{{ __('Description') }}" name="description" />
+            <x-input.summernote name="description" title="{{ __('Description') }}" id="editContent" />
             {{-- photos --}}
             <livewire:component.multiple-media-upload title="{{ __('Images') }}" name="photos" types="PNG or JPEG"
                 fileTypes="image/*" emitFunction="photoSelected" max="{{ setting('filelimit.max_service_images', 3) }}"
@@ -87,15 +92,21 @@
                 <x-checkbox title="{{ __('Active') }}" name="is_active" :defer="false" />
             </div>
 
-        </x-modal>
+            <x-checkbox title="{{ __('Age Restriction') }}" name="age_restricted"
+                description="{{ __('Customer will be informed they must be of legal age when buying this service') }}"
+                :defer="false" />
+
+        </x-modal-lg>
     </div>
 
     {{-- show service details --}}
     <div x-data="{ open: @entangle('showDetails') }">
-        <x-modal>
+        <x-modal-lg>
             <p class="text-xl font-semibold">{{ __('Services/Booking') }} {{ __('Details') }}</p>
             <x-details.item title="{{ __('Name') }}" text="{{ $selectedModel->name ?? '' }}" />
-            <x-details.item title="{{ __('Description') }}" text="{{ $selectedModel->description ?? '' }}" />
+            <x-details.item title="{{ __('Description') }}">
+                {!! $selectedModel->description ?? '' !!}
+            </x-details.item>
             <div class="grid grid-cols-2 space-x-2">
                 <x-details.item title="{{ __('Vendor') }}" text="{{ $selectedModel->vendor->name ?? '' }}" />
                 <x-details.item title="{{ __('Category') }}" text="{{ $selectedModel->category->name ?? '' }}" />
@@ -128,7 +139,7 @@
 
             </div>
 
-        </x-modal>
+        </x-modal-lg>
 
     </div>
 

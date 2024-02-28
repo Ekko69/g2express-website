@@ -18,6 +18,7 @@ class OptionGroupLivewire extends BaseLivewireComponent
     public $multiple = 1;
     public $required = 0;
     public $isActive = 1;
+    public $max_options;
 
     protected $rules = [
         "name" => "required|string",
@@ -33,19 +34,20 @@ class OptionGroupLivewire extends BaseLivewireComponent
     public function showCreateModal()
     {
 
-        if(\Auth::user()->hasAnyRole('manager')){
+        if (\Auth::user()->hasAnyRole('manager')) {
             $this->showCreate = true;
-        }else{
+        } else {
             $this->showWarningAlert(__("Only vendor manager can create new record"));
         }
     }
 
 
-    public function save(){
+    public function save()
+    {
         //validate
         $this->validate();
 
-        try{
+        try {
 
             DB::beginTransaction();
             $model = new OptionGroup();
@@ -54,37 +56,38 @@ class OptionGroupLivewire extends BaseLivewireComponent
             $model->is_active = $this->isActive;
             $model->required = $this->required ?? false;
             $model->vendor_id = Auth::user()->vendor_id;
+            $model->max_options = $this->max_options;
             $model->save();
             DB::commit();
 
             $this->dismissModal();
             $this->reset();
-            $this->showSuccessAlert(__("Option Group")." ".__('created successfully!'));
+            $this->showSuccessAlert(__("Option Group") . " " . __('created successfully!'));
             $this->emit('refreshTable');
-
-
-        }catch(Exception $error){
+        } catch (Exception $error) {
             DB::rollback();
-            $this->showErrorAlert( $error->getMessage() ?? __("Option Group")." ".__('creation failed!'));
-
+            $this->showErrorAlert($error->getMessage() ?? __("Option Group") . " " . __('creation failed!'));
         }
-
     }
 
     // Updating model
-    public function initiateEdit($id){
+    public function initiateEdit($id)
+    {
         $this->selectedModel = $this->model::find($id);
         $this->name = $this->selectedModel->name;
         $this->isActive = $this->selectedModel->is_active;
         $this->required = $this->selectedModel->required ?? false;
+        $this->multiple = $this->selectedModel->multiple;
+        $this->max_options = $this->selectedModel->max_options;
         $this->emit('showEditModal');
     }
 
-    public function update(){
+    public function update()
+    {
         //validate
         $this->validate();
 
-        try{
+        try {
 
             DB::beginTransaction();
             $model = $this->selectedModel;
@@ -92,23 +95,17 @@ class OptionGroupLivewire extends BaseLivewireComponent
             $model->multiple = $this->multiple;
             $model->is_active = $this->isActive;
             $model->required = $this->required ?? false;
+            $model->max_options = $this->max_options;
             $model->save();
             DB::commit();
 
             $this->dismissModal();
             $this->reset();
-            $this->showSuccessAlert(__("Option Group")." ".__('updated successfully!'));
+            $this->showSuccessAlert(__("Option Group") . " " . __('updated successfully!'));
             $this->emit('refreshTable');
-
-
-        }catch(Exception $error){
+        } catch (Exception $error) {
             DB::rollback();
-            $this->showErrorAlert( $error->getMessage() ?? __("Option Group")." ".__('updated failed!'));
-
+            $this->showErrorAlert($error->getMessage() ?? __("Option Group") . " " . __('updated failed!'));
         }
-
     }
-
-
-
 }

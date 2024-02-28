@@ -42,7 +42,7 @@ class TaxiOrderService
                 'status' => $order->status,
                 'earth_distance' => $this->getEarthDistance($order->taxi_order->pickup_latitude, $order->taxi_order->pickup_longitude),
                 'trip_distance' => $this->getRelativeDistance($pickupLat, $dropoffLat),
-                'range' => (int) setting('driverSearchRadius', 10),
+                'range' => (int) driverSearchRadius($order),
                 'notify' => (int) setting('maxDriverOrderNotificationAtOnce', 1),
                 'pickup' => new FirestoreObject([
                     'address' => $order->taxi_order->pickup_address,
@@ -87,7 +87,7 @@ class TaxiOrderService
                 'status' => $order->status,
                 'earth_distance' => $this->getEarthDistance($order->taxi_order->pickup_latitude, $order->taxi_order->pickup_longitude),
                 'trip_distance' => $this->getRelativeDistance($pickupLat, $dropoffLat),
-                'range' => (int) setting('driverSearchRadius', 10),
+                'range' => (int) driverSearchRadius($order),
                 'notify' => (int) setting('maxDriverOrderNotificationAtOnce', 1),
                 'pickup' => new FirestoreObject([
                     'address' => $order->taxi_order->pickup_address,

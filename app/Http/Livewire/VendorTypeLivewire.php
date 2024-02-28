@@ -3,6 +3,7 @@
 namespace App\Http\Livewire;
 
 use App\Models\VendorType;
+use App\Models\DeliveryZone;
 use Exception;
 use Illuminate\Support\Facades\DB;
 
@@ -19,7 +20,15 @@ class VendorTypeLivewire extends BaseLivewireComponent
     public $isActive;
     public $slug;
     public $types = [];
+    public $deliveryZonesIDs;
 
+
+    public function getListeners()
+    {
+        return $this->listeners + [
+            "deliveryZonesChange" => "deliveryZonesChange",
+        ];
+    }
 
     public function render()
     {
@@ -29,6 +38,26 @@ class VendorTypeLivewire extends BaseLivewireComponent
         return view('livewire.vendor_types');
     }
 
+    public function showCreateModal()
+    {
+        parent::showCreateModal();
+        $this->updateDeliveryZoneSelector();
+    }
+
+    public function updateDeliveryZoneSelector()
+    {
+        $deliveryZones = DeliveryZone::active()->get();
+        if ($this->showCreate) {
+            $this->showSelect2("#deliveryZonesSelect2", $this->deliveryZonesIDs, "deliveryZonesChange", $deliveryZones);
+        } else {
+            $this->showSelect2("#editDeliveryZonesSelect2", $this->deliveryZonesIDs, "deliveryZonesChange", $deliveryZones);
+        }
+    }
+
+    public function deliveryZonesChange($data)
+    {
+        $this->deliveryZonesIDs = $data;
+    }
 
     // Updating model
     public function initiateEdit($id)
@@ -38,6 +67,8 @@ class VendorTypeLivewire extends BaseLivewireComponent
         $this->color = $this->selectedModel->color;
         $this->description = $this->selectedModel->description ?? "";
         $this->isActive = $this->selectedModel->is_active;
+        $this->deliveryZonesIDs = $this->selectedModel->delivery_zones()->pluck('delivery_zone_id');
+        $this->updateDeliveryZoneSelector();
         $this->emit('showEditModal');
     }
 
@@ -48,8 +79,8 @@ class VendorTypeLivewire extends BaseLivewireComponent
             [
                 "name" => "required|string",
                 "description" => "nullable|sometimes|string",
-                "photo" => "nullable|sometimes|image|max:".setting("filelimit.vendor_type",1024)."",
-                "secondPhoto" => "nullable|sometimes|image|max:".setting("filelimit.vendor_type",1024)."",
+                "photo" => "nullable|sometimes|image|max:" . setting("filelimit.vendor_type", 1024) . "",
+                "secondPhoto" => "nullable|sometimes|image|max:" . setting("filelimit.vendor_type", 1024) . "",
             ]
         );
 
@@ -63,6 +94,9 @@ class VendorTypeLivewire extends BaseLivewireComponent
             $model->is_active = $this->isActive;
             $model->slug = $this->slug ?? "food";
             $model->save();
+
+            //
+            $model->delivery_zones()->sync($this->deliveryZonesIDs);
 
             if ($this->photo) {
 
@@ -97,8 +131,8 @@ class VendorTypeLivewire extends BaseLivewireComponent
             [
                 "name" => "required|string",
                 "description" => "nullable|sometimes|string",
-                "photo" => "nullable|sometimes|image|max:".setting("filelimit.vendor_type",1024)."",
-                "secondPhoto" => "nullable|sometimes|image|max:".setting("filelimit.vendor_type",1024)."",
+                "photo" => "nullable|sometimes|image|max:" . setting("filelimit.vendor_type", 1024) . "",
+                "secondPhoto" => "nullable|sometimes|image|max:" . setting("filelimit.vendor_type", 1024) . "",
             ]
         );
 
@@ -111,6 +145,9 @@ class VendorTypeLivewire extends BaseLivewireComponent
             $model->description = $this->description;
             $model->is_active = $this->isActive;
             $model->save();
+
+            //
+            $model->delivery_zones()->sync($this->deliveryZonesIDs);
 
             if ($this->photo) {
 

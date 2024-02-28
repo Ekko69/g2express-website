@@ -62,12 +62,10 @@
         <div class="gap-4 mt-5 border-t">
             {{-- with initial emit --}}
             {{-- delivery boy --}}
-            <livewire:component.autocomplete-input title="{{ __('Delivery Boy') }}"
-                placeholder="{{ __('Search for driver') }}" column="name" model="User" customQuery="driver"
-                initialEmit="preselectedDeliveryBoyEmit" emitFunction="autocompleteDriverSelected"
-                onclearCalled="clearAutocompleteFieldsEvent" />
-            {{-- <x-select title="{{ __('Delivery Boy') }}" :options="$deliveryBoys ?? []"
-                name="deliveryBoyId" :noPreSelect="true" /> --}}
+            <x-label for="deliveryBoyId" title="{{ __('Delivery Personal') }}">
+                <livewire:select.edit-order-driver-select name="deliveryBoyId"
+                    placeholder="{{ __('Delivery Personal/Driver') }}" :searchable="true" />
+            </x-label>
             <x-select title="{{ __('Status') }}" :options="$orderStatus ?? []" name="status" />
             <x-select title="{{ __('Payment Status') }}" :options="$orderPaymentStatus ?? []" name="paymentStatus" />
             <x-input title="{{ __('Note') }}" name="note" />

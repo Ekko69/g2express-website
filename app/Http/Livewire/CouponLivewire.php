@@ -29,6 +29,7 @@ class CouponLivewire extends BaseLivewireComponent
     public $min_order_amount;
     public $max_coupon_amount;
     public $isActive = 1;
+    public $for_delivery = 0;
     public $productIDS;
     public $vendorsIDS;
     public $vendor_type_id;
@@ -95,6 +96,7 @@ class CouponLivewire extends BaseLivewireComponent
             $model->expires_on = $this->expires_on;
             $model->times = $this->times;
             $model->is_active = $this->isActive;
+            $model->for_delivery = $this->for_delivery;
             if (\Schema::hasColumn('coupons', 'vendor_type_id')) {
                 $model->vendor_type_id = $this->vendor_type_id;
             }
@@ -137,6 +139,7 @@ class CouponLivewire extends BaseLivewireComponent
         $this->expires_on = $this->selectedModel->expires_on;
         $this->times = $this->selectedModel->times;
         $this->isActive = $this->selectedModel->is_active;
+        $this->for_delivery = $this->selectedModel->for_delivery;
         $this->vendor_type_id = $this->selectedModel->vendor_type_id;
 
         $this->productIDS = $this->selectedModel->products()->pluck('id');
@@ -172,6 +175,7 @@ class CouponLivewire extends BaseLivewireComponent
             $model->min_order_amount = $this->min_order_amount;
             $model->max_coupon_amount = $this->max_coupon_amount;
             $model->is_active = $this->isActive;
+            $model->for_delivery = $this->for_delivery;
             if (\Schema::hasColumn('coupons', 'vendor_type_id')) {
                 $model->vendor_type_id = $this->vendor_type_id;
             }

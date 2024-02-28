@@ -7,9 +7,11 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Service;
 use App\Models\Vendor;
+use App\Traits\GoogleMapApiTrait;
 
 class SearchController extends Controller
 {
+    use GoogleMapApiTrait;
     //
     public function index(Request $request)
     {
@@ -39,16 +41,6 @@ class SearchController extends Controller
 
             $products = $searchResult = Product::active()
 
-                ->when($request->latitude && empty($request->vendor_type_id), function ($query) use ($request) {
-                    return $query->where(function ($query) use ($request) {
-                        return $this->filterByVendorLocation($query, $request);
-                    });
-                })
-                ->when($request->latitude && $request->vendor_type_id, function ($query) use ($request) {
-                    return $query->where(function ($query) use ($request) {
-                        return $this->filterByVendorChecks($query, $request);
-                    });
-                })
                 //tag search
                 ->when(!empty($tags), function ($query) use ($tags) {
                     return $query->whereHas('tags', function ($query) use ($tags) {
@@ -97,6 +89,17 @@ class SearchController extends Controller
                 ->when($request->keyword, function ($query) use ($request) {
                     return $query->where('name', "like", "%" . $request->keyword . "%");
                 })
+                // ->when($request->latitude && empty($request->vendor_type_id), function ($query) use ($request) {
+                //     return $query->where(function ($query) use ($request) {
+                //         return $this->filterByVendorLocation($query, $request);
+                //     });
+                // })
+                // ->when($request->latitude && $request->vendor_type_id, function ($query) use ($request) {
+                //     return $query->where(function ($query) use ($request) {
+                //         return $this->filterByVendorChecks($query, $request);
+                //     });
+                // })
+
                 /*
                 ->when($request->vendor_type_id, function ($query) use ($request) {
                     return $this->filterByVendorTypeId($query, $request);
@@ -104,9 +107,32 @@ class SearchController extends Controller
                 ->when($request->latitude, function ($query) use ($request) {
                     return $this->filterByVendorLocation($query, $request);
                 })
-*/
-
+                */
+                //filter by vendor type id
+                ->when($request->vendor_type_id, function ($query) use ($request) {
+                    return $query->whereHas('vendor', function ($query) use ($request) {
+                        return $query->active()->where('vendor_type_id', $request->vendor_type_id);
+                    });
+                })
+                //filter by vendor location
+                ->when($request->latitude, function ($query) use ($request) {
+                    if (!fetchDataByLocation()) {
+                        return $query;
+                    }
+                    //
+                    $latitude = $request->latitude;
+                    $longitude = $request->longitude;
+                    $deliveryZonesIds = $this->getDeliveryZonesByLocation($latitude, $longitude);
+                    //where has vendors that has delivery zones
+                    return $query->whereHas("vendor", function ($query) use ($deliveryZonesIds) {
+                        $query->whereHas('delivery_zones', function ($query) use ($deliveryZonesIds) {
+                            $query->whereIn('delivery_zone_id', $deliveryZonesIds);
+                        });
+                    });
+                })
                 ->paginate();
+
+
 
             //
         } else if ($request->type == "service") {
@@ -160,15 +186,6 @@ class SearchController extends Controller
             $longitude = $request->longitude;
 
             $vendors = $searchResult = Vendor::active()
-                ->when($request->latitude, function ($query) use ($request) {
-                    return $query->where(function ($query) use ($request) {
-                        return $query->where(function ($query) use ($request) {
-                            return $query->within($request->latitude, $request->longitude);
-                        })->orwhere(function ($query) use ($request) {
-                            return $query->withinrange($request->latitude, $request->longitude);
-                        });
-                    });
-                })
                 ->when($request->keyword, function ($query) use ($request) {
                     return $query->where('name', "like", "%" . $request->keyword . "%");
                 })
@@ -180,25 +197,31 @@ class SearchController extends Controller
                         return $query->where('category_id', "=", $request->category_id);
                     });
                 })
+                // subcategory_id
+                ->when($request->subcategory_id, function ($query) use ($request) {
+                    return $query->whereHas("categories", function ($query) use ($request) {
+                        return $query->whereHas('sub_categories', function ($query) use ($request) {
+                            return $query->where('subcategories.id', "=", $request->subcategory_id);
+                        });
+                    });
+                })
                 ->when($request->vendor_type_id, function ($query) use ($request) {
                     return $query->where('vendor_type_id', "=", $request->vendor_type_id);
                 })
                 ->when($request->sort, function ($query) use ($request) {
                     return $query->orderBy('name', $request->sort);
                 })
+                ->when($request->latitude, function ($query) use ($request) {
+                    return $query->where(function ($query) use ($request) {
+                        return $query->where(function ($query) use ($request) {
+                            return $query->within($request->latitude, $request->longitude);
+                        })->orwhere(function ($query) use ($request) {
+                            return $query->withinrange($request->latitude, $request->longitude);
+                        });
+                    });
+                })
+                ->orderBy('is_open', 'desc')
                 ->paginate();
-        }
-
-        if (!empty($vendors)) {
-
-            $result = $vendors->items();
-            $unsortedVendors = collect($result);
-            $sortedVendors = $unsortedVendors->sortBy([
-                ['is_open', 'desc'],
-            ]);
-
-            $result = $vendors->setCollection($sortedVendors);
-            $vendors = $result;
         }
 
         //
@@ -209,7 +232,6 @@ class SearchController extends Controller
                 "services" => $services,
             ], 200);
         } else {
-
             return response()->json($searchResult, 200);
         }
     }

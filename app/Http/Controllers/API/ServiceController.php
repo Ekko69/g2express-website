@@ -34,25 +34,33 @@ class ServiceController extends Controller
             ->when($request->vendor_id, function ($query) use ($request) {
                 return $query->active()->where('vendor_id', $request->vendor_id);
             })
+            // ->when($request->latitude, function ($query) use ($request) {
+            //     return $query->whereHas('vendor', function ($query) use ($request) {
+            //         return $query->active()->around($request->latitude, $request->longitude);
+            //     });
+            // })
             ->when($request->latitude, function ($query) use ($request) {
                 return $query->whereHas('vendor', function ($query) use ($request) {
-                    return $query->active()->around($request->latitude, $request->longitude);
+                    return $query->byDeliveryZone($request->latitude, $request->longitude);
                 });
             })
+            //order by in_order
+            ->orderBy('in_order', 'ASC')
             ->when($request->page, function ($query) {
                 return $query->paginate($this->perPage);
-            }, function ($query)  {
+            }, function ($query) {
                 return $query->get();
             });
     }
 
-    public function show(Request $request,$id)
+    public function show(Request $request, $id)
     {
         return Service::find($id);
     }
 
 
-    public function durations(Request $request){
+    public function durations(Request $request)
+    {
         return Service::getPossibleEnumValues('duration');
     }
 }

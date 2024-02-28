@@ -25,6 +25,9 @@ class TaxiOrderObserver
             $newTaxiFare = $this->getRecalculatedTaxiOrderTotalPrice($model);
             $model->sub_total = $newTaxiFare;
             $model->total = ($newTaxiFare - $model->discount) + $model->tip;
+            //update the taxi order
+            $taxiOrder = $this->getRecalculatedTaxiOrderBreakdown($model);
+            $taxiOrder->saveQuietly();
         }
         AppLangService::restoreLocale();
     }

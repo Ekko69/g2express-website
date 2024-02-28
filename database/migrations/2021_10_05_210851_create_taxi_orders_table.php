@@ -26,6 +26,12 @@ class CreateTaxiOrdersTable extends Migration
             $table->string('dropoff_latitude');
             $table->string('dropoff_longitude');
             $table->string('dropoff_address');
+            //breakdown
+            $table->string('base_fare')->nullable();
+            $table->string('distance_fare')->nullable();
+            $table->string('time_fare')->nullable();
+            $table->string('trip_distance')->nullable();
+            $table->string('trip_time')->nullable();
             $table->timestamps();
         });
     }

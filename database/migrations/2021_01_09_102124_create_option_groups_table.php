@@ -21,6 +21,8 @@ class CreateOptionGroupsTable extends Migration
             $table->boolean('required')->default(false);
             $table->boolean('is_active')->default(true);
             $table->integer('in_order')->default(1);
+            //max number of options that can be selected
+            $table->integer('max_options')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

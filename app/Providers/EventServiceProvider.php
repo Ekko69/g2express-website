@@ -21,6 +21,7 @@ use App\Models\Service;
 use App\Models\TaxiOrder;
 use App\Models\Vendor;
 use App\Models\Wallet;
+use App\Models\WalletTransaction;
 use App\Observers\AutoAssignmentObserver;
 //
 use App\Observers\OrderObserver;
@@ -38,9 +39,11 @@ use App\Observers\ServiceObserver;
 use App\Observers\VendorObserver;
 use App\Observers\ReferralObserver;
 use App\Observers\WalletObserver;
+use App\Observers\WalletTransactionObserver;
 use App\Observers\OrderLoyaltyObserver;
 use App\Observers\OverdraftOrderObserver;
 use App\Observers\OverdraftWalletObserver;
+use App\Observers\VendorOpenObserver;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -69,6 +72,7 @@ class EventServiceProvider extends ServiceProvider
         //
         User::observe(UserObserver::class);
         Vendor::observe(VendorObserver::class);
+        Vendor::observe(VendorOpenObserver::class);
         Order::observe(OrderObserver::class);
         Order::observe(OrderFeesObserver::class);
         SubscriptionVendor::observe(SubscriptionObserver::class);
@@ -88,8 +92,10 @@ class EventServiceProvider extends ServiceProvider
         //
         Order::observe(ReferralObserver::class);
         Order::observe(OrderLoyaltyObserver::class);
-        Wallet::observe(WalletObserver::class);
         Wallet::observe(OverdraftWalletObserver::class);
+        Wallet::observe(WalletObserver::class);
+        WalletTransaction::observe(WalletTransactionObserver::class);
+        //add wallet transaction observer
         AutoAssignment::observe(AutoAssignmentObserver::class);
 
         // translations observer

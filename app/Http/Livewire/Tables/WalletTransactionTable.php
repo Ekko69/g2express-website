@@ -78,7 +78,7 @@ class WalletTransactionTable extends BaseDataTableComponent
                     "value" => $localTransfer ? __("Transfer") : ($row->payment_method != null ? $row->payment_method->name : ''),
                 ]);
             }),
-            Column::make(__('Created At'), 'formatted_date'),
+            Column::make(__('Created At'), 'formatted_date_time'),
             Column::make(__('Actions'))->format(function ($value, $column, $row) {
                 return view('components.buttons.transaction_actions', $data = [
                     "model" => $row,

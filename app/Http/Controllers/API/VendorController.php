@@ -21,98 +21,20 @@ class VendorController extends Controller
         //
         $latitude = $request->latitude;
         $longitude = $request->longitude;
-
-        //the rest
-        $vendors = $this->getVendorsQuery($request);
-
-        //no location
-        if (!empty($latitude)) {
-
-            $vendors = $this->getVendorsQuery($request)->when($request->latitude, function ($query) use ($request) {
-                return $query->where(function ($query) use ($request) {
-                    return $query->where(function ($query) use ($request) {
-                        return $query->within($request->latitude, $request->longitude);
-                    })->orwhere(function ($query) use ($request) {
-                        return $query->withinrange($request->latitude, $request->longitude);
-                    });
-                });
-            })->when(!empty($request->type), function ($query) {
-                $vendorsHomePageListCount = setting('vendorsHomePageListCount', $this->perPage);
-                return $query->paginate($vendorsHomePageListCount);
-            }, function ($query) {
-                return $query->paginate($this->perPage);
-            });
-
-            if (!empty($vendors)) {
-
-                $result = $vendors->items();
-                $unsortedVendors = collect($result);
-                $sortedVendors = $unsortedVendors->sortBy([
-                    ['is_open', 'desc'],
-                ]);
-
-                $result = $vendors->setCollection($sortedVendors);
-                $vendors = $result;
-            }
-
-            return $vendors;
-
-            /*
-            //OLD Code, to be removed in future update, when no issue is recored
-            $rangeSearchVendors = $this->getVendorsQuery($request)
-                ->whereDoesntHave('delivery_zones')
-                ->havingRaw("delivery_range >= distance")
-                ->when(!empty($request->type), function ($query) {
-                    $vendorsHomePageListCount = setting('vendorsHomePageListCount', $this->perPage);
-                    return $query->paginate($vendorsHomePageListCount);
-                }, function ($query) {
-                    return $query->paginate($this->perPage);
-                });
-
-            $ignoreIds = $rangeSearchVendors->pluck('id');
-
-
-            $deliveryZoneSearchVendors = $this->getVendorsQuery($request)->when($latitude, function ($query) use ($latitude, $longitude) {
-                $query->with('delivery_zones')->whereHas('delivery_zones', function ($query) use ($latitude, $longitude) {
-                    $query->closeTo($latitude, $longitude);
-                });
+        //
+        $vendors = $this->getVendorsQuery($request)
+            ->when($request->latitude, function ($query) use ($latitude, $longitude) {
+                return $query->byDeliveryZone($latitude, $longitude);
             })
-                ->whereNotIn('id', $ignoreIds)
-                ->when(!empty($request->type), function ($query) {
-                    $vendorsHomePageListCount = setting('vendorsHomePageListCount', $this->perPage);
-                    return $query->paginate($vendorsHomePageListCount);
-                }, function ($query) {
-                    return $query->paginate($this->perPage);
-                });
-
-            $result = $deliveryZoneSearchVendors;
-            $result = $rangeSearchVendors->items();
-            $result = array_merge($result, $deliveryZoneSearchVendors->items());
-
-            $unsortedVendors = collect($result);
-            $sortedVendors = $unsortedVendors->sortBy([
-                ['is_open', 'desc'],
-            ]);
-
-            $result = $rangeSearchVendors->setCollection($sortedVendors);
-
-            return $result;
-            */
-        } else {
-            $vendorData = $vendors->when(!empty($request->type), function ($query) {
+            ->orderBy('is_open', 'desc')
+            ->when(!empty($request->type), function ($query) {
                 $vendorsHomePageListCount = setting('vendorsHomePageListCount', $this->perPage);
                 return $query->paginate($vendorsHomePageListCount);
             }, function ($query) {
                 return $query->paginate($this->perPage);
             });
 
-            $unsortedVendors = collect($vendorData->items());
-            $sortedVendors = $unsortedVendors->sortBy([
-                ['is_open', 'desc'],
-            ]);
-            $result = $vendorData->setCollection($sortedVendors);
-            return $result;
-        }
+        return $vendors;
     }
 
     public function getVendorsQuery($request)
@@ -124,9 +46,11 @@ class VendorController extends Controller
         $vendorTypeId = $request->vendor_type_id;
 
         //the rest
-        return Vendor::active()->inorder()->when($request->type == "top", function ($query) {
-            return $query->withCount('sales')->orderBy('sales_count', 'DESC');
-        })
+        return Vendor::active()
+            ->orderBy('is_open', 'desc')
+            ->inorder()->when($request->type == "top", function ($query) {
+                return $query->withCount('sales')->orderBy('sales_count', 'DESC');
+            })
 
             ->when($request->type == "featured", function ($query) {
                 return $query->where('featured', 1);

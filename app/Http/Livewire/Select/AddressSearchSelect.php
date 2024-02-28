@@ -3,11 +3,10 @@
 namespace App\Http\Livewire\Select;
 
 use App\Http\Controllers\API\GeocoderController;
-use Asantibanez\LivewireSelect\LivewireSelect;
 use Illuminate\Support\Collection;
 use App\Models\Vendor;
 
-class AddressSearchSelect extends LivewireSelect
+class AddressSearchSelect extends BaseLivewireSelect
 {
 
 

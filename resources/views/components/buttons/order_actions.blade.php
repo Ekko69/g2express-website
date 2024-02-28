@@ -1,4 +1,4 @@
-<div class="grid grid-cols-2 gap-2 w-20">
+<div class="grid grid-cols-2 md:grid-cols-3 gap-2 w-20 md:w-32">
 
     @php
         $chatUrl = route('order.chats', $model->code);
@@ -6,7 +6,7 @@
     @endphp
 
     @can('view-order-chat')
-        <x-buttons.plain wireClick="$emit('newTab', '{{ $chatUrl }}' )">
+        <x-buttons.plain wireClick="$emit('newTab', '{{ $chatUrl }}')">
             <x-lineawesome-comments-solid class="w-5 h-5" />
         </x-buttons.plain>
     @endcan

@@ -16,7 +16,7 @@ class VendorSelector extends BaseLivewireComponent
 
 
     protected $listeners = [];
-    
+
     //
     public function mount()
     {
@@ -47,7 +47,8 @@ class VendorSelector extends BaseLivewireComponent
             $user->save();
             \DB::commit();
             $this->showSuccessAlert(__('Current vendor updated successfully!'));
-            return redirect(request()->header('Referer'));
+            // return redirect(request()->header('Referer'));
+            return redirect()->route('dashboard');
         } catch (\Exception $ex) {
             \DB::rollback();
             $this->showErrorAlert($ex->getMessage() ?? __('Error updating current vendor'));

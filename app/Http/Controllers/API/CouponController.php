@@ -24,6 +24,10 @@ class CouponController extends Controller
                 });
             });
         })
+            //where expires_on is null or greater than today
+            ->where(function ($query) {
+                return $query->whereNull('expires_on')->orWhere('expires_on', '>=', Carbon::now());
+            })
             ->when($vendorTypeId, function ($query) use ($vendorTypeId) {
                 return $query->where('vendor_type_id', $vendorTypeId);
             })
@@ -38,7 +42,7 @@ class CouponController extends Controller
     public function details(Request $request, $id)
     {
         $coupon = Coupon::with('products', 'vendors')->whereId($id)->first();
-        if(empty($coupon)){
+        if (empty($coupon)) {
             return response()->json([
                 "message" => __("No Coupon Found")
             ], 400);
@@ -72,7 +76,7 @@ class CouponController extends Controller
                 }
             }
 
-            //check times used 
+            //check times used
             if (!empty($coupon)) {
                 $usedTimes = CouponUser::where('coupon_id', $coupon->id)
                     ->where('user_id', auth('api')->user()->id)

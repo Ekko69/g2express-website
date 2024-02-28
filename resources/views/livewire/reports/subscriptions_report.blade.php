@@ -1,9 +1,9 @@
-@section('title',  __('Subscription Report') )
+@section('title', __('Subscription Report'))
 <div>
 
     <x-baseview title="">
-         {{-- Info cards --}}
-         <div class="grid gap-6 mt-10 md:grid-cols-2 lg:grid-cols-3">
+        {{-- Info cards --}}
+        <div class="grid gap-6 mt-10 md:grid-cols-2 lg:grid-cols-3">
 
             {{-- topVendorsChart --}}
             <x-dashboard-chart>

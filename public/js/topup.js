@@ -1,4 +1,18 @@
-$(function() {
+$(function () {
+
+    //
+    var isFlutterInAppWebViewReady = false;
+    window.addEventListener("flutterInAppWebViewPlatformReady", function (event) {
+        isFlutterInAppWebViewReady = true;
+    });
+    //custom code
+    livewire.on("openExternalBrowser", url => {
+        if (isFlutterInAppWebViewReady) {
+            window.flutter_inappwebview.callHandler('handlerOpenLink', url, true);
+        }
+    });
+
+
     //Stripe
     livewire.on("initStripe", data => {
         var stripe = Stripe(data[0]);
@@ -15,11 +29,11 @@ $(function() {
             currency: data[3],
             ref: "" + data[4] + "", // generates a pseudo-unique reference. Please replace with a reference you generated. Or remove the line entirely so our API will generate one for you
             // label: "Optional string that replaces customer email"
-            onClose: function() {
-                window.location.href = ""+data[5]+"";
+            onClose: function () {
+                window.location.href = "" + data[5] + "";
             },
-            callback: function(response) {
-                window.location.href = ""+data[5]+"";
+            callback: function (response) {
+                window.location.href = "" + data[5] + "";
             }
         });
         handler.openIframe();
@@ -28,7 +42,7 @@ $(function() {
     //Razorpay
     livewire.on("initRazorpay", data => {
 
-        console.log("Date ==>"+data);
+        console.log("Date ==>" + data);
         var options = {
             key: "" + data[0] + "", // Enter the Key ID generated from the Dashboard
             amount: "" + data[1] + "", // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
@@ -39,8 +53,8 @@ $(function() {
             order_id: "" + data[5] + "", //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
             redirect: true,
             callback_url: data[6],
-            handler: function(response) {
-                window.location.href = ""+data[6]+"";
+            handler: function (response) {
+                window.location.href = "" + data[7] + "";
             },
             theme: {
                 // color: "" + data[7] + ""
@@ -48,8 +62,8 @@ $(function() {
         };
         console.log(options);
         var rzp1 = new Razorpay(options);
-        rzp1.on("payment.failed", function(response) {
-            window.location.href = ""+data[6]+"";
+        rzp1.on("payment.failed", function (response) {
+            window.location.href = "" + data[6] + "";
         });
         rzp1.open();
     });
@@ -74,10 +88,10 @@ $(function() {
                 phone_number: "" + data[6][1] + "",
                 name: "" + data[6][2] + ""
             },
-            callback: function(data) {
+            callback: function (data) {
                 console.log(data);
             },
-            onclose: function() {
+            onclose: function () {
                 // close modal
             },
             customizations: {
@@ -93,7 +107,7 @@ $(function() {
         //
         paypal
             .Buttons({
-                createOrder: function(data, actions) {
+                createOrder: function (data, actions) {
                     // This function sets up the details of the transaction, including the amount and line item details.
                     return actions.order.create({
                         purchase_units: [
@@ -106,10 +120,10 @@ $(function() {
                         ]
                     });
                 },
-                onApprove: function(data, actions) {
+                onApprove: function (data, actions) {
                     // This function captures the funds from the transaction.
-                    return actions.order.capture().then(function(details) {
-                        window.location.href = "" + mainData[2] + "&transaction_id="+details["id"]+"";
+                    return actions.order.capture().then(function (details) {
+                        window.location.href = "" + mainData[2] + "&transaction_id=" + details["id"] + "";
                     });
                 }
             })
@@ -118,8 +132,8 @@ $(function() {
 
     });
 
-     //paytm
-     livewire.on("initPayTmPayment", (mainData) => {
+    //paytm
+    livewire.on("initPayTmPayment", (mainData) => {
         //
         let paymentData = mainData;
         $("#paytm_REQUEST_TYPE").val(paymentData["REQUEST_TYPE"]);

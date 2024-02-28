@@ -11,9 +11,10 @@ class DeliveryZoneTable extends BaseDataTableComponent
 {
 
     use DBTrait;
-    
+
     public $model = DeliveryZone::class;
-    public $header_view = 'components.buttons.new';
+    public string $defaultSortColumn = 'is_active';
+    public string $defaultSortDirection = 'desc';
 
     public function filters(): array
     {
@@ -35,8 +36,7 @@ class DeliveryZoneTable extends BaseDataTableComponent
     {
         return $this->model::withCount('vendors')
             ->when($this->getFilter('start_date'), fn ($query, $sDate) => $query->whereDate('created_at', ">=", $sDate))
-            ->when($this->getFilter('end_date'), fn ($query, $eDate) => $query->whereDate('created_at', "<=", $eDate))
-            ->orderBy('created_at', 'DESC');
+            ->when($this->getFilter('end_date'), fn ($query, $eDate) => $query->whereDate('created_at', "<=", $eDate));
     }
 
     public function columns(): array
@@ -44,6 +44,17 @@ class DeliveryZoneTable extends BaseDataTableComponent
         return [
             Column::make(__('ID'), "id")->searchable()->sortable(),
             Column::make(__('Name'), 'name')->searchable()->sortable(),
+            Column::make(__('Delivery Fee'), 'delivery_fee')->format(function ($value, $column, $row) {
+                if ($value != null) {
+                    $text = currencyFormat($value ??  '');
+                } else {
+                    $text = "--";
+                }
+                return view('components.table.plain', $data = [
+                    "text" => $text
+                ]);
+            })->searchable()->sortable(),
+
             Column::make(__('Vendors'), 'vendors_count'),
             Column::make(__('Active'))->format(function ($value, $column, $row) {
                 return view('components.table.active', $data = [

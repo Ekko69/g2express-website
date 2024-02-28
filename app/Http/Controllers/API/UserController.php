@@ -37,7 +37,11 @@ class UserController extends Controller
                         return $q->where('vehicle_type_id', $request->vehicle_type_id);
                     });
                 }, function ($query) use ($request) {
-                    return $query->whereDoesntHave('vehicle');
+                    // return $query->whereDoesntHave('vehicle');
+                    //return user with driver_type is_taxi = 0
+                    return $query->whereHas('driver_type', function ($q) {
+                        return $q->where('is_taxi', 0);
+                    });
                 });
         })->get();
 

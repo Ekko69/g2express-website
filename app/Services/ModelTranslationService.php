@@ -86,4 +86,48 @@ class ModelTranslationService
             //
         }
     }
+
+    public function fixProductTranslations()
+    {
+
+        $columns = ['name', "description"];
+        $models = Product::all();
+        foreach ($models as $model) {
+            try {
+                //
+                DB::beginTransaction();
+                //
+                foreach ($columns as $column) {
+                    //
+                    $columnValue = $model->getRawOriginal($column);
+                    //find occurance of " but ingore the following cases:
+                    // 1. \" 2. "} 3. {" 4. ":"
+                    $finds = ["{\"", "\"}", "\":\"", "\",\""];
+                    $replaces = ["}||", "{||", "{--}", "{++}"];
+                    foreach ($finds as $key => $find) {
+                        $replace = $replaces[$key];
+                        $columnValue = str_replace($find, $replace, $columnValue);
+                    }
+
+                    $columnValue = str_replace('"', '\"', $columnValue);
+                    //replace back the previous
+                    foreach ($finds as $key => $find) {
+                        $replace = $replaces[$key];
+                        $columnValue = str_replace($replace, $find, $columnValue);
+                    }
+                    $columnValue = json_decode($columnValue, true);
+                    if ($columnValue == null) {
+                        continue;
+                    }
+                    $model->setTranslations($column, $columnValue);
+                    $model->saveQuietly();
+                }
+                //
+                DB::commit();
+            } catch (\Exception $e) {
+                DB::rollBack();
+                logger("Error", [$e->getMessage()]);
+            }
+        }
+    }
 }

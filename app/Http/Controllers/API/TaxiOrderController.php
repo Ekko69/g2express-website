@@ -91,7 +91,7 @@ class TaxiOrderController extends Controller
             if (number_format($vehicleType->total, 2) > number_format($request->sub_total, 2)) {
                 // throw new \Exception("An error occured while trying to book your trip:: Amount issue ::Total ==>".$vehicleType->total.":: Sub ==>".$request->sub_total."", 1);
                 //
-                throw new \Exception("An error occured while trying to book your trip  Amount issue", 1);
+                throw new \Exception(__("An error occured while trying to book your trip  Amount issue"), 1);
             }
 
             //also check if user over applied coupon code
@@ -102,7 +102,7 @@ class TaxiOrderController extends Controller
             //
             DB::beginTransaction();
             $order = new order();
-            $order->code = $this->generateOrderCode();
+            $order->code = $this->generateOrderCode(10);
             //verify payment method is valid and can handle the order amount
             $paymentMethod = PaymentMethod::find($request->payment_method_id);
             $paymentLink = "";
@@ -114,7 +114,7 @@ class TaxiOrderController extends Controller
                 if ($paymentMethod->slug == "wallet") {
                     //
                     $wallet = Wallet::firstOrCreate(
-                        ['user_id' =>  \Auth::id()],
+                        ['user_id' => $request->user_id ?? \Auth::id()],
                         ['balance' => 0.00]
                     );
 
@@ -135,9 +135,6 @@ class TaxiOrderController extends Controller
                 $message = __("Order placed successfully. Relax while the vendor process your order");
             } else {
                 $message = __("Order placed successfully. Please follow the link to complete payment.");
-                if ($order->payment_status == "pending") {
-                    $paymentLink = route('order.payment', ["code" => $order->code]);
-                }
             }
 
 
@@ -150,7 +147,7 @@ class TaxiOrderController extends Controller
             $order->total = $request->total;
             $order->pickup_date = $request->pickup_date;
             $order->pickup_time = $request->pickup_time;
-            $order->payment_status = "pending";
+            $order->payment_status ??= "pending";
             if (\Schema::hasColumn("orders", 'fees')) {
                 $order->fees = json_encode($request->fees ?? []);
             }
@@ -162,7 +159,7 @@ class TaxiOrderController extends Controller
             if (!empty($coupon)) {
                 $couponUser = new CouponUser();
                 $couponUser->coupon_id = $coupon->id;
-                $couponUser->user_id = \Auth::id();
+                $couponUser->user_id = $request->user_id ?? \Auth::id();
                 $couponUser->order_id = $order->id;
                 $couponUser->save();
             }
@@ -181,11 +178,26 @@ class TaxiOrderController extends Controller
             $taxiOrder->dropoff_latitude = $request->dropoff["lat"];
             $taxiOrder->dropoff_longitude = $request->dropoff["lng"];
             $taxiOrder->dropoff_address = $request->dropoff["address"];
+            //fare breakdown
+            try {
+                $taxiOrder->base_fare = $vehicleType->base_fare;
+                $taxiOrder->distance_fare = $vehicleType->distance_fare;
+                $taxiOrder->time_fare = $vehicleType->time_fare;
+                $taxiOrder->trip_distance = $vehicleType->trip_distance;
+                $taxiOrder->trip_time = $vehicleType->trip_time;
+            } catch (\Exception $e) {
+                logger("Taxi order Breakdown error", [$e]);
+            }
             $taxiOrder->save();
 
             //
             $order->save();
             $order->refresh();
+
+            //generate payment link, if payment is pending
+            if ($order->payment_status == "pending" && !$paymentMethod->is_cash) {
+                $paymentLink = route('order.payment', ["code" => $order->code]);
+            }
 
             //
             DB::commit();

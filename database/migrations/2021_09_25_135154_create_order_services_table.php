@@ -19,6 +19,8 @@ class CreateOrderServicesTable extends Migration
             $table->double('price', 8, 2)->default(0);
             $table->foreignId('order_id')->constrained();
             $table->foreignId('service_id')->constrained();
+            $table->text('options')->nullable();
+            $table->string('options_ids')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

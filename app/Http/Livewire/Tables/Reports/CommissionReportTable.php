@@ -33,7 +33,7 @@ class CommissionReportTable extends BaseReportTable
             Column::make(__('ID'), 'id'),
             Column::make(__('Order No'), 'order.code'),
             Column::make(__('Vendor'), 'order.vendor.name')->searchable(),
-            Column::make(__('Admin Vendor Commission'), 'vendor_commission')->format(function ($value, $column, $row) {
+            Column::make(__('Vendor Earned'), 'vendor_commission')->format(function ($value, $column, $row) {
                 return view('components.table.price', $data = [
                     "model" => $row,
                     "column" => $column,
@@ -41,7 +41,14 @@ class CommissionReportTable extends BaseReportTable
                 ]);
             })->sortable(),
             Column::make(__('Driver'), 'order.driver.name')->searchable(),
-            Column::make(__('Admin Driver Commission'), 'driver_commission')->format(function ($value, $column, $row) {
+            Column::make(__('Driver Earned'), 'driver_commission')->format(function ($value, $column, $row) {
+                return view('components.table.price', $data = [
+                    "model" => $row,
+                    "column" => $column,
+                    "value" => $value,
+                ]);
+            })->sortable(),
+            Column::make(__('System Earned'), 'admin_commission')->format(function ($value, $column, $row) {
                 return view('components.table.price', $data = [
                     "model" => $row,
                     "column" => $column,
@@ -49,22 +56,6 @@ class CommissionReportTable extends BaseReportTable
                 ]);
             })->sortable(),
             Column::make(__('Created At'), 'formatted_date'),
-        ];
-    }
-
-    public function filters(): array
-    {
-        return [
-            'start_date' => Filter::make(__('Start Date'))
-                ->date([
-                    'min' => now()->subYear()->format('Y-m-d'), // Optional
-                    'max' => now()->format('Y-m-d') // Optional
-                ]),
-            'end_date' => Filter::make(__('End Date'))
-                ->date([
-                    'min' => now()->subYear()->format('Y-m-d'), // Optional
-                    'max' => now()->format('Y-m-d') // Optional
-                ])
         ];
     }
 

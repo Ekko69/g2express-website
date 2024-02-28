@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Mail\NewAccountMail;
 use App\Models\User;
+use App\Services\MailHandlerService;
 use Illuminate\Http\Request;
 use App\Traits\FirebaseAuthTrait;
 use Illuminate\Support\Facades\Validator;
@@ -35,7 +37,7 @@ class SocialLoginController extends Controller
             ], 401);
         }
 
-        //        
+        //
         $user = User::where('email', 'like', '%' . $request->email . '')->first();
 
         //verify firebase token
@@ -45,15 +47,21 @@ class SocialLoginController extends Controller
             if (!empty($request->firebase_id_token)) {
 
                 if ($request->provider == "google") {
-                    $firebaseUser = $this->getFirebaseAuth()->signInWithGoogleIdToken($request->firebase_id_token);
+                    $firebaseUser = $this->getFirebaseAuth()->signInWithIdpIdToken("google.com", $request->firebase_id_token);
                     $firebaseUserEmail = $firebaseUser->data()["email"];
                 } else if ($request->provider == "facebook") {
-                    $firebaseUser = $this->getFirebaseAuth()->signInWithFacebookAccessToken($request->firebase_id_token);
+                    $firebaseUser = $this->getFirebaseAuth()->signInWithIdpAccessToken("facebook.com", $request->firebase_id_token);
                     $firebaseUserEmail = $firebaseUser->data()["email"];
                     //TODO
                 } else if ($request->provider == "apple") {
                     try {
-                        $firebaseUser = $this->getFirebaseAuth()->signInWithAppleIdToken($request->firebase_id_token, $request->nonce);
+                        $firebaseUser = $this->getFirebaseAuth()->signInWithIdpIdToken(
+                            "apple.com",
+                            $request->firebase_id_token,
+                            null,
+                            null,
+                            $request->nonce,
+                        );
                         $firebaseUserEmail = $firebaseUser->data()["email"];
                     } catch (\Exception $ex) {
                         // logger("Apple login error", [$ex]);
@@ -73,7 +81,7 @@ class SocialLoginController extends Controller
 
                         $user = new User();
                         //formed name
-                        $formedName = explode("@",$firebaseUserEmail)[0];
+                        $formedName = explode("@", $firebaseUserEmail)[0];
 
                         if ($request->provider == "apple") {
                             $fbUserData = $firebaseUser;
@@ -85,12 +93,17 @@ class SocialLoginController extends Controller
                             $user->phone = $fbUserData['phone'] ?? null;
                         }
 
+                        $password = \Str::random(8);
                         $user->email = $firebaseUserEmail;
                         $user->country_code = "";
-                        $user->password = \Hash::make(\Str::random(8));
+                        $user->password = \Hash::make($password);
                         $user->is_active = true;
                         $user->save();
                         $user->syncRoles("client");
+
+                        //send mail
+                        MailHandlerService::sendMail(new NewAccountMail($user, $password), $user->email);
+
                         \DB::commit();
                     } catch (\Expection $ex) {
                         \DB::rollback();

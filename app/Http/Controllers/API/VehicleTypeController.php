@@ -19,13 +19,22 @@ class VehicleTypeController extends Controller
     }
 
 
-    //using this to 
+    //using this to
     public function calculateFee(Request $request)
     {
 
         //
         $vehicleTypes = VehicleType::active()->inorder()->get();
-
+        if (!$request->has('country_code') || $request->country_code == null || empty($request->country_code) || $request->country_code == "null") {
+            try {
+                $ip = $request->ip();
+                $details = json_decode(file_get_contents("http://ipinfo.io/{$ip}"));
+                $countryCode = $details->country ?? null;
+                $request->merge(['country_code' => $countryCode]);
+            } catch (\Exception $e) {
+                $request->merge(['country_code' => null]);
+            }
+        }
         //check if multiple currency is enabled
         $multipleCurrency = (bool) setting('taxi.multipleCurrency', false);
         if ($multipleCurrency && $request->country_code) {
@@ -45,6 +54,7 @@ class VehicleTypeController extends Controller
                 $vehicleType->min_fare = $taxiCurrencyVehicleType->min_fare;
                 $vehicleType->currency = $taxiCurrencyVehicleType->currency;
                 $vehicleType->total = $this->getTaxiOrderTotalPrice($vehicleType, $request->pickup, $request->dropoff);
+                $vehicleType = $this->getFareBreakdown($vehicleType, $request->pickup, $request->dropoff);
                 $vehicleType->encrypted = \Crypt::encrypt($vehicleType);
                 $vehicleTypes[] = $vehicleType;
             }
@@ -61,6 +71,8 @@ class VehicleTypeController extends Controller
             $vehicleTypes = $vehicleTypes->map(function ($vehicleType, $key) use ($request) {
                 $amount = $this->getTaxiOrderTotalPrice($vehicleType, $request->pickup, $request->dropoff);
                 $vehicleType->total = $amount;
+                $vehicleType = $this->getFareBreakdown($vehicleType, $request->pickup, $request->dropoff);
+                $vehicleType->encrypted = \Crypt::encrypt($vehicleType);
                 return $vehicleType;
             });
         }

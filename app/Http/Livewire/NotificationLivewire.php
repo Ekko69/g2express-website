@@ -161,28 +161,20 @@ class NotificationLivewire extends BaseLivewireComponent
             //fetching topic to send message to
             if ($this->customReceiver) {
                 foreach ($this->customReceiverRoles as $topic) {
-                    logger("topic",[$topic]);
-                    $this->sendFirebaseNotification(
+                    logger("topic", [$topic]);
+                    $this->sendPlainFirebaseNotification(
                         $topic,
                         $this->headings,
                         $this->message,
-                        $notificationData,
-                        $onlyData = true,
-                        $channel_id = "basic_channel",
-                        $noSound = false,
-                        $image = $this->imageUrl
+                        $this->imageUrl
                     );
                 }
             } else {
-                $this->sendFirebaseNotification(
+                $this->sendPlainFirebaseNotification(
                     "all",
                     $this->headings,
                     $this->message,
-                    $notificationData,
-                    $onlyData = false,
-                    $channel_id = "basic_channel",
-                    $noSound = false,
-                    $image = $this->imageUrl
+                    $this->imageUrl
                 );
             }
 

@@ -64,7 +64,7 @@ class ExtensionLivewire extends BaseLivewireComponent
 
 
             //
-            //store the zip 
+            //store the zip
             $fileLocation = $this->uploadZipFile($this->photo);
             //unzip the file to a temp folder
             $extractedFileLocation = $this->extractZipFile($fileLocation);
@@ -85,6 +85,7 @@ class ExtensionLivewire extends BaseLivewireComponent
             //
             $this->showSuccessAlert(__("Extension Installation Successful!"));
         } catch (\Exception $ex) {
+            logger("Extension Installation", [$ex]);
             $this->showErrorAlert($ex->getMessage() ?? __("Extension Installation") . " " . __('failed!'));
         }
     }

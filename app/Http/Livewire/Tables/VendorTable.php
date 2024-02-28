@@ -11,10 +11,12 @@ use App\Models\Order;
 use App\Models\PackageTypePricing;
 use App\Models\Product;
 use App\Models\Service;
+use App\Models\User;
 use App\Models\VendorType;
 use Rappasoft\LaravelLivewireTables\Views\Column;
 use Rappasoft\LaravelLivewireTables\Views\Filter;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class VendorTable extends OrderingBaseDataTableComponent
@@ -22,6 +24,8 @@ class VendorTable extends OrderingBaseDataTableComponent
 
     public $model = Vendor::class;
     public bool $columnSelect = false;
+    public string $defaultSortColumn = 'is_active';
+    public string $defaultSortDirection = 'desc';
 
 
     public function filters(): array
@@ -42,20 +46,37 @@ class VendorTable extends OrderingBaseDataTableComponent
 
     public function query()
     {
-        return Vendor::with('vendor_type')->mine()->when($this->getFilter('vendor_type'), fn ($query, $value) => $query->where('vendor_type_id', $value));;
+        return Vendor::with('vendor_type')->mine()
+            ->when($this->getFilter('vendor_type'), fn ($query, $value) => $query->where('vendor_type_id', $value));
+    }
+
+    public function setTableRowClass($row): ?string
+    {
+        return $row->is_active ? null : 'inactive-item';
     }
 
     public function columns(): array
     {
         return [
-            Column::make(__('ID'), 'id')->searchable()->sortable(),
-            Column::make(__('Name'), 'name')->searchable()->sortable(),
-            Column::make(__('Type'), 'vendor_type.name'),
-            Column::make(__('Active'))->format(function ($value, $column, $row) {
-                return view('components.table.active', $data = [
-                    "model" => $row
+            Column::make(__('ID'), 'id')->sortable()->searchable(),
+            //address
+            Column::make(__('Name'), 'name')->format(function ($value, $column, $row) {
+                $text = "<p class='font-semibold'>" . $row->name . "</p>";
+                //if address is not empty
+                if (!empty($row->address)) {
+                    $text .= "<p class='text-xs font-light text-muted'>" . $row->address . "</p>";
+                }
+                return view('components.table.plain', $data = [
+                    "text" => $text,
                 ]);
-            }),
+            })->sortable()
+                ->searchable(
+                    function ($builder, $term) {
+                        $builder->orWhere('name', 'like', '%' . $term . '%')
+                            ->orWhere('address', 'like', '%' . $term . '%');
+                    }
+                ),
+            Column::make(__('Type'), 'vendor_type.name'),
             Column::make(__('Created At'), 'formatted_date'),
             Column::make(__('Actions'))->format(function ($value, $column, $row) {
                 return view('components.buttons.market_actions', $data = [
@@ -103,6 +124,9 @@ class VendorTable extends OrderingBaseDataTableComponent
 
             //delete any row in tbale that has vendor_id column
             $this->deleteFromTables('vendor_id', $this->selectedModel->id, false, ['users']);
+            //delete vendor payment accounts, the table has morphs column: accountable
+            //write BD script to delete any row in tbale that has accountable_type column of value: App\Models\Vendor and accountable_id column of value: $this->selectedModel->id
+            DB::table('payment_accounts')->where('accountable_type', 'App\Models\Vendor')->where('accountable_id', $this->selectedModel->id)->delete();
 
             $this->selectedModel = $this->selectedModel->fresh();
             $this->selectedModel->forceDelete();

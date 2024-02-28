@@ -1,6 +1,6 @@
 <div>
     <x-form noClass="true" action="saveGeneralSettings">
-        <div class='grid grid-cols-1 gap-4 md:grid-cols-2 '>
+        <div class='grid grid-cols-1 gap-4 md:grid-cols-2'>
             <x-input title="{{ __('App Name') }}" name="appName" />
 
 
@@ -31,6 +31,13 @@
                 <x-checkbox title="{{ __('Enable') }}" name="enableNumericOrderCode" :defer="true" />
             </div>
         </div>
+        <div class='border-t border-b py-4 my-4 grid grid-cols-1 gap-4 md:grid-cols-2'>
+            <div class="block text-sm">
+                <p>{{ __('Allow Profile Update') }}</p>
+                <x-checkbox title="{{ __('Enable') }}" name="enableProfileUpdate" :defer="true" />
+            </div>
+        </div>
+
         <div class='grid grid-cols-1 gap-4 p-4 mt-4 border rounded shadow md:grid-cols-2 '>
             <x-input title="{{ __('Android App Download Link') }}" name="androidDownloadLink" />
             <x-input title="{{ __('iOS App Download Link') }}" name="iosDownloadLink" />

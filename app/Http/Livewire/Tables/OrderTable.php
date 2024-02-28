@@ -112,7 +112,20 @@ class OrderTable extends BaseDataTableComponent
         $columns = [
             Column::make(__('ID'), 'id')->searchable()->sortable(),
             Column::make(__('Type'), 'code_order_type'),
-            Column::make(__('Code'), 'code')->searchable()->sortable(),
+            Column::make(__('Code'), 'code')
+                ->format(function ($value, $column, $row) {
+
+                    $text = __(\Str::ucfirst($row->code));
+                    if ($row->driver_id) {
+                        $text .= "<br/>";
+                        $text .= "<span class='text-xs font-bold text-primary-400'>Driver Assigned</span>";
+                    }
+
+
+                    return view('components.table.plain', $data = [
+                        "text" => $text
+                    ]);
+                })->searchable()->sortable(),
             Column::make(__('User'), 'user.name')
                 ->format(function ($value, $column, $row) {
                     return view('components.table.user', $data = [
@@ -120,22 +133,38 @@ class OrderTable extends BaseDataTableComponent
                         "model" => $row->user,
                     ]);
                 })->searchable(),
+            Column::make(__('Vendor'), 'vendor.name')
+                ->format(function ($value, $column, $row) {
+                    $text = $row->vendor->name ?? "";
+                    //add link if vendor exists
+                    if ($row->vendor != null) {
+                        $link = route('vendors');
+                        $link .= "?filters[search]=" . $row->vendor->name;
+                        $text = "<a href='$link' class='text-primary-500 hover:underline'>$text</a>";
+                    }
+                    return view('components.table.plain', $data = [
+                        "text" => $text
+                    ]);
+                })->addClass('break-all w-40 text-ellipsis line-clamp-1')->searchable(),
             Column::make(__('Status'), 'status')
                 ->format(function ($value, $column, $row) {
-                    return view('components.table.custom', $data = [
-                        "value" => __(\Str::ucfirst($row->status))
+
+                    $text = __(\Str::ucfirst($row->status));
+                    return view('components.table.plain', $data = [
+                        "text" => $text
                     ]);
                 }),
-            Column::make(__('Payment'), 'payment_status')
-                ->format(function ($value, $column, $row) {
-                    return view('components.table.custom', $data = [
-                        "value" => __(\Str::ucfirst($row->payment_status))
-                    ]);
-                })->searchable(),
             Column::make(__('Total'), 'total')->format(function ($value, $column, $row) {
-                return view('components.table.order-total', $data = [
-                    "model" => $row
+
+                $text = "<p>" . currencyFormat($row->total, $row->currency_symbol) . "</p>";
+                $text .= "<span class='text-xs' style='color:$row->payment_status_color;'>" . __(\Str::ucfirst($row->payment_status)) . "</span>";
+                return view('components.table.plain', $data = [
+                    "text" => $text
                 ]);
+
+                // return view('components.table.order-total', $data = [
+                //     "model" => $row
+                // ]);
             })->searchable()
                 ->sortable(),
             Column::make(__('Method'), 'payment_method.name')->searchable(),

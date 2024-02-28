@@ -36,11 +36,8 @@
 
         </x-details.item>
 
-        @empty($stop->note)
-            <x-details.item title="{{ __('Note') }}">
-                {{ $stop->note ?? '' }}
-            @endempty
-
+        <x-details.item title="{{ __('Note') }}">
+            <p class="break-words overflow-clip"> {{ $stop->note ?? '' }}</p>
         </x-details.item>
         {{-- order stop photo proof --}}
         @if ($stop != null && $stop->proof && !strpos($stop->proof, 'default.png'))
@@ -57,6 +54,7 @@
 
     <x-details.item title="{{ __('Vendor') }}" text="{{ $selectedModel->vendor->name ?? '' }}" />
     <x-details.item title="{{ __('Vendor Address') }}" text="{{ $selectedModel->vendor->address ?? '' }}" />
+    <x-details.item title="{{ __('Vendor Phone') }}" text="{{ $selectedModel->vendor->phone ?? '' }}" />
 
 
     <x-details.item title="{{ __('Date of order') }}"
@@ -70,6 +68,10 @@
         <x-details.item title="{{ __('Scheduled For') }}" text="{{ $scheduleDate->format('M d, Y \\a\\t h:i a') }}" />
     @endif
 </div>
+
+@if ($selectedModel != null && $selectedModel->status == 'cancelled')
+    <x-details.item title="{{ __('Cancel Reason') }}" text="{!! $selectedModel->reason ?? '--' !!}" />
+@endif
 
 {{-- driver info --}}
 <div class="grid grid-cols-1 gap-4 pt-4 mt-4 border-t md:grid-cols-2 lg:grid-cols-3">

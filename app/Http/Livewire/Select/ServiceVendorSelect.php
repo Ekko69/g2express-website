@@ -2,11 +2,10 @@
 
 namespace App\Http\Livewire\Select;
 
-use Asantibanez\LivewireSelect\LivewireSelect;
 use Illuminate\Support\Collection;
 use App\Models\Vendor;
 
-class ServiceVendorSelect extends LivewireSelect
+class ServiceVendorSelect extends BaseLivewireSelect
 {
 
     public function options($searchTerm = null): Collection

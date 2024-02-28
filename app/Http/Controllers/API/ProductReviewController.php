@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ProductReviewResource;
 use App\Models\ProductReview;
 use Illuminate\Http\Request;
 
@@ -45,9 +46,10 @@ class ProductReviewController extends Controller
 
     public function index(Request $request)
     {
-        return ProductReview::with(
-            'user'
-        )->where('product_id', $request->product_id)
-            ->paginate($this->perPage);
+        return ProductReviewResource::collection(
+            ProductReview::with('user')
+                ->where('product_id', $request->product_id)
+                ->paginate($this->perPage)
+        );
     }
 }

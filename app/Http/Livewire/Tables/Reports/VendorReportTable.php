@@ -24,27 +24,27 @@ class VendorReportTable extends BaseReportTable
                 return $query->whereDate('created_at', "<=", $eDate);
             });
         }])
-        ->withCount(['successful_sales' => function ($query) {
-            $query->when($this->getFilter('start_date'), function ($query, $sDate) {
-                return $query->whereDate('created_at', ">=", $sDate);
-            })->when($this->getFilter('end_date'), function ($query, $eDate) {
-                return $query->whereDate('created_at', "<=", $eDate);
-            });
-        }])
-        ->withCount(['cancelled_sales' => function ($query) {
-            $query->when($this->getFilter('start_date'), function ($query, $sDate) {
-                return $query->whereDate('created_at', ">=", $sDate);
-            })->when($this->getFilter('end_date'), function ($query, $eDate) {
-                return $query->whereDate('created_at', "<=", $eDate);
-            });
-        }])
-        ->withCount(['pending_sales' => function ($query) {
-            $query->when($this->getFilter('start_date'), function ($query, $sDate) {
-                return $query->whereDate('created_at', ">=", $sDate);
-            })->when($this->getFilter('end_date'), function ($query, $eDate) {
-                return $query->whereDate('created_at', "<=", $eDate);
-            });
-        }]);
+            ->withCount(['successful_sales' => function ($query) {
+                $query->when($this->getFilter('start_date'), function ($query, $sDate) {
+                    return $query->whereDate('created_at', ">=", $sDate);
+                })->when($this->getFilter('end_date'), function ($query, $eDate) {
+                    return $query->whereDate('created_at', "<=", $eDate);
+                });
+            }])
+            ->withCount(['cancelled_sales' => function ($query) {
+                $query->when($this->getFilter('start_date'), function ($query, $sDate) {
+                    return $query->whereDate('created_at', ">=", $sDate);
+                })->when($this->getFilter('end_date'), function ($query, $eDate) {
+                    return $query->whereDate('created_at', "<=", $eDate);
+                });
+            }])
+            ->withCount(['pending_sales' => function ($query) {
+                $query->when($this->getFilter('start_date'), function ($query, $sDate) {
+                    return $query->whereDate('created_at', ">=", $sDate);
+                })->when($this->getFilter('end_date'), function ($query, $eDate) {
+                    return $query->whereDate('created_at', "<=", $eDate);
+                });
+            }]);
     }
 
     public function columns(): array
@@ -81,22 +81,6 @@ class VendorReportTable extends BaseReportTable
                     "value" => $value
                 ]);
             })->sortable(),
-        ];
-    }
-
-    public function filters(): array
-    {
-        return [
-            'start_date' => Filter::make(__('Start Date'))
-                ->date([
-                    'min' => now()->subYear()->format('Y-m-d'), // Optional
-                    'max' => now()->format('Y-m-d') // Optional
-                ]),
-            'end_date' => Filter::make(__('End Date'))
-                ->date([
-                    'min' => now()->subYear()->format('Y-m-d'), // Optional
-                    'max' => now()->format('Y-m-d') // Optional
-                ])
         ];
     }
 

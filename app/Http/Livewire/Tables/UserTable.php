@@ -8,6 +8,8 @@ use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
 use App\Models\ProductReview;
+use Exception;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Rappasoft\LaravelLivewireTables\Views\Column;
 use Rappasoft\LaravelLivewireTables\Views\Filter;
@@ -18,6 +20,8 @@ class UserTable extends BaseDataTableComponent
 
     public $model = User::class;
     public $role;
+    public string $defaultSortColumn = 'created_at';
+    public string $defaultSortDirection = 'desc';
 
 
     public function filters(): array
@@ -56,12 +60,18 @@ class UserTable extends BaseDataTableComponent
     {
         $columns = [
             Column::make(__('ID'), "id")->searchable()->sortable(),
-            Column::make(__('Name'), 'name')->searchable()->sortable(),
+            Column::make(__('Name'), 'name')
+                ->format(function ($value, $column, $row) {
+                    return view('components.table.user', $data = [
+                        "value" => $value,
+                        "model" => $row,
+                    ]);
+                })->searchable()->sortable(),
         ];
 
-        if (!$this->inDemo()) {
-            $columns[] = Column::make(__('Phone'), 'phone')->searchable()->sortable();
-        }
+        // if (!$this->inDemo()) {
+        //     $columns[] = Column::make(__('Phone'), 'phone')->searchable()->sortable();
+        // }
 
         $mColumns = [
             $this->customColumn(__('Wallet'), 'components.table.wallet'),
@@ -83,7 +93,7 @@ class UserTable extends BaseDataTableComponent
         try {
 
             $this->isDemo();
-            \DB::beginTransaction();
+            DB::beginTransaction();
             //
             $walletIds = Wallet::where('user_id', $this->selectedModel->id)->get()->pluck('id');
             DeliveryAddress::whereIn('user_id', [$this->selectedModel->id])->delete();
@@ -93,10 +103,10 @@ class UserTable extends BaseDataTableComponent
             ProductReview::whereIn('user_id', [$this->selectedModel->id])->delete();
             $this->selectedModel = $this->selectedModel->fresh();
             $this->selectedModel->forceDelete();
-            \DB::commit();
+            DB::commit();
             $this->showSuccessAlert("Deleted");
         } catch (Exception $error) {
-            \DB::rollback();
+            DB::rollback();
             $this->showErrorAlert($error->getMessage() ?? "Failed");
         }
     }

@@ -40,11 +40,12 @@ class DriverLivewire extends BaseLivewireComponent
         return view('livewire.drivers');
     }
 
-    public function save(){
+    public function save()
+    {
         //validate
         $this->validate();
 
-        try{
+        try {
 
             DB::beginTransaction();
             $user = new User();
@@ -56,7 +57,7 @@ class DriverLivewire extends BaseLivewireComponent
             $user->vendor_id = \Auth::user()->vendor_id;
             $user->save();
             $user->assignRole('driver');
-            
+
             //update wallet
             $user->updateWallet(0);
 
@@ -64,49 +65,48 @@ class DriverLivewire extends BaseLivewireComponent
 
             $this->dismissModal();
             $this->reset();
-            $this->showSuccessAlert(__("User")." ".__('created successfully!'));
+            $this->showSuccessAlert(__("User") . " " . __('created successfully!'));
             $this->emit('refreshTable');
-
-
-        }catch(Exception $error){
+        } catch (Exception $error) {
             DB::rollback();
-            $this->showErrorAlert( $error->getMessage() ?? __("User")." ".__('creation failed!'));
-
+            $this->showErrorAlert($error->getMessage() ?? __("User") . " " . __('creation failed!'));
         }
-
     }
 
-    public function initiateEdit($id){
+    public function initiateEdit($id)
+    {
         $this->selectedModel = $this->model::find($id);
         $this->name = $this->selectedModel->name;
         $this->email = $this->selectedModel->email;
         $this->phone = $this->selectedModel->phone;
         $this->role = $this->selectedModel->role_id;
-        $this->commission = $this->selectedModel->commission;
+        //get commission original value
+        $this->commission = $this->selectedModel->getRawOriginal('commission');
         $this->emit('showEditModal');
     }
 
-    public function update(){
+    public function update()
+    {
         //validate
         $this->validate(
             [
                 "name" => "required|string",
-                "email" => "required|email|unique:users,email,".$this->selectedModel->id."",
-                "phone" => "required|unique:users,phone,".$this->selectedModel->id."",
+                "email" => "required|email|unique:users,email," . $this->selectedModel->id . "",
+                "phone" => "required|unique:users,phone," . $this->selectedModel->id . "",
                 "password" => "sometimes|nullable|string",
                 "commission" => "sometimes|nullable|numeric",
             ]
         );
 
-        try{
+        try {
 
             DB::beginTransaction();
             $user = $this->selectedModel;
             $user->name = $this->name;
             $user->email = $this->email;
             $user->phone = $this->phone;
-            $user->commission = $this->commission ?? 0.00;
-            if( !empty($this->password) ){
+            $user->commission = $this->commission;
+            if (!empty($this->password)) {
                 $user->password = Hash::make($this->password);
             }
             $user->save();
@@ -115,19 +115,11 @@ class DriverLivewire extends BaseLivewireComponent
 
             $this->dismissModal();
             $this->reset();
-            $this->showSuccessAlert(__("User")." ".__('updated successfully!'));
+            $this->showSuccessAlert(__("User") . " " . __('updated successfully!'));
             $this->emit('refreshTable');
-
-
-        }catch(Exception $error){
+        } catch (Exception $error) {
             DB::rollback();
-            $this->showErrorAlert( $error->getMessage() ?? __("User")." ".__('updated failed!'));
-
+            $this->showErrorAlert($error->getMessage() ?? __("User") . " " . __('updated failed!'));
         }
-
     }
-
-
-
-
 }

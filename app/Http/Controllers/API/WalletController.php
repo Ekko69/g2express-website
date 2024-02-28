@@ -35,9 +35,17 @@ class WalletController extends Controller
                 $msg = __("Amount is less than minimun topup amount") . " " . $minimumTopupAmount . "";
                 return response()->json([
                     "message" => $msg,
-                    "link" => route('wallet.topup.failed', ["amount" => $request->amount, 'msg' => $msg]),
+                    "link" => route('wallet.topup.failed', ["code" => \Str::random(10), "amount" => $request->amount, 'msg' => $msg]),
                 ]);
             }
+
+            $amountToTopup = $request->amount;
+            //throw exception if amount is not numeric, negative or zero
+            if (!is_numeric($amountToTopup) || $amountToTopup <= 0) {
+                throw new \Exception(__("Invalid Amount"), 1);
+            }
+
+
             DB::beginTransaction();
             $wallet = $this->index();
             $walletTransaction = new WalletTransaction();
@@ -45,14 +53,22 @@ class WalletController extends Controller
             $walletTransaction->wallet_id = $wallet->id;
             $walletTransaction->is_credit = 1;
             $walletTransaction->reason = __("Topup");
-            $walletTransaction->ref = \Str::random(10);
+            $walletTransaction->ref = "tp_" . \Str::random(10);
             $walletTransaction->status = "pending";
             $walletTransaction->save();
             DB::commit();
 
+            $token = encrypt([
+                "id" => $walletTransaction->id,
+                "code" => $walletTransaction->ref,
+                "user_id" => $walletTransaction->wallet->user_id,
+            ]);
+
             return response()->json([
                 "message" => "",
                 "link" => route('wallet.topup', ["code" => $walletTransaction->ref]),
+                "code" => $walletTransaction->ref,
+                "token" => $token,
             ]);
         } catch (\Exception $ex) {
             DB::rollback();
@@ -81,6 +97,13 @@ class WalletController extends Controller
             $minimumTopupAmount = setting("minimumTopupAmount", 100);
             if ($request->amount < $minimumTopupAmount) {
                 throw new \Exception(__("Amount is less than minimun topup amount") . " " . $minimumTopupAmount . "", 1);
+            }
+
+            //validate that the amount sent is numeric and greater than zero
+            $amountToTopup = $request->amount;
+            //throw exception if amount is not numeric, negative or zero
+            if (!is_numeric($amountToTopup) || $amountToTopup <= 0) {
+                throw new \Exception(__("Invalid Amount"), 1);
             }
 
 

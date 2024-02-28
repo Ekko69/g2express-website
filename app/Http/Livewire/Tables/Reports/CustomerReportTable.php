@@ -14,6 +14,34 @@ class CustomerReportTable extends BaseReportTable
 
     public $model = Order::class;
 
+    public function filters(): array
+    {
+        return [
+            'status' => Filter::make(__("Status"))
+                ->select([
+                    '' => __('Any'),
+                    'pending' => __('Pending'),
+                    'preparing' => __('Preparing'),
+                    'ready' => __('Ready'),
+                    'enroute' => __('Enroute'),
+                    'delivered' => __('Delivered'),
+                    'cancelled' => __('Cancelled'),
+                    'failed' => __('Failed'),
+                ]),
+            'start_date' => Filter::make(__('Start Date'))
+                ->date([
+                    'min' => now()->subYear()->format('Y-m-d'), // Optional
+                    'max' => now()->format('Y-m-d') // Optional
+                ]),
+            'end_date' => Filter::make(__('End Date'))
+                ->date([
+                    'min' => now()->subYear()->format('Y-m-d'), // Optional
+                    'max' => now()->format('Y-m-d') // Optional
+                ])
+        ];
+    }
+
+
     public function query()
     {
         //
@@ -48,32 +76,6 @@ class CustomerReportTable extends BaseReportTable
         ];
     }
 
-    public function filters(): array
-    {
-        return [
-            'status' => Filter::make(__("Status"))
-                ->select([
-                    '' => __('Any'),
-                    'pending' => __('Pending'),
-                    'preparing' => __('Preparing'),
-                    'ready' => __('Ready'),
-                    'enroute' => __('Enroute'),
-                    'delivered' => __('Delivered'),
-                    'cancelled' => __('Cancelled'),
-                    'failed' => __('Failed'),
-                ]),
-            'start_date' => Filter::make(__('Start Date'))
-                ->date([
-                    'min' => now()->subYear()->format('Y-m-d'), // Optional
-                    'max' => now()->format('Y-m-d') // Optional
-                ]),
-            'end_date' => Filter::make(__('End Date'))
-                ->date([
-                    'min' => now()->subYear()->format('Y-m-d'), // Optional
-                    'max' => now()->format('Y-m-d') // Optional
-                ])
-        ];
-    }
 
 
     public function exportSelected()

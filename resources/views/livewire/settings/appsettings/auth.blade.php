@@ -1,7 +1,11 @@
 {{-- Auth Layout --}}
 <x-form noClass="true" action="saveAuthSettings">
-    <div class='grid grid-cols-1 gap-4 mb-10 md:grid-cols-2'>
+    <div class='grid grid-cols-1 gap-4 mb-10 md:grid-cols-3'>
         {{-- enableOTPLogin --}}
+        <div class="block mt-4 text-sm">
+            <p>{{ __('Email Login') }}</p>
+            <x-checkbox title="{{ __('Enable') }}" name="enableEmailLogin" :defer="true" />
+        </div>
         <div class="block mt-4 text-sm">
             <p>{{ __('OTP Login') }}</p>
             <x-checkbox title="{{ __('Enable') }}" name="enableOTPLogin" :defer="true" />

@@ -136,6 +136,7 @@ class OrderController extends Controller
             //for multiple vendor ordering
             return (new RegularOrderService())->multipleVendorOrder($request);
         } catch (\Exception $ex) {
+            logger("order error", [$ex]);
             \Log::info([
                 "Error" => $ex->getMessage(),
                 "File" => $ex->getFile(),
@@ -143,7 +144,8 @@ class OrderController extends Controller
             ]);
             DB::rollback();
             return response()->json([
-                "message" => $ex->getMessage()
+                "message" => $ex->getMessage(),
+                "errorCode" => $ex->getCode(),
             ], 400);
         }
     }
@@ -189,7 +191,8 @@ class OrderController extends Controller
             ]);
             DB::rollback();
             return response()->json([
-                "message" => $ex->getMessage()
+                "message" => $ex->getMessage(),
+                "errorCode" => $ex->getCode(),
             ], 400);
         }
     }
@@ -209,10 +212,10 @@ class OrderController extends Controller
             'delivery_fee' => 'required|numeric',
             'tax' => 'required|numeric',
             'total' => 'required|numeric',
+            "token" => "required",
         ]);
 
         if ($validator->fails()) {
-
             return response()->json([
                 "message" => $this->readalbeError($validator),
             ], 400);
@@ -230,7 +233,8 @@ class OrderController extends Controller
             ]);
             DB::rollback();
             return response()->json([
-                "message" => $ex->getMessage()
+                "message" => $ex->getMessage(),
+                "errorCode" => $ex->getCode(),
             ], 400);
         }
     }

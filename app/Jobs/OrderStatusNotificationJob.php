@@ -21,16 +21,18 @@ class OrderStatusNotificationJob implements ShouldQueue
 
     public $order;
     public $notificationType = 0;
+    public $status;
 
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct($order, $type = 0)
+    public function __construct($order, $type = 0, $status = null)
     {
         $this->order = $order;
         $this->notificationType = $type;
+        $this->status = $status;
     }
 
     /**
@@ -52,7 +54,7 @@ class OrderStatusNotificationJob implements ShouldQueue
         // ]);
         switch ($this->notificationType) {
             case 1:
-                $this->sendOrderStatusChangeNotification($this->order);
+                $this->sendOrderStatusChangeNotification($this->order, $this->status);
                 break;
             case 2:
                 $this->sendTaxiOrderStatusChangeNotification($this->order);
@@ -62,7 +64,7 @@ class OrderStatusNotificationJob implements ShouldQueue
                 break;
 
             default:
-                $this->sendOrderStatusChangeNotification($this->order);
+                $this->sendOrderStatusChangeNotification($this->order, $this->status);
                 break;
         }
     }

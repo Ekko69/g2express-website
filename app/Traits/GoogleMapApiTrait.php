@@ -36,18 +36,18 @@ trait GoogleMapApiTrait
 
     public function getLinearDistance($originLocation, $destinationLocations)
     {
-        $lat1 = explode(",", $originLocation)[0];
-        $lon1 = explode(",", $originLocation)[1];
+        $lat1 = (float) explode(",", $originLocation)[0];
+        $lon1 = (float) explode(",", $originLocation)[1];
         //
-        $lat2 = explode(",", $destinationLocations)[0];
-        $lon2 = explode(",", $destinationLocations)[1];
+        $lat2 = (float) explode(",", $destinationLocations)[0];
+        $lon2 = (float) explode(",", $destinationLocations)[1];
         // $lat1, $lon1, $lat2, $lon2
         $pi80 = M_PI / 180;
         $lat1 *= $pi80;
         $lon1 *= $pi80;
         $lat2 *= $pi80;
         $lon2 *= $pi80;
-        $r = 6372.797; // mean radius of Earth in km 
+        $r = 6372.797; // mean radius of Earth in km
         $dlat = $lat2 - $lat1;
         $dlon = $lon2 - $lon1;
         $a = sin($dlat / 2) * sin($dlat / 2) + cos($lat1) * cos($lat2) * sin($dlon / 2) * sin($dlon / 2);
@@ -205,5 +205,31 @@ trait GoogleMapApiTrait
             $i++;
         }
         return array($mlat, $mlng);
+    }
+
+
+
+
+    //fetch all delivery_zones with provided latitude and longitude
+    public function getDeliveryZonesByLocation($latitude, $longitude)
+    {
+        $deliveryZonesIds = [];
+        //Zone_filter: if request has latitute and longitude
+        if ($latitude != null && $longitude != null) {
+            //fetch delivery zones close to the coordinates
+            $deliveryZones = \App\Models\DeliveryZone::active()->get();
+            $deliveryZonesIds = [];
+            foreach ($deliveryZones as $deliveryZone) {
+                $cLatLng = [
+                    'lat' => $latitude,
+                    'lng' => $longitude
+                ];
+                $inBound = $this->insideBound($cLatLng, $deliveryZone->points);
+                if ($inBound) {
+                    $deliveryZonesIds[] = $deliveryZone->id;
+                }
+            }
+        }
+        return $deliveryZonesIds;
     }
 }

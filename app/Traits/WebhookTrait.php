@@ -192,4 +192,42 @@ trait WebhookTrait
             "message" => "No record found",
         ], 400);
     }
+
+
+    public function reroutePayTMPaymentWehbook()
+    {
+        $requestData = request()->all();
+        if (!request()->has('ORDERID')) {
+            return response()->json([
+                "message" => "No params",
+            ], 400);
+        }
+
+        $txRef = $requestData['ORDERID'];
+        //check which type of transaction
+        $walletTransaction = WalletTransaction::where('ref', $txRef)->first();
+        $order = Order::where('code', $txRef)->first();
+        $vendorSubscription = SubscriptionVendor::where('code', $txRef)->first();
+        //
+        if ($order) {
+            return route('payment.callback', [
+                "code" => $order->code,
+                "status" => "success",
+            ]);
+        } else if ($walletTransaction) {
+            return route('wallet.topup.callback', [
+                "code" => $walletTransaction->ref,
+                "status" => "success",
+            ]);
+        } else if ($vendorSubscription) {
+            return route('subscription.callback', [
+                "code" => $vendorSubscription->code,
+                "status" => "success",
+            ]);
+        }
+
+        return response()->json([
+            "message" => "No record found",
+        ], 400);
+    }
 }

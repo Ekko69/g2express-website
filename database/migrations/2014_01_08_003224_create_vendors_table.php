@@ -26,7 +26,7 @@ class CreateVendorsTable extends Migration
             $table->string('address')->nullable();
             $table->string('latitude')->nullable();
             $table->string('longitude')->nullable();
-            $table->double('commission', 8, 2)->default(0);
+            $table->double('commission', 8, 2)->nullable();
             $table->boolean('pickup')->default(true);
             $table->boolean('delivery')->default(false);
             $table->boolean('is_active')->default(true);

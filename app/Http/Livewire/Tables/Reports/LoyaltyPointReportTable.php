@@ -16,7 +16,7 @@ class LoyaltyPointReportTable extends BaseReportTable
 
     public function query()
     {
-        return LoyaltyPointReport::with('order')
+        return LoyaltyPointReport::with('order', 'loyalty_point')
             ->when($this->getFilter('start_date'), fn ($query, $sDate) => $query->whereDate('created_at', ">=", $sDate))
             ->when($this->getFilter('end_date'), fn ($query, $eDate) => $query->whereDate('created_at', "<=", $eDate));
     }
@@ -44,7 +44,7 @@ class LoyaltyPointReportTable extends BaseReportTable
                 ->format(function ($value, $column, $row) {
                     return view('components.table.user', $data = [
                         "value" => $value,
-                        "model" => $row->order != null ? $row->order->user : null,
+                        "model" => $row->order != null ? $row->order->user : $row->loyalty_point->user ?? null,
                     ]);
                 }),
             Column::make(__('Type'), 'is_credit')->format(function ($value, $column, $row) {
@@ -55,22 +55,6 @@ class LoyaltyPointReportTable extends BaseReportTable
                 ]);
             }),
             Column::make(__('Date'), 'formatted_date_time'),
-        ];
-    }
-
-    public function filters(): array
-    {
-        return [
-            'start_date' => Filter::make(__('Start Date'))
-                ->date([
-                    'min' => now()->subYear()->format('Y-m-d'), // Optional
-                    'max' => now()->format('Y-m-d') // Optional
-                ]),
-            'end_date' => Filter::make(__('End Date'))
-                ->date([
-                    'min' => now()->subYear()->format('Y-m-d'), // Optional
-                    'max' => now()->format('Y-m-d') // Optional
-                ])
         ];
     }
 

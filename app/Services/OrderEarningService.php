@@ -71,7 +71,7 @@ class OrderEarningService
                         );
                         //get vendor commission
                         $vendorCommission = $order->vendor->commission;
-                        if (empty($vendorCommission)) {
+                        if (is_null($vendorCommission)) {
                             $vendorCommission = $generalVendorCommission;
                         }
                         //get system commission in amount from the order subtotal
@@ -145,6 +145,12 @@ class OrderEarningService
                         )->first();
 
                         if (empty($earned)) {
+
+                            //if the pay driver delivery fee is enabled, then set the delivery fee to 0
+                            $collectDeliveryCash = (bool) setting('finance.delivery.collectDeliveryCash', 0);
+                            if ($collectDeliveryCash) {
+                                $order->delivery_fee = 0;
+                            }
                             //
                             $updateAdminCommission = true;
                             //
@@ -155,7 +161,7 @@ class OrderEarningService
 
                             $driver = User::find($order->driver_id);
                             //
-                            if (empty($driver->commission)) {
+                            if (is_null($driver->commission)) {
                                 $driver->commission = $generalDriverCommission;
                             }
                             //driver commission from delivery fee + tip from customer
@@ -165,7 +171,8 @@ class OrderEarningService
                                 // $systemAdminTotalCommission += ((100 - $driver->commission) / 100) * $order->total;
                                 // logger("driver admin com taxi", [$driver->commission, $order->total, $systemAdminTotalCommission]);
                             } else {
-                                $earnedAmount = (($driver->commission / 100) * $order->delivery_fee) + $order->tip;
+                                $orderTip = !$isCashOrder ? $order->tip : 0;
+                                $earnedAmount = (($driver->commission / 100) * $order->delivery_fee) + $orderTip;
                                 //add the system commission from delivery fee to admin total order earned
                                 // $systemAdminTotalCommission += ((100 - $driver->commission) / 100) * $order->delivery_fee;
                                 // logger("driver admin com", [$driver->commission, $order->delivery_fee, $systemAdminTotalCommission]);
@@ -188,7 +195,8 @@ class OrderEarningService
                                 $totalToDeduct = 0;
                                 //only remove commission fro driver wallet is driver self pay for order
                                 if ($driverSelfPay && ($order->vendor_id != null && !empty($order->vendor_id))) {
-                                    $totalToDeduct  = $order->delivery_fee - ($earnedAmount - $order->tip);
+                                    $orderTip = !$isCashOrder ? $order->tip : 0;
+                                    $totalToDeduct  = $order->delivery_fee - ($earnedAmount - $orderTip);
                                     $driverWallet->balance = $driverWallet->balance - $totalToDeduct;
                                 } else {
                                     $totalToDeduct  = $order->total - $earnedAmount;
@@ -248,6 +256,11 @@ class OrderEarningService
                                         'order_id' => $order->id,
                                     ],
                                 );
+                            }
+
+                            //revert delivery fee
+                            if ($collectDeliveryCash) {
+                                $order->delivery_fee = $order->getOriginal('delivery_fee');
                             }
                         }
                     }

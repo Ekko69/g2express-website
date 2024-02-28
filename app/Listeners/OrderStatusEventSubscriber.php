@@ -3,6 +3,7 @@
 namespace App\Listeners;
 
 use App\Models\Order;
+use App\Observers\OrderObserver;
 use App\Services\JobHandlerService;
 use Spatie\ModelStatus\Status;
 use App\Traits\FirebaseMessagingTrait;
@@ -54,6 +55,7 @@ class OrderStatusEventSubscriber
         $oldStatusName = ($oldStatus != null ? $oldStatus->name : "");
 
         // logger("handleOrderUpdate", [
+        //     "Order Code" => $event->model->code,
         //     "newStatus" => $newStatus,
         //     "oldStatus" => $oldStatus,
         //     "oldStatusName" => $oldStatusName,
@@ -72,11 +74,10 @@ class OrderStatusEventSubscriber
             }
 
             //
-            (new JobHandlerService())->orderFCMNotificationJob($order, $type);
+            (new JobHandlerService())->orderFCMNotificationJob($order, $type, $newStatus->name);
+            //
+            (new OrderObserver())->updated($order);
         }
-        // else {
-        //     logger("notification not called");
-        // }
 
         //refund order
         $order->refundUser();

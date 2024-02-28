@@ -19,29 +19,30 @@ class BackUpLivewire extends BaseLivewireComponent
     public function render()
     {
 
-        $files = Storage::allFiles( env("APP_NAME") );
-        return view('livewire.backup',[
+        $files = Storage::allFiles(env("APP_NAME"));
+        //reverse the array so that the latest backup is shown first
+        $files = array_reverse($files);
+        return view('livewire.backup', [
             "backups" => $files,
         ]);
     }
 
-    public function newBackUp(){
+    public function newBackUp()
+    {
 
-        try{
+        try {
 
             Artisan::call("backup:run --only-db");
             $this->showSuccessAlert(__("Database backup successful"));
-
-        }catch(Exception $error){
+        } catch (Exception $error) {
 
             $this->showErrorAlert(__("Database backup failed"));
-
         }
-
     }
 
 
-    public function initiateDelete($file){
+    public function initiateDelete($file)
+    {
 
         $this->selectedModel = $file;
         $this->confirm('Delete', [
@@ -54,21 +55,19 @@ class BackUpLivewire extends BaseLivewireComponent
             'onConfirmed' => 'deleteModel',
             'onCancelled' => 'cancelled'
         ]);
-
     }
 
 
-    public function deleteModel(){
+    public function deleteModel()
+    {
 
-        try{
+        try {
 
             Storage::delete($this->selectedModel);
             $this->showSuccessAlert(__("Backup Deleted"));
-
-        }catch(Exception $error){
-            $this->showErrorAlert( $error->getMessage() ?? __("Backup delete Failed"));
+        } catch (Exception $error) {
+            $this->showErrorAlert($error->getMessage() ?? __("Backup delete Failed"));
         }
-
     }
 
 
@@ -76,7 +75,4 @@ class BackUpLivewire extends BaseLivewireComponent
     {
         return Storage::download($file);
     }
-
-
-
 }

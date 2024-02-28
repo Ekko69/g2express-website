@@ -2,11 +2,10 @@
 
 namespace App\Http\Livewire\Select;
 
-use Asantibanez\LivewireSelect\LivewireSelect;
 use Illuminate\Support\Collection;
 use App\Models\Product;
 
-class MultipleProductSelect extends LivewireSelect
+class MultipleProductSelect extends BaseLivewireSelect
 {
     public function options($searchTerm = null): Collection
     {

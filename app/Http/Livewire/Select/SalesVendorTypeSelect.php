@@ -2,11 +2,10 @@
 
 namespace App\Http\Livewire\Select;
 
-use Asantibanez\LivewireSelect\LivewireSelect;
 use Illuminate\Support\Collection;
 use App\Models\VendorType;
 
-class SalesVendorTypeSelect extends LivewireSelect
+class SalesVendorTypeSelect extends BaseLivewireSelect
 {
 
     //listeners

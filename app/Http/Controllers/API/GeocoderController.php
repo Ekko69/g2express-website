@@ -28,10 +28,10 @@ class GeocoderController extends Controller
 
 
         try {
-            $geocoderType = env('geocoderType') ?? "google";
+            $geocoderType = strtolower(env('geocoderType') ?? "google");
             $addresses = [];
 
-            if ($geocoderType == "Opencage") {
+            if ($geocoderType == "opencage") {
                 $opencageApiKey = env('opencageApiKey');
                 $api = "https://api.opencagedata.com/geocode/v1/json?q={$request->lat},{$request->lng}&key=$opencageApiKey";
                 $response = Http::get($api);
@@ -60,7 +60,7 @@ class GeocoderController extends Controller
                 } else {
                     throw new \Exception($response->body(), 1);
                 }
-            } else if ($geocoderType == "Radar") {
+            } else if ($geocoderType == "radar") {
                 $radarApiKey = env('radarApiKey');
                 $api = "https://api.radar.io/v1/geocode/reverse?coordinates={$request->lat},{$request->lng}&layers=fine";
                 $response = Http::withHeaders([
@@ -92,7 +92,7 @@ class GeocoderController extends Controller
                 } else {
                     throw new \Exception($response->json()["meta"]["message"] ?? $response->json(), 1);
                 }
-            } else if ($geocoderType == "Locationiq") {
+            } else if ($geocoderType == "locationiq") {
                 $locationiqApiKey = env('locationiqApiKey');
                 $api = "https://us1.locationiq.com/v1/reverse.php?key={$locationiqApiKey}&lat={$request->lat}&lon={$request->lng}&format=json";
                 $response = Http::get($api);
@@ -124,7 +124,10 @@ class GeocoderController extends Controller
             } else {
                 //google
                 $googleMapKey = env('googleMapKey');
+                $resultLimit = $request->result_limit ?? 5;
+                $locationType = $request->location_type ?? "";
                 $api = "https://maps.googleapis.com/maps/api/geocode/json?latlng={$request->lat},{$request->lng}&key=$googleMapKey";
+                $api .= "&location_type=$locationType&limit=$resultLimit";
                 $response = Http::get($api);
 
                 if ($response->successful()) {
@@ -150,7 +153,8 @@ class GeocoderController extends Controller
                         ];
                     }
                 } else {
-                    throw new \Exception($response->json()["meta"]["message"] ?? $response->json(), 1);
+                    logger("GeocoderController Error", [$response->json()]);
+                    throw new \Exception($response->json()["meta"]["message"] ?? $response->json()['message'] ?? "Failed", 1);
                 }
             }
 
@@ -341,11 +345,11 @@ class GeocoderController extends Controller
     {
 
         try {
-            $geocoderType = env('geocoderType') ?? "google";
+            $geocoderType = strtolower(env('geocoderType') ?? "google");
             $countiresSearch = env('placeFilterCountryCodes');
             $addresses = [];
 
-            if ($geocoderType != "Google") {
+            if ($geocoderType != "google") {
                 return $this->reverse($request);
             } else {
                 //google
@@ -386,7 +390,7 @@ class GeocoderController extends Controller
             $response = Http::get($api);
 
             if ($response->successful()) {
-                https: //maps.googleapis.com/maps/api/place/details/json?fields=address_component,formatted_address,name,geometry&place_id=
+                // https: //maps.googleapis.com/maps/api/place/details/json?fields=address_component,formatted_address,name,geometry&place_id=
                 //
                 $address = $response["result"];
                 if ($request->plain ?? false) {

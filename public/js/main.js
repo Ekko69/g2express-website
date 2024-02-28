@@ -57,5 +57,9 @@ $(function () {
         window.open(url, '_blank').focus();
     });
 
+    livewire.on("reloadPage", url => {
+        window.location.reload();
+    });
+
 
 });

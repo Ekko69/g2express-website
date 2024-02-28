@@ -128,6 +128,12 @@ class ParcelOrderService
 
         //save the coupon used
         $coupon = Coupon::where("code", $request->coupon_code)->first();
+        //if discount is not zero and coupon is empty, throw error
+        if (empty($coupon) && $request->discount > 0) {
+            throw new \Exception(__("Invalid Coupon"), 1);
+        }
+
+
         if (!empty($coupon)) {
             $couponUser = new CouponUser();
             $couponUser->coupon_id = $coupon->id;
@@ -145,9 +151,19 @@ class ParcelOrderService
         //
         DB::commit();
 
+        //
+        $paymentToken = encrypt([
+            "id" => $order->id,
+            "code" => $order->code,
+            "user_id" => $order->user_id,
+        ]);
+
+
         return response()->json([
             "message" => $message,
             "link" => $paymentLink,
+            "code" => $order->code,
+            "token" => $paymentToken,
         ], 200);
     }
 }

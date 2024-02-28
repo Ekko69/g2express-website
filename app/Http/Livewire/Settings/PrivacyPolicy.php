@@ -8,6 +8,8 @@ class PrivacyPolicy extends BaseSettingsComponent
 
     //
     public $privacyPolicy;
+    //set listeners to emtpy
+    protected $listeners = [];
 
 
     public function mount()
@@ -31,6 +33,12 @@ class PrivacyPolicy extends BaseSettingsComponent
         $this->privacyPolicy = file_get_contents($filePath) ?? "";
     }
 
+
+    public function setupData()
+    {
+        $this->emit('loadSummerNote', "privacyPolicyEdit", $this->privacyPolicy);
+    }
+
     public function savePrivacyPolicy()
     {
 
@@ -41,11 +49,11 @@ class PrivacyPolicy extends BaseSettingsComponent
             file_put_contents($filePath, $this->privacyPolicy);
 
             $this->showSuccessAlert(__("Privacy Policy Settings saved successfully!"));
-            $this->goBack();
-        } catch (Exception $error) {
+            $this->setupData();
+        } catch (\Exception $error) {
             $this->showErrorAlert($error->getMessage() ?? __("Privacy Policy Settings save failed!"));
+            $this->setupData();
             // $this->showErrorAlert("Privacy Policy ===> " . $this->privacyPolicy . "");
         }
     }
-
 }

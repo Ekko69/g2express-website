@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
 
+        Validator::includeUnvalidatedArrayKeys();
         Schema::defaultStringLength(191);
         //
         Blade::if('showPackage', function () {
@@ -40,7 +42,6 @@ class AppServiceProvider extends ServiceProvider
             }
             return 0;
         });
-
         //
         Blade::if('showService', function () {
 
@@ -53,8 +54,6 @@ class AppServiceProvider extends ServiceProvider
             }
             return 0;
         });
-
-
         //
         Blade::if('showProduct', function () {
 
@@ -69,7 +68,6 @@ class AppServiceProvider extends ServiceProvider
             }
             return 0;
         });
-
         //
         Blade::if('showDeliveryBoys', function () {
 
@@ -82,9 +80,8 @@ class AppServiceProvider extends ServiceProvider
             }
             return 0;
         });
-
+        //
         Blade::if('handleDeliveryBoys', function () {
-
             $user = \Auth::user();
             $showDeliveryBoysMenu = $user->vendor->has_drivers ?? false;
 
@@ -106,13 +103,25 @@ class AppServiceProvider extends ServiceProvider
             if (setting('vendorSetDeliveryFee') || $user->hasAnyRole('admin')) {
                 return 1;
             }
+            //if the user is manager and vendor has own drivers
+            if ($user && $user->hasAnyRole('manager') && ($user->vendor->has_drivers ?? false)) {
+                return 1;
+            }
             return 0;
         });
 
+        //test db connection
+        $isDBConnected = false;
+        try {
+            $isDBConnected = \DB::connection()->getPdo() ? true : false;
+        } catch (\Exception $ex) {
+            $isDBConnected = false;
+        }
+        //
         if (!app()->runningInConsole()) {
             //
             try {
-                if (!Schema::hasTable('settings')) {
+                if ($isDBConnected && !Schema::hasTable('settings')) {
                     $currentRoute = $this->app->request->getRequestUri();
                     if (!str_contains($currentRoute, "/install")) {
                         redirect("install")->send();
@@ -128,7 +137,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         try {
-            if (Schema::hasTable('settings')) {
+            if ($isDBConnected && Schema::hasTable('settings')) {
                 date_default_timezone_set(setting('timeZone', 'UTC'));
                 // app()->setLocale(setting('localeCode', 'en'));
             } else {
@@ -145,8 +154,13 @@ class AppServiceProvider extends ServiceProvider
 
         if (!$this->app->environment('production')) {
             try {
-                Mail::alwaysTo(config('backend.support.email'));
+                $supportEmails = config('backend.support.email');
+                $isHostSet = config('mail.host') != null;
+                if ($isHostSet && !empty($supportEmails)) {
+                    Mail::alwaysTo($supportEmails);
+                }
             } catch (\Exception $ex) {
+                logger("Mail Always to Error", [$ex]);
             }
         }
     }

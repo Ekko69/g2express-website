@@ -59,5 +59,25 @@ class RouteServiceProvider extends ServiceProvider
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by(optional($request->user())->id ?: $request->ip());
         });
+        //new rate limiter for otp requests
+        RateLimiter::for('otp', function (Request $request) {
+            //limit to 2 requests per 2hours to prevent spamming
+            //by ip address, user agent and route
+            return Limit::perHour(5, 2)
+                ->by($request->ip() . '|' . $request->userAgent() . '|' . $request->route()->getName())
+                ->response(function () {
+                    logger(
+                        "API OTP Limit passed",
+                        [
+                            "ip" => request()->ip(),
+                            "user_agent" => request()->userAgent(),
+                            "route" => request()->route()->getName(),
+                        ]
+                    );
+                    return response()->json([
+                        'message' => __('You have exceeded the OTP request limit. You can retry again after 2 hours'),
+                    ], 429);
+                });
+        });
     }
 }

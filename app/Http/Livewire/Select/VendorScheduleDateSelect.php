@@ -2,13 +2,11 @@
 
 namespace App\Http\Livewire\Select;
 
-use App\Models\Day;
-use Asantibanez\LivewireSelect\LivewireSelect;
 use Illuminate\Support\Collection;
 use App\Models\Vendor;
 use Carbon\Carbon;
 
-class VendorScheduleDateSelect extends LivewireSelect
+class VendorScheduleDateSelect extends BaseLivewireSelect
 {
     public function options($searchTerm = null): Collection
     {

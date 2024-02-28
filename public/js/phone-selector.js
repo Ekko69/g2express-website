@@ -7,8 +7,10 @@ $(function () {
         // var input = document.querySelector("#" + data[0] + "");
         var utilsScriptLink = document.getElementById("utilsScriptUrl").getAttribute("data-value");
         var iti = window.intlTelInput(phoneElement, {
+            initialCountry: data[3] ?? '',
             nationalMode: true,
             utilsScript: utilsScriptLink,
+            dropdownContainer: document.body,
         });
 
 

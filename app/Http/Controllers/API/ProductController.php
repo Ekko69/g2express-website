@@ -7,10 +7,16 @@ use App\Models\Option;
 use App\Models\OptionGroup;
 use App\Models\Product;
 use App\Models\User;
+use App\Traits\GoogleMapApiTrait;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Exception;
 
 class ProductController extends Controller
 {
+
+    use GoogleMapApiTrait;
 
     public function index(Request $request)
     {
@@ -25,16 +31,6 @@ class ProductController extends Controller
                 })->latest()->paginate($this->perPage);
         }
         return Product::active()
-            // NEW ONES END HERE
-            ->when($request->latitude, function ($query) use ($request) {
-                return $query->where(function ($query) use ($request) {
-                    return $query->whereHas('vendor', function ($query) use ($request) {
-                        return $query->active()->within($request->latitude, $request->longitude);
-                    })->orWhereHas('vendor', function ($query) use ($request) {
-                        return $query->active()->withinrange($request->latitude, $request->longitude);
-                    });
-                });
-            })
             ->when($request->vendor_type_id, function ($query) use ($request) {
                 return $query->whereHas('vendor', function ($query) use ($request) {
                     return $query->active()->where('vendor_type_id', $request->vendor_type_id);
@@ -85,6 +81,36 @@ class ProductController extends Controller
             ->when($request->type == "new", function ($query) {
                 return $query->orderBy('created_at', 'DESC');
             })
+            // NEW ONES END HERE
+            ->when($request->latitude, function ($query) use ($request) {
+
+                if (!fetchDataByLocation()) {
+                    return $query;
+                }
+
+                $latitude = $request->latitude;
+                $longitude = $request->longitude;
+                $deliveryZonesIds = $this->getDeliveryZonesByLocation($latitude, $longitude);
+                //where has vendors that has delivery zones
+                return $query->whereHas("vendor", function ($query) use ($deliveryZonesIds) {
+                    $query->whereHas('delivery_zones', function ($query) use ($deliveryZonesIds) {
+                        $query->whereIn('delivery_zone_id', $deliveryZonesIds);
+                    });
+                });
+                // return $query->whereHas('vendor', function ($query) use ($request) {
+                //     return $query->byDeliveryZone($request->latitude, $request->longitude);
+                // });
+
+                // return $query->where(function ($query) use ($request) {
+                //     return $query->whereHas('vendor', function ($query) use ($request) {
+                //         return $query->active()->within($request->latitude, $request->longitude);
+                //     })->orWhereHas('vendor', function ($query) use ($request) {
+                //         return $query->active()->withinrange($request->latitude, $request->longitude);
+                //     });
+                // });
+            })
+            //order by in_order
+            ->orderBy('in_order', 'ASC')
             ->paginate($this->perPage);
     }
 
@@ -125,44 +151,55 @@ class ProductController extends Controller
         }
 
         try {
-            \DB::beginTransaction();
+            DB::beginTransaction();
             $product = Product::create($request->all());
             $product->deliverable = $request->deliverable == 1 || $request->deliverable == "true";
             $product->is_active = $request->is_active == 1 || $request->is_active == "true";
             $product->save();
 
-            //categories 
-            if (!empty($request->category_ids)) {
+            //tags
+            if ($request->has("tag_ids") && $request->tag_ids != "[]") {
+                $product->tags()->attach($request->tag_ids);
+            }
+            //categories
+            if ($request->has("category_ids") && $request->category_ids != "[]") {
                 $product->categories()->attach($request->category_ids);
             }
-            //sub_category_ids 
-            if (!empty($request->sub_category_ids)) {
+            //sub_category_ids
+            if ($request->has("sub_category_ids") && $request->sub_category_ids != "[]") {
                 $product->sub_categories()->attach($request->sub_category_ids);
             }
             //menus
-            if (!empty($request->menu_ids)) {
+            if ($request->has("menu_ids") && $request->menu_ids != "[]") {
                 $product->menus()->attach($request->menu_ids);
             }
 
 
             if ($request->hasFile("photo")) {
                 $product->clearMediaCollection();
-                $product->addMedia($request->photo->getRealPath())->toMediaCollection();
+                $product->addMedia($request->photo->getRealPath())
+                    ->usingFileName(genFileName($request->photo))
+                    ->toMediaCollection();
             }
 
             if ($request->hasFile("photos")) {
                 $product->clearMediaCollection();
                 foreach ($request->file('photos') as $photo) {
-                    $product->addMedia($photo->getRealPath())->toMediaCollection();
+                    $product->addMedia($photo->getRealPath())
+                        ->usingFileName(genFileName($photo))
+                        ->toMediaCollection();
                 }
             }
 
-            \DB::commit();
+            //sync option groups
+            $this->syncProductOptionGroups($product, $request);
+
+            DB::commit();
             return response()->json([
                 "message" => __("Product Added successfully")
             ], 200);
-        } catch (\Exception $ex) {
-            \DB::rollback();
+        } catch (Exception $ex) {
+            DB::rollback();
             return response()->json([
                 "message" => $ex->getMessage() ?? __("Product Creation failed")
             ], 400);
@@ -184,43 +221,74 @@ class ProductController extends Controller
                 ], 400);
             }
 
-            \DB::beginTransaction();
+            DB::beginTransaction();
             $product->update($request->all());
 
-            //categories 
-            if (!empty($request->category_ids)) {
-                $product->categories()->sync($request->category_ids);
-            }
-            //sub_category_ids 
-            if (!empty($request->sub_category_ids)) {
-                $product->sub_categories()->sync($request->sub_category_ids);
-            }
-            //menus
-            if (!empty($request->menu_ids)) {
-                $product->menus()->sync($request->menu_ids);
+            //tags
+            if ($request->has("tag_ids") && $request->tag_ids != "[]") {
+                $tagIds = collect($request->input('tag_ids'));
+                $product->tags()->detach();
+                if ($tagIds->isNotEmpty()) {
+                    $product->tags()->attach($tagIds);
+                }
             }
 
+            //categories
+            if ($request->has("category_ids") && $request->category_ids != "[]") {
+                $categoryIds = collect($request->input('category_ids'));
+                //first detach all categories
+                $product->categories()->detach();
+                //then attach the new ones
+                if ($categoryIds->isNotEmpty()) {
+                    $product->categories()->attach($categoryIds);
+                }
+            }
+            //sub_category_ids
+            if ($request->has("sub_category_ids") && $request->sub_category_ids != "[]") {
+                $subCategoryIds = collect($request->input('sub_category_ids'));
+                $product->sub_categories()->detach();
+                if ($subCategoryIds->isNotEmpty()) {
+                    $product->sub_categories()->attach($subCategoryIds);
+                }
+            }
+            //menus
+            //if no menu_ids are passed, skip this step
+            if ($request->has("menu_ids") && $request->menu_ids != "[]") {
+                $menuIds = collect($request->input('menu_ids'));
+                $product->menus()->detach();
+                if ($menuIds->isNotEmpty()) {
+                    $product->menus()->attach($menuIds);
+                }
+            }
 
             if ($request->hasFile("photo")) {
                 $product->clearMediaCollection();
-                $product->addMedia($request->photo->getRealPath())->toMediaCollection();
+                $product->addMedia($request->photo->getRealPath())
+                    ->usingFileName(genFileName($request->photo))
+                    ->toMediaCollection();
             }
 
             if ($request->hasFile("photos")) {
                 $product->clearMediaCollection();
                 foreach ($request->file('photos') as $photo) {
-                    $product->addMedia($photo->getRealPath())->toMediaCollection();
+                    $product->addMedia($photo->getRealPath())
+                        ->usingFileName(genFileName($photo))
+                        ->toMediaCollection();
                 }
             }
 
+            //sync option groups
+            $this->syncProductOptionGroups($product, $request);
 
-            \DB::commit();
+
+            DB::commit();
 
             return response()->json([
                 "message" => __("Product updated successfully"),
             ]);
-        } catch (\Exception $ex) {
-            \DB::rollback();
+        } catch (Exception $ex) {
+            DB::rollback();
+            logger("Product update error", [$ex]);
             return response()->json([
                 "message" => $ex->getMessage()
             ], 400);
@@ -241,18 +309,67 @@ class ProductController extends Controller
 
         try {
 
-            \DB::beginTransaction();
+            DB::beginTransaction();
             Product::destroy($id);
-            \DB::commit();
+            DB::commit();
 
             return response()->json([
                 "message" => __("Product deleted successfully"),
             ]);
-        } catch (\Exception $ex) {
-            \DB::rollback();
+        } catch (Exception $ex) {
+            DB::rollback();
             return response()->json([
                 "message" => $ex->getMessage()
             ], 400);
+        }
+    }
+
+
+
+
+
+
+
+    //MISC. private functions
+    private function syncProductOptionGroups($product, $request)
+    {
+        //if request has option_groups, sync them
+        if ($request->has("option_groups")) {
+            //
+            $user = User::find(auth('api')->id());
+            $vendorId = $user->vendor_id;
+            //
+            $mOptionGroups = collect($request->input('option_groups'));
+            //loop through the option groups
+            foreach ($mOptionGroups as $mOptionGroup) {
+                $optionGroup = OptionGroup::updateOrCreate([
+                    "id" => $mOptionGroup['id'],
+                    "vendor_id" => $vendorId,
+                ], [
+                    "name" => $mOptionGroup['name'],
+                    "multiple" => $mOptionGroup['multiple'],
+                    "required" => $mOptionGroup['required'],
+                    "max_options" => $mOptionGroup['max_options'] ?? null,
+                ]);
+                //sync the options
+                $mOptionGroupOptions = collect($mOptionGroup['options']);
+                foreach ($mOptionGroupOptions as $mOptionGroupOption) {
+                    $option = Option::updateOrCreate([
+                        "id" => $mOptionGroupOption['id'],
+                        "vendor_id" => $vendorId,
+                    ], [
+                        "name" => $mOptionGroupOption['name'],
+                        "price" => $mOptionGroupOption['price'],
+                        "product_id" => $product->id,
+                        "is_active" => true,
+                    ]);
+                    //sync the option with the option group
+                    $option->option_group_id = $optionGroup->id;
+                    $option->save();
+                    //sync the option with the product
+                    $option->products()->syncWithoutDetaching($product->id);
+                }
+            }
         }
     }
 }

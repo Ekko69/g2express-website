@@ -1,4 +1,9 @@
 <div class="flex items-center gap-x-2">
+    {{-- details --}}
+    <x-buttons.plain title="{{ __('Details') }}" bgColor="bg-primary-500"
+        onClick="window.open('{{ route('users.details', ['id' => $model->id]) }}')">
+        <x-heroicon-o-document-text class="w-5 h-5" />
+    </x-buttons.plain>
 
     @if ($model->id != \Auth::id())
         @can('assign-permissions')

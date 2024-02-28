@@ -33,9 +33,9 @@ class WebhookPaymentCallbackController extends Controller
             $routeUrl = $this->reroutePaystackPaymentWehbook();
         } else if ($paymentMethodSlug == "flutterwave") {
             $routeUrl = $this->rerouteFlutterwavePaymentWehbook();
+        } else if ($paymentMethodSlug == "paytm") {
+            $routeUrl = $this->reroutePayTMPaymentWehbook();
         }
-        // } else if ($paymentMethodSlug == "paytm") {
-        // $routeUrl = $this->reroutePayTMPaymentWehbook();
         // } else if ($paymentMethodSlug == "payu") {
         //     $routeUrl =  $this->rerouteFlutterwavePaymentWehbook();
         // }

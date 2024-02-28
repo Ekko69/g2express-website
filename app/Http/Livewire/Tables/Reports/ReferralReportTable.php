@@ -14,46 +14,6 @@ class ReferralReportTable extends BaseReportTable
 
     public $model = Referral::class;
 
-    public function query()
-    {
-        //
-        return $this->model::with(
-            'referringUser',
-            'referredUser'
-        )->mine()
-            ->when($this->getFilter('status'), function ($query, $status) {
-                return $query->where('completed', $status);
-            })->when($this->getFilter('start_date'), function ($query, $sDate) {
-                return $query->whereDate('created_at', ">=", $sDate);
-            })->when($this->getFilter('end_date'), function ($query, $eDate) {
-                return $query->whereDate('created_at', "<=", $eDate);
-            });
-    }
-
-    public function columns(): array
-    {
-        return [
-            Column::make(__('ID'), 'id'),
-            Column::make(__('Referring User'), 'referringUser.name')->searchable(),
-            Column::make(__('Referred User'), 'referredUser.name')->searchable(),
-            Column::make(__('Amount'), 'amount')->format(function ($value, $column, $row) {
-                return view('components.table.price', $data = [
-                    "model" => $row,
-                    "column" => $column,
-                    "value" => number_format($value, 2),
-                ]);
-            })->sortable(),
-            Column::make(__('Confirmed'), 'confirmed')->addClass('w-32')->format(function ($value, $column, $row) {
-                return view('components.table.chip', $data = [
-                    "text" => $value ? __("Yes") : __("No"),
-                    'bgColor' => $value ? 'bg-green-500' : 'bg-red-500',
-                    'textColor' =>  'text-white',
-                ]);
-            })->sortable(),
-            Column::make(__('Created At'), 'formatted_date'),
-        ];
-    }
-
     public function filters(): array
     {
         return [
@@ -75,6 +35,63 @@ class ReferralReportTable extends BaseReportTable
                 ])
         ];
     }
+
+
+    public function query()
+    {
+        //
+        return $this->model::with(
+            'referringUser',
+            'referredUser'
+        )->mine()
+            ->when($this->getFilter('status'), function ($query, $status) {
+                return $query->where('confirmed', $status);
+            })->when($this->getFilter('start_date'), function ($query, $sDate) {
+                return $query->whereDate('created_at', ">=", $sDate);
+            })->when($this->getFilter('end_date'), function ($query, $eDate) {
+                return $query->whereDate('created_at', "<=", $eDate);
+            });
+    }
+
+    public function columns(): array
+    {
+        return [
+            Column::make(__('ID'), 'id'),
+            // Column::make(__('Referring User'), 'referringUser.name')->searchable(),
+            Column::make(__('Referring User'), 'referringUser.name')
+                ->format(function ($value, $column, $row) {
+                    return view('components.table.user', $data = [
+                        "value" => $value,
+                        "model" => $row->referringUser,
+                    ]);
+                })->searchable(),
+            // Column::make(__('Referred User'), 'referredUser.name')->searchable(),
+            Column::make(__('Referred User'), 'referredUser.name')
+                ->format(function ($value, $column, $row) {
+                    return view('components.table.user', $data = [
+                        "value" => $value,
+                        "model" => $row->referredUser,
+                    ]);
+                })->searchable(),
+            Column::make(__('Amount'), 'amount')->format(function ($value, $column, $row) {
+                return view('components.table.price', $data = [
+                    "model" => $row,
+                    "column" => $column,
+                    "value" => number_format($value, 2),
+                ]);
+            })->sortable(),
+            Column::make(__('Confirmed'), 'confirmed')->addClass('w-32')->format(function ($value, $column, $row) {
+                return view('components.table.chip', $data = [
+                    "text" => $value ? __("Yes") : __("No"),
+                    'bgColor' => $value ? 'bg-green-500' : 'bg-red-500',
+                    'textColor' =>  'text-white',
+                ]);
+            })->sortable(),
+            Column::make(__('Created At'), 'formatted_date'),
+        ];
+    }
+
+
 
 
     public function exportSelected()

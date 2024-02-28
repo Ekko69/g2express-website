@@ -89,9 +89,9 @@ class RefundTable extends BaseDataTableComponent
                 $this->isDemo();
             }
             \DB::beginTransaction();
+            $this->selectedModel->order->refundUser(true);
             $this->selectedModel->status = "successful";
             $this->selectedModel->save();
-            $this->selectedModel->order->refundUser(true);
             \DB::commit();
             $this->showSuccessAlert(__("Approved"));
         } catch (Exception $error) {

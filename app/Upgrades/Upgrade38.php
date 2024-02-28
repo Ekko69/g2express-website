@@ -4,7 +4,6 @@ namespace App\Upgrades;
 
 use App\Models\Order;
 use App\Models\PaymentMethod;
-use App\Services\FirestoreRestService;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Artisan;
 
@@ -48,9 +47,5 @@ class Upgrade38 extends BaseUpgrade
         if (!Schema::hasTable('refunds')) {
             Artisan::call('migrate --path=database/migrations/2022_04_28_090529_create_refunds_table.php --force');
         }
-
-
-        //creating the firestore index on the fly
-        (new FirestoreRestService())->whereBetween(5.122, 3.000, 0);
     }
 }

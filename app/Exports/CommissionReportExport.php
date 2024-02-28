@@ -21,7 +21,7 @@ class CommissionReportExport implements FromArray, WithHeadings, WithMapping, Sh
         $this->selectedRows = $selectedRows;
     }
 
-    public function array():array
+    public function array(): array
     {
         return $this->selectedRows;
     }
@@ -43,10 +43,14 @@ class CommissionReportExport implements FromArray, WithHeadings, WithMapping, Sh
             __("ID"),
             __('Order No'),
             __("Vendor"),
-            __("Admin Vendor Commission"),
+            __("Vendor Earned"),
             __("Driver"),
-            __("Admin Driver Commission"),
+            __("Driver Earned"),
+            __("System Earned"),
             __("Created At"),
+            "",
+            __("Total Order Amount"),
+            __("Delivery Fee"),
         ];
     }
 
@@ -60,7 +64,11 @@ class CommissionReportExport implements FromArray, WithHeadings, WithMapping, Sh
             $model["vendor_commission"],
             $model["order"]["driver"]["name"] ?? "",
             $model["driver_commission"],
+            $model["admin_commission"],
             $model["created_at"],
+            "",
+            $model["order"]["total"],
+            $model["order"]["delivery_fee"],
         ];
     }
 }

@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\User;
 use App\Services\ModelTranslationService;
 use App\Services\TranslationFixService;
+use App\Services\FirestoreRestService;
 use App\Traits\FirebaseAuthTrait;
 use GeoSot\EnvEditor\Facades\EnvEditor;
 //
@@ -104,10 +105,26 @@ class TroubleShootLivewire extends BaseLivewireComponent
         }
 
         //regular drivers online
-        $regularDriversOnline = User::role('driver')->whereDoesntHave('vehicle')->where('is_online', 1)->count();
+        //TODO: check if driver is online
+        $regularDriversOnline = User::role('driver')
+            ->where(function ($query) {
+                $query->whereHas('driver_type', function ($query) {
+                    $query->where('is_taxi', 0);
+                })->orWhereDoesntHave('vehicle');
+            })
+            // ->whereDoesntHave('vehicle')
+            ->where('is_online', 1)->count();
         $this->autoAssignmentChecks["online_regular_drivers"] = $regularDriversOnline > 0;
         //taxi drivers online
-        $taxiDriversOnline = User::role('driver')->whereHas('vehicle')->where('is_online', 1)->count();
+        //TODO: check if driver is online
+        $taxiDriversOnline = User::role('driver')
+            ->where(function ($query) {
+                $query->whereHas('driver_type', function ($query) {
+                    $query->where('is_taxi', 1);
+                })->orWhereHas('vehicle');
+            })
+            // ->whereHas('vehicle')
+            ->where('is_online', 1)->count();
         $this->autoAssignmentChecks["online_taxi_drivers"] = $taxiDriversOnline > 0;
 
         //ready orders
@@ -202,6 +219,19 @@ class TroubleShootLivewire extends BaseLivewireComponent
             $this->showErrorAlert($ex->getMessage() ?? __("Failed"));
         }
     }
+    public function fixProductTranslations()
+    {
+
+        try {
+            $this->isDemo();
+            $modelTranslationService = new ModelTranslationService();
+            $modelTranslationService->fixProductTranslations();
+            $this->showSuccessAlert(__("Product Translations") . " " . __("Successfully"));
+        } catch (\Exception $ex) {
+            logger("error", [$ex]);
+            $this->showErrorAlert($ex->getMessage() ?? __("Failed"));
+        }
+    }
 
     public function fixTranslationFallback()
     {
@@ -266,5 +296,118 @@ class TroubleShootLivewire extends BaseLivewireComponent
         // }
 
         return $drivers;
+    }
+
+
+
+    //
+    public function fixFirestoreIndexesLink()
+    {
+        try {
+            //creating the firestore index on the fly
+            $drivers = (new FirestoreRestService())->whereWithinGeohash(5.122, 3.000, 10, 0);
+            $drivers = (new FirestoreRestService())->whereWithinGeohash(5.122, 3.000, 10, 0, 1);
+            $this->showSuccessAlert(__("Firestore indexes already created") . " " . __("Successfully"));
+        } catch (\Exception $ex) {
+            logger("error", [$ex]);
+            $this->showErrorAlert($ex->getMessage() ?? __("Failed"), $time = 30000);
+        }
+    }
+
+
+
+    //
+    public $totalDriverModified = 0;
+    public function fixFirebaseDriverRecords()
+    {
+        try {
+            $this->isDemo();
+            $this->totalDriverModified = 0;
+            //first get drivers from firebase firestore
+            $firestoreClient = $this->getFirebaseStoreClient();
+            $this->firebaseDriverRecordsFix($firestoreClient);
+            $msg = __("Driver Firebase Resolved") . " " . __("Successfully");
+            $msg .= " " . $this->totalDriverModified . " " . __("Driver records modified");
+            $this->showSuccessAlert($msg);
+        } catch (\Exception $ex) {
+            logger("error", [$ex]);
+            $this->showErrorAlert($ex->getMessage() ?? __("Failed"), $time = 30000);
+        }
+    }
+
+
+    public function firebaseDriverRecordsFix($firestoreClient, $token = null)
+    {
+        try {
+            //first get drivers from firebase firestore
+            $driverDocumentsRaw = $firestoreClient->listDocuments('drivers', [
+                "pageSize" => 50,
+                'pageToken' => $token
+            ]);
+
+            $driverDocuments = $driverDocumentsRaw["documents"] ?? [];
+            foreach ($driverDocuments as $driverDocument) {
+                $driverDocData = $driverDocument->toArray();
+                $docPath = $driverDocument->getRelativeName();
+                //remove the first / from the path, if it starts with /
+                if (substr($docPath, 0, 1) == "/") {
+                    $docPath = substr($docPath, 1);
+                }
+
+                //$driverId get from the path of the document
+                $driverId = explode("/", $docPath)[1] ?? null;
+                //check if there is a driver record with the driver id
+                $driver = User::find($driverId);
+                if (empty($driver)) {
+                    //delete the driver record from firestore
+                    $firestoreClient->deleteDocument($docPath);
+                    $this->totalDriverModified++;
+                    continue;
+                }
+
+                //check if array have vehicle type id
+                if (!array_key_exists("vehicle_type_id", $driverDocData)) {
+                    $newDriverData = [
+                        "vehicle_type_id" => null
+                    ];
+                    try {
+                        //update the vehicle type id to null
+                        $firestoreClient->setDocument(
+                            $docPath,
+                            $newDriverData,
+                            true,
+                            [],
+                            ["merge" => true]
+                        );
+                        $this->totalDriverModified++;
+                    } catch (\Exception $ex) {
+                        logger("Issue with setDocument driver id: " . $driverId, [$ex->getMessage() ?? '']);
+                    }
+                    continue;
+                }
+
+                $vehicleTypeId = $driverDocData["vehicle_type_id"] ?? null;
+                if ($vehicleTypeId == 0 || $vehicleTypeId === 0) {
+                    try {
+                        //update the vehicle type id to null
+                        $firestoreClient->updateDocument($docPath, [
+                            "vehicle_type_id" => null
+                        ]);
+                        $this->totalDriverModified++;
+                    } catch (\Exception $ex) {
+                        logger("Issue with updateDocument driver id: " . $driverId, [$ex->getMessage() ?? '']);
+                    }
+                    continue;
+                }
+            }
+
+            //call itself again if there is a next page token
+            if (array_key_exists('nextPageToken', $driverDocumentsRaw)) {
+                $this->firebaseDriverRecordsFix($firestoreClient, $driverDocumentsRaw["nextPageToken"]);
+            }
+        } catch (\Exception $ex) {
+            logger("error", [$ex]);
+            $this->showErrorAlert($ex->getMessage() ?? __("Failed"), $time = 30000);
+        }
     }
 }

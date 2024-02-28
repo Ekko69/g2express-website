@@ -33,17 +33,17 @@ class OTPService
 
         //
         if ($enabledSmsGateway == "twilio") {
-            $accountId = setting("sms_gateways.twilio.accountId");
-            $token = setting("sms_gateways.twilio.token");
-            $fromNumber = setting("sms_gateways.twilio.fromNumber");
+            $accountId = env("TWILIO_ACCOUNT_SID");
+            $token = env("TWILIO_AUTH_TOKEN");
+            $fromNumber = env("TWILIO_FROM");
             //
             $twilio = new Twilio($accountId, $token, $fromNumber);
             $twilio->message($phone, $message);
         } else if ($enabledSmsGateway == "gatewayapi") {
 
-            //            
-            $sender = setting("sms_gateways.gatewayapi.sender");
-            $apiToken = setting("sms_gateways.gatewayapi.token");
+            //
+            $sender = env("GATEWAYAPI_SENDER");
+            $apiToken = env("GATEWAYAPI_TOKEN");
 
 
             //Send an SMS using Gatewayapi.com
@@ -83,11 +83,11 @@ class OTPService
                 throw new \Exception($errorMessage, 1);
             }
         } else if ($enabledSmsGateway == "msg91") {
-            $authKey = setting("sms_gateways.msg91.authkey");
-            $sender = setting("sms_gateways.msg91.sender");
-            $routeNo = setting("sms_gateways.msg91.route");
-            $templateId = setting("sms_gateways.msg91.template_id");
-            $templateMsg = setting("sms_gateways.msg91.template", "##OTP## is your verification code");
+            $authKey = env("MSG91_AUTHKEY");
+            $sender = env("MSG91_SENDER");
+            $routeNo = env("MSG91_ROUTE");
+            $templateId = env("MSG91_TEMPLATE_ID");
+            $templateMsg = env("MSG91_TEMPLATE", "##OTP## is your verification code");
 
             if ($isDemo) {
                 logger("msg91 sending sms", [
@@ -119,8 +119,8 @@ class OTPService
                 logger("msg91Client Response ", [$messageParts, $varibale1, $response->getData()]);
             }
         } else if ($enabledSmsGateway == "termii") {
-            $authkey = setting("sms_gateways.termii.authkey");
-            $sender = setting("sms_gateways.termii.sender");
+            $authkey = env("TERMII_AUTHKEY");
+            $sender = env("TERMII_SENDER");
 
             $response = Http::post('https://termii.com/api/sms/send?to=' . $phone . '&from=' . $sender . '&sms=' . $message . '&type=plain&channel=generic&api_key=' . $authkey . '');
 
@@ -130,9 +130,9 @@ class OTPService
         } else if ($enabledSmsGateway == "africastalking") {
 
             //
-            $authKey = setting("sms_gateways.africastalking.authkey");
-            $sender = setting("sms_gateways.africastalking.sender");
-            $username = setting("sms_gateways.africastalking.token");
+            $authKey = env("AFRICASTALKING_AUTHKEY");
+            $sender = env("AFRICASTALKING_SENDER");
+            $username = env("AFRICASTALKING_TOKEN");
 
             $url = "https://api.africastalking.com/version1/messaging";
             if (!\App::environment('production')) {
@@ -178,9 +178,9 @@ class OTPService
                 throw new \Exception($errorMessage, 1);
             }
         } else if ($enabledSmsGateway == "hubtel") {
-            $username = setting("sms_gateways.hubtel.authkey");
-            $password = setting("sms_gateways.hubtel.token");
-            $sender = setting("sms_gateways.hubtel.sender");
+            $username = env("HUBTEL_AUTHKEY");
+            $password = env("HUBTEL_TOKEN");
+            $sender = env("HUBTEL_SENDER");
 
             $response = Http::get(
                 "https://smsc.hubtel.com/v1/messages/send?clientsecret={" . $password . "}&clientid={" . $username . "}&from={" . $sender . "}&to=" . $phone . "&content=" . urlencode($message) . ""

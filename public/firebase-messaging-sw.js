@@ -9,7 +9,7 @@ Initialize the Firebase app in the service worker by passing in the messagingSen
 * New configuration for app@pulseservice.com
 */
 firebase.initializeApp({
-messagingSenderId: '907625197333',
+messagingSenderId: '',
 });
 /*
 Retrieve an instance of Firebase Messaging so that it can handle background messages.

@@ -2,12 +2,12 @@
 
 namespace App\Http\Livewire\Select;
 
-use Asantibanez\LivewireSelect\LivewireSelect;
 use Illuminate\Support\Collection;
 use App\Models\User;
 
-class NewOrderUserSelect extends LivewireSelect
+class NewOrderUserSelect extends BaseLivewireSelect
 {
+
     public function options($searchTerm = null): Collection
     {
         return User::where('name', 'like', '%' . $searchTerm . '%')

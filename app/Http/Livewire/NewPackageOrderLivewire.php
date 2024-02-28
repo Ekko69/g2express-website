@@ -6,7 +6,7 @@ use App\Http\Controllers\API\PackageOrderController;
 use App\Models\DeliveryAddress;
 use App\Models\Order;
 use Exception;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use App\Models\PackageType;
 use App\Models\PackageTypePricing;
 use App\Models\Vendor;
@@ -66,6 +66,7 @@ class NewPackageOrderLivewire extends BaseLivewireComponent
         'user_idUpdated' => 'updatedUserId',
         'schedule_dateUpdated' => 'updatedScheduleDate',
         'schedule_timeUpdated' => 'updatedScheduleTime',
+        'autocompleteAddressSelected' => 'autocompleteAddressSelected',
     ];
 
     public function render()
@@ -138,6 +139,9 @@ class NewPackageOrderLivewire extends BaseLivewireComponent
         $this->orderStops[] = [
             "code" => uniqid(),
             "label" => $label ?? __("Stop"),
+            "id" => "",
+            //toggle to show map picker or address picker
+            "showMapPicker" => false,
             "name" => "",
             "address" => "",
             "latitude" => "",
@@ -160,14 +164,51 @@ class NewPackageOrderLivewire extends BaseLivewireComponent
         $this->orderStops = array_values($this->orderStops);
     }
 
+    public function openMapPicker($index)
+    {
+        $this->orderStops[$index]['showMapPicker'] = true;
+    }
+
+    public function openAddressPicker($index)
+    {
+        $this->orderStops[$index]['showMapPicker'] = false;
+    }
+
+    public function autocompleteAddressSelected($fullAddress, $key)
+    {
+        $this->orderStops[$key]['address'] = $fullAddress['address'];
+        $this->orderStops[$key]['latitude'] = $fullAddress['latitude'];
+        $this->orderStops[$key]['longitude'] = $fullAddress['longitude'];
+        $this->orderStops[$key]['name'] = $fullAddress['name'] ?? $fullAddress['address'];
+        //
+        $this->orderStops[$key]['city'] = $fullAddress['city'];
+        $this->orderStops[$key]['state'] = $fullAddress['state'];
+        $this->orderStops[$key]['country'] = $fullAddress['country'];
+    }
+
+
     public function validateStep2()
     {
 
-        $this->validate(
-            [
-                'orderStops.*.id' => 'required|exists:delivery_addresses,id',
-            ]
-        );
+        //clear error bag
+        $this->resetErrorBag();
+        //manual validation
+        foreach ($this->orderStops as $key => $stop) {
+            if ($stop['id'] == null || empty($stop['id'])) {
+                if ($stop['address'] == null || empty($stop['address'])) {
+                    $this->addError('orderStops.' . $key . '.address', __("Please select an address"));
+                }
+            }
+        }
+
+        //has errors
+        if ($this->getErrorBag()) {
+            $errors = $this->getErrorBag();
+            //check if empty
+            if (count($errors) > 0) {
+                return;
+            }
+        }
 
         $this->nextStep();
         $this->prepareVendorSelection();
@@ -181,15 +222,35 @@ class NewPackageOrderLivewire extends BaseLivewireComponent
 
         $packageOrderController =  new PackageOrderController();
         $locations = [];
-        foreach ($this->orderStops as $stop) {
-            $mDeliveryAddress = DeliveryAddress::find($stop['id']);
-            $locations[] = [
-                "lat" => $mDeliveryAddress->lat,
-                "long" => $mDeliveryAddress->long,
-                "city" => $mDeliveryAddress->city,
-                "state" => $mDeliveryAddress->state,
-                "country" => $mDeliveryAddress->country,
-            ];
+        foreach ($this->orderStops as $key => $stop) {
+            if ($stop['id'] == null || empty($stop['id'])) {
+                $locations[] = [
+                    "address" => $stop['address'],
+                    "name" => $stop['name'],
+                    "lat" => $stop['latitude'],
+                    "long" => $stop['longitude'],
+                    "city" => $stop['city'],
+                    "state" => $stop['state'],
+                    "country" => $stop['country'],
+                ];
+            } else {
+                $mDeliveryAddress = DeliveryAddress::find($stop['id']);
+                $locations[] = [
+                    "address" => $mDeliveryAddress->address,
+                    "name" => $mDeliveryAddress->name,
+                    "lat" => $mDeliveryAddress->lat,
+                    "long" => $mDeliveryAddress->long,
+                    "city" => $mDeliveryAddress->city,
+                    "state" => $mDeliveryAddress->state,
+                    "country" => $mDeliveryAddress->country,
+                ];
+
+                //
+                $this->orderStops[$key]['address'] = $mDeliveryAddress->address;
+                $this->orderStops[$key]['latitude'] = $mDeliveryAddress->lat;
+                $this->orderStops[$key]['longitude'] = $mDeliveryAddress->long;
+                $this->orderStops[$key]['name'] = $mDeliveryAddress->name;
+            }
         }
         $payload = [
             'vendor_type_id' => VendorType::whereSlug('parcel')->first()->id,
@@ -323,7 +384,28 @@ class NewPackageOrderLivewire extends BaseLivewireComponent
         //stops
         $this->orderStopsPreview = [];
 
-        foreach ($this->orderStops as $stop) {
+        foreach ($this->orderStops as $key => $stop) {
+
+            //check if stop is new or existing
+            if ($stop['id'] == null || empty($stop['id'])) {
+                //create new delivery address and add to orderStopsPreview
+                $mDeliveryAddress = new DeliveryAddress();
+                $mDeliveryAddress->user_id = $this->user_id;
+                $mDeliveryAddress->name = $stop['address'];
+                $mDeliveryAddress->address = $stop['address'];
+                $mDeliveryAddress->latitude = $stop['latitude'];
+                $mDeliveryAddress->longitude = $stop['longitude'];
+                $mDeliveryAddress->city = $stop['city'];
+                $mDeliveryAddress->state = $stop['state'];
+                $mDeliveryAddress->country = $stop['country'];
+                $mDeliveryAddress->save();
+                //
+                $this->orderStops[$key]['id'] = $mDeliveryAddress->id;
+                $stop['id'] = $mDeliveryAddress->id;
+            }
+
+
+            //get address from db
             $mDeliveryAddress = DeliveryAddress::find($stop['id']);
             $this->orderStopsPreview[] = [
                 "label" => $stop['label'],

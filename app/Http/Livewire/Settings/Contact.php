@@ -8,6 +8,8 @@ class Contact extends BaseSettingsComponent
 
     //
     public $contactInfo;
+    //set listeners to emtpy
+    protected $listeners = [];
 
 
     public function mount()
@@ -30,6 +32,12 @@ class Contact extends BaseSettingsComponent
         $this->contactInfo = file_get_contents($filePath) ?? "";
     }
 
+
+    public function setupData()
+    {
+        $this->emit('loadSummerNote', "contactInfoEdit", $this->contactInfo);
+    }
+
     public function saveContactInfo()
     {
 
@@ -40,9 +48,10 @@ class Contact extends BaseSettingsComponent
             file_put_contents($filePath, $this->contactInfo);
 
             $this->showSuccessAlert(__("Contact Info saved successfully!"));
-            $this->reset();
-        } catch (Exception $error) {
+            $this->setupData();
+        } catch (\Exception $error) {
             $this->showErrorAlert($error->getMessage() ?? __("Contact Info save failed!"));
+            $this->setupData();
         }
     }
 }

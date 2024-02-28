@@ -50,7 +50,7 @@ class Upgrade43 extends BaseUpgrade
         //         EnvEditor::editKey("APP_SETTINGS_LOC", "json");
         //     }
         //     //
-        //     $settings = \DB::table('settings')->select(['key', 'value'])->get();
+        //     $settings = \DB::table('settings')->options(['key', 'value'])->get();
 
         //     $values = [];
         //     foreach ($settings as $setting) {

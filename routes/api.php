@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\API\AppSettingsController;
+use App\Http\Controllers\API\UserFirebaseController;
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\CancellationReasonController;
 use App\Http\Controllers\API\AccountManagementController;
 use App\Http\Controllers\API\TagController;
 use App\Http\Controllers\API\CategoryController;
@@ -51,6 +53,10 @@ use App\Http\Controllers\API\FlashSaleController;
 use App\Http\Controllers\API\OnboardingController;
 use App\Http\Controllers\API\FaqController;
 use App\Http\Controllers\API\SignedMediaController;
+use App\Http\Controllers\API\MyVendorController;
+use App\Http\Controllers\API\VendorReportController;
+use App\Http\Controllers\API\DriverReportController;
+use App\Http\Controllers\API\DocumentRequestController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
@@ -88,11 +94,16 @@ Route::get('/cron/job', function (Request $request) {
 Route::get('/app/settings', [AppSettingsController::class, 'index']);
 Route::get('/app/onboarding', [OnboardingController::class, 'index']);
 Route::get('/app/faqs', [FaqController::class, 'index']);
+Route::get('/cancellation/reasons', [CancellationReasonController::class, 'index']);
 
 // Auth
-Route::post('otp/send', [OTPController::class, 'sendOTP']);
-Route::post('otp/verify', [OTPController::class, 'verifyOTP']);
-Route::post('otp/firebase/verify', [OTPController::class, 'verifyFirebaseToken']);
+Route::group(['middleware' => ['throttle:otp']], function () {
+    //otps
+    Route::post('otp/send', [OTPController::class, 'sendOTP'])->name('otp.send');
+    Route::post('otp/verify', [OTPController::class, 'verifyOTP'])->name('otp.verify');
+    Route::post('otp/firebase/verify', [OTPController::class, 'verifyFirebaseToken'])->name('otp.firebase.verify');
+});
+
 Route::post('login', [AuthController::class, 'login']);
 Route::post('vendor/register', [PartnerController::class, 'vendor']);
 Route::post('driver/register', [PartnerController::class, 'driver']);
@@ -149,20 +160,27 @@ Route::apiResource('external/redirect', ExternalRedirectController::class)->only
 Route::group(['middleware' => ['auth:sanctum']], function () {
 
     Route::apiResource('favourites', FavouriteController::class);
+    Route::post('device/token/sync', [UserFirebaseController::class, 'syncTokens']);
     Route::get('logout', [AuthController::class, 'logout']);
     Route::get('my/profile', [UserController::class, 'myProfile']);
     Route::put('profile/update', [AuthController::class, 'profileUpdate']);
     Route::put('profile/password/update', [AuthController::class, 'changePassword']);
     Route::delete('account/delete', [AccountManagementController::class, 'delete']);
     Route::apiResource('delivery/addresses', DeliveryAddressController::class);
-    Route::apiResource('orders', OrderController::class)->only('index', 'store', 'show', 'update');
+    Route::apiResource('orders', OrderController::class)->only('index', 'show', 'update');
+    Route::middleware('throttle.order.api')->group(function () {
+        Route::post('orders', [OrderController::class, 'store']);
+    });
+
     Route::post('/track/order', [TrackOrderController::class, "track"]);
     Route::apiResource('rating', RatingController::class)->only('store');
     Route::post('product/reviews', [ProductReviewController::class, 'store']);
     //package delivery
     Route::post('package/order/vendors', [PackageOrderController::class, 'fetchVendors']);
     Route::get('package/order/summary', [PackageOrderController::class, 'summary']);
-    Route::get('general/order/summary', [RegularOrderController::class, 'summary']);
+    Route::get('general/order/delivery/fee/summary', [RegularOrderController::class, 'deliveryFeeSummary']);
+    Route::post('general/order/summary', [RegularOrderController::class, 'summary']);
+    Route::post('service/order/summary', [RegularOrderController::class, 'serviceSummary']);
     Route::post('package/order/stop/verify/{id}', [PackageOrderController::class, 'verifyOrderStop']);
     //
     Route::post('chat/notification', [ChatNotificationController::class, 'send']);
@@ -211,7 +229,20 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
         Route::post('availability/vendor/{id}', [VendorController::class, 'toggleVendorAvailablity']);
         Route::apiResource('/vendor/package/pricing', VendorPackageTypePricingController::class);
-        Route::apiResource('/my/services', VendorServiceController::class);
+        //separate the my services into get, post, put, delete
+        Route::get('/my/services', [VendorServiceController::class, 'index']);
+        Route::post('/my/services', [VendorServiceController::class, 'store']);
+        Route::put('/my/services/{id}', [VendorServiceController::class, 'update']);
+        Route::delete('/my/services/{id}', [VendorServiceController::class, 'destroy']);
+
+        //
+        Route::get('/my/vendors', [MyVendorController::class, 'index']);
+        Route::post('/switch/vendor', [MyVendorController::class, 'switchVendor']);
+        Route::get('/my/vendor/sales/report', [VendorReportController::class, 'sales']);
+        Route::get('/my/vendor/earnings/report', [VendorReportController::class, 'earnings']);
+
+        //document submission
+        Route::post('/my/vendor/document/request/submission', [DocumentRequestController::class, 'vendor']);
     });
 
 
@@ -223,5 +254,10 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('driver/vehicle/{id}/activate', [DriverTypeController::class, 'activateVehicle']);
         // Route::post('driver/order/accept', [DriverTypeController::class, 'activateVehicle']);
         // Route::post('driver/order/reject', [DriverTypeController::class, 'activateVehicle']);
+        //document submission
+        Route::post('/driver/document/request/submission', [DocumentRequestController::class, 'driver']);
+        //summary report
+        Route::get('/driver/payouts/report', [DriverReportController::class, 'payouts']);
+        Route::get('/driver/earnings/report', [DriverReportController::class, 'earnings']);
     });
 });

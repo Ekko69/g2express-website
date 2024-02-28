@@ -22,12 +22,14 @@ class WalletTopUpLivewire extends BaseLivewireComponent
 
     public $code;
     public $error;
+    public $errorTitle;
     public $errorMessage;
     public $done = false;
     public $currency;
     public $paymentStatus;
     public $selectedPaymentMethod;
-    protected $queryString = ['code'];
+    protected $queryString = ['code', 'slug'];
+    public $slug;
     //
     public $paymentCode;
 
@@ -35,13 +37,20 @@ class WalletTopUpLivewire extends BaseLivewireComponent
     public function mount()
     {
         $this->selectedModel = WalletTransaction::with('wallet.user', 'payment_method')->where('ref', $this->code)->first();
+        //if slug is set
+        if (!empty($this->slug)) {
+            $paymentMethod = PaymentMethod::where('slug', $this->slug)->first();
+            $this->initPayment($paymentMethod->id);
+        }
     }
 
     public function render()
     {
         //
         if (!in_array($this->selectedModel->status, ['pending'])) {
-            return view('livewire.payment.processed')->layout('layouts.guest');
+            //payment already processed
+            $link = route('payment.processed', ["code" => $this->selectedModel->ref, "type" => "wallet"]);
+            return redirect()->away($link);
         } else {
             return view('livewire.payment.wallet', [
                 "transaction" => $this->selectedModel,
@@ -75,6 +84,9 @@ class WalletTopUpLivewire extends BaseLivewireComponent
                 setting('websiteName', env("APP_NAME")),
                 setting('websiteLogo', asset('images/logo.png')),
                 $razorpayOrderId,
+                //callback url
+                route('api.wallet.topup.callback', ["code" => $this->selectedModel->ref, "status" => "success"]),
+                //redirect url
                 route('wallet.topup.callback', ["code" => $this->selectedModel->ref, "status" => "success"]),
             ]);
         } else if ($paymentMethodSlug == "paystack") {
@@ -128,6 +140,9 @@ class WalletTopUpLivewire extends BaseLivewireComponent
                 setting('currencyCode', 'USD'),
                 route('wallet.topup.callback', ["code" => $this->selectedModel->ref, "status" => "success"]),
             ]);
+            //assign payment_method_id to the transaction
+            $this->selectedModel->payment_method_id = $this->selectedPaymentMethod->id;
+            $this->selectedModel->save();
         } else if ($paymentMethodSlug == "paytm") {
             //initialize paytm payment order
             $response = $this->createPayTmTopupReference($this->selectedModel, $this->selectedPaymentMethod);
@@ -139,6 +154,12 @@ class WalletTopUpLivewire extends BaseLivewireComponent
             //initialize payu payment order
             $paymentData = $this->createPayUTopupReference($this->selectedModel, $this->selectedPaymentMethod);
             $this->emit('initPayUPayment', $paymentData);
+        } else if ($paymentMethodSlug == "offline") {
+            //initialize custom payment order
+            $this->emit(
+                'openExternalBrowser',
+                route('wallet.topup', ["code" => $this->selectedModel->ref, 'slug' => $paymentMethodSlug]),
+            );
         }
         //custom payment
     }
@@ -169,8 +190,11 @@ class WalletTopUpLivewire extends BaseLivewireComponent
             }
 
             \DB::commit();
-            $this->errorMessage = __("Payment info uploaded successfully. You will be notified once approved");
-            $this->error = false;
+            $title = __("Payment info uploaded successfully");
+            $message = __("Payment info uploaded successfully. You will be notified once approved");
+            $link = route('payment.processed', ["code" => $this->selectedModel->ref, "type" => "wallet"]);
+            $link .= "?title=" . urlencode($title) . "&message=" . urlencode($message);
+            return redirect()->away($link);
         } catch (\Exception $error) {
             \DB::rollback();
             $this->error = true;
@@ -178,5 +202,11 @@ class WalletTopUpLivewire extends BaseLivewireComponent
         }
 
         $this->done = true;
+    }
+
+
+    public function resetSelectedMethod()
+    {
+        $this->selectedPaymentMethod = null;
     }
 }

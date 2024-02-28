@@ -22,6 +22,7 @@ class VendorLivewire extends VendorTimingLivewire
     public $showNewDayAssignment = false;
 
     //
+    public $documents = [];
     public $name;
     public $description;
     public $base_delivery_fee;
@@ -69,31 +70,37 @@ class VendorLivewire extends VendorTimingLivewire
     public $selectedFees = [];
 
 
-    protected $rules = [
-        "name" => "required|string",
-        "description" => "required|string",
-        "base_delivery_fee" => 'nullable|sometimes|numeric|required_if:is_package_vendor,0,false',
-        "delivery_fee" => 'nullable|sometimes|numeric|required_if:is_package_vendor,0,false',
-        "delivery_range" => 'nullable|sometimes|numeric|required_if:is_package_vendor,0,false',
-        "vendor_type_id" => 'required|exists:vendor_types,id',
-        "phone" => "required|numeric",
-        "email" => "required|email|unique:vendors,email",
-        "address" => "required|string",
-        "latitude" => "required|numeric",
-        "longitude" => "required|numeric",
-        "commission" => "nullable|sometimes|numeric",
-        "photo" => "required|image|max:1024",
-        "secondPhoto" => "required|image|max:2048",
-    ];
+    public function rules()
+    {
+        return [
+            "name" => "required|string",
+            "description" => "required|string",
+            "base_delivery_fee" => 'nullable|sometimes|numeric|required_if:is_package_vendor,0,false',
+            "delivery_fee" => 'nullable|sometimes|numeric|required_if:is_package_vendor,0,false',
+            "delivery_range" => 'nullable|sometimes|numeric|required_if:is_package_vendor,0,false',
+            "vendor_type_id" => 'required|exists:vendor_types,id',
+            "email" => "required|email|unique:vendors,email",
+            "address" => "required|string",
+            "latitude" => "required|numeric",
+            "longitude" => "required|numeric",
+            "commission" => "nullable|sometimes|numeric",
+            "photo" => "required|image|max:1024",
+            "secondPhoto" => "required|image|max:2048",
+            "phone" => "required|phone:" . setting('countryCode', "INTERNATIONAL") . "",
+        ];
+    }
 
-
-    protected $messages = [
-        // "photo.max" => "Logo must be not be more than 1MB",
-        "photo.required" => "Logo is required",
-        // "secondPhoto.max" => "Feature Image must be not be more than 2MB",
-        "secondPhoto.required" => "Feature Image is required",
-        "email.unique" => "Email already used by another vendor",
-    ];
+    public function messages()
+    {
+        return [
+            "photo.max" => __("Logo must be not be more than 1MB"),
+            "photo.required" => __("Logo is required"),
+            "secondPhoto.max" => __("Feature Image must be not be more than 2MB"),
+            "secondPhoto.required" => __("Feature Image is required"),
+            "email.unique" => __("Email already used by another vendor"),
+            "phone.phone" => __("Phone Number is invalid"),
+        ];
+    }
 
 
     public function getListeners()
@@ -145,7 +152,7 @@ class VendorLivewire extends VendorTimingLivewire
     public function save()
     {
         //validate
-        $rules = $this->rules;
+        $rules = $this->getRules();
         $rules["photo"] = "required|image|max:" . setting("filelimit.vendor_logo", 2048) . "";
         $rules["secondPhoto"] = "required|image|max:" . setting("filelimit.vendor_feature", 2048) . "";
         $this->validate($rules);
@@ -165,7 +172,11 @@ class VendorLivewire extends VendorTimingLivewire
             $model->address = $this->address;
             $model->latitude = $this->latitude;
             $model->longitude = $this->longitude;
-            $model->commission = $this->commission ?? 0;
+            //if commission is empty, set it to null
+            if (empty($this->commission)) {
+                $this->commission = null;
+            }
+            $model->commission = $this->commission;
             $model->tax = $this->tax;
             $model->pickup = $this->pickup ?? 0;
             $model->delivery = $this->delivery ?? 0;
@@ -190,15 +201,29 @@ class VendorLivewire extends VendorTimingLivewire
             if ($this->photo) {
 
                 $model->clearMediaCollection();
-                $model->addMedia($this->photo->getRealPath())->toMediaCollection("logo");
+                $model->addMedia($this->photo->getRealPath())
+                    ->usingFileName(genFileName($this->photo))
+                    ->toMediaCollection("logo");
                 $this->photo = null;
             }
 
             if ($this->secondPhoto) {
 
                 $model->clearMediaCollection();
-                $model->addMedia($this->secondPhoto->getRealPath())->toMediaCollection("feature_image");
+                $model->addMedia($this->secondPhoto->getRealPath())
+                    ->usingFileName(genFileName($this->secondPhoto))
+                    ->toMediaCollection("feature_image");
                 $this->secondPhoto = null;
+            }
+
+            //if documents is not empty
+            if (!empty($this->documents)) {
+                foreach ($this->documents as $document) {
+                    $model->addMedia($document->getRealPath())
+                        ->usingFileName(genFileName($document))
+                        ->toMediaCollection("documents");
+                }
+                $this->documents = [];
             }
 
             //
@@ -232,7 +257,8 @@ class VendorLivewire extends VendorTimingLivewire
         $this->address = $this->selectedModel->address;
         $this->latitude = $this->selectedModel->latitude;
         $this->longitude = $this->selectedModel->longitude;
-        $this->commission = $this->selectedModel->commission;
+        //get original commission
+        $this->commission = $this->selectedModel->getRawOriginal("commission");
         $this->tax = $this->selectedModel->tax;
         $this->pickup = $this->selectedModel->pickup;
         $this->delivery = $this->selectedModel->delivery;
@@ -265,6 +291,7 @@ class VendorLivewire extends VendorTimingLivewire
         $this->feesIDs = $this->selectedModel->plain_fees()->pluck('fee_id');
         $fees = Fee::get();
         $this->showSelect2("#editFeesSelect2", $this->feesIDs, "feesChange", $fees);
+        $this->emit('initPhone', json_encode(["phoneEdit", "phone", $this->phone]));
         //
         $this->emit('showEditModal');
         $this->emit('initialAddressSelected', $this->address);
@@ -277,7 +304,7 @@ class VendorLivewire extends VendorTimingLivewire
             [
                 "name" => "required|string",
                 "description" => "required|string",
-                "phone" => "required|numeric",
+                "phone" => "required|phone:" . setting('countryCode', "INTERNATIONAL") . "",
                 "email" => "required|email|unique:vendors,email," . $this->selectedModel->id . "",
                 "address" => "required|string",
                 "latitude" => "required|numeric",
@@ -302,6 +329,10 @@ class VendorLivewire extends VendorTimingLivewire
             $model->address = $this->address;
             $model->latitude = $this->latitude;
             $model->longitude = $this->longitude;
+            //if commission is empty, set it to null
+            if (empty($this->commission)) {
+                $this->commission = null;
+            }
             $model->commission = $this->commission;
             $model->tax = $this->tax;
             $model->pickup = $this->pickup;
@@ -327,15 +358,29 @@ class VendorLivewire extends VendorTimingLivewire
             if ($this->photo) {
 
                 $model->clearMediaCollection("logo");
-                $model->addMedia($this->photo->getRealPath())->toMediaCollection("logo");
+                $model->addMedia($this->photo->getRealPath())
+                    ->usingFileName(genFileName($this->photo))
+                    ->toMediaCollection("logo");
                 $this->photo = null;
             }
 
             if ($this->secondPhoto) {
 
                 $model->clearMediaCollection("feature_image");
-                $model->addMedia($this->secondPhoto->getRealPath())->toMediaCollection("feature_image");
+                $model->addMedia($this->secondPhoto->getRealPath())
+                    ->usingFileName(genFileName($this->secondPhoto))
+                    ->toMediaCollection("feature_image");
                 $this->secondPhoto = null;
+            }
+
+            //if documents is not empty
+            if (!empty($this->documents)) {
+                foreach ($this->documents as $document) {
+                    $model->addMedia($document->getRealPath())
+                        ->usingFileName(genFileName($document))
+                        ->toMediaCollection("documents");
+                }
+                $this->documents = [];
             }
 
             //
@@ -448,5 +493,41 @@ class VendorLivewire extends VendorTimingLivewire
         $this->address = $data["address"];
         $this->latitude = $data["latitude"];
         $this->longitude = $data["longitude"];
+    }
+
+
+
+
+    //
+    public function requestDocuments()
+    {
+        try {
+            $this->isDemo();
+            $documentRequest = new \App\Models\DocumentRequest();
+            $documentRequest->model_id = $this->selectedModel->id;
+            $documentRequest->model_type = $this->model;
+            $documentRequest->status = "requested";
+            $documentRequest->save();
+            $this->dismissModal();
+            $this->showSuccessAlert(__("Vendor") . " " . __('document request sent successfully!'));
+        } catch (Exception $error) {
+            $this->showErrorAlert($error->getMessage() ?? __("Vendor") . " " . __('document request failed!'));
+        }
+    }
+
+    public function cancelDocumentRequest()
+    {
+
+        try {
+            $this->isDemo();
+            $documentRequest = $this->selectedModel->document_request()->where('status', 'requested')->first();
+            if ($documentRequest) {
+                $documentRequest->delete();
+            }
+            $this->dismissModal();
+            $this->showSuccessAlert(__("Vendor") . " " . __('document request cancelled successfully!'));
+        } catch (Exception $error) {
+            $this->showErrorAlert($error->getMessage() ?? __("Vendor") . " " . __('document request cancellation failed!'));
+        }
     }
 }

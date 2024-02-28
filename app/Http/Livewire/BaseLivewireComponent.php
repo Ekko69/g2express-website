@@ -160,7 +160,9 @@ class BaseLivewireComponent extends Component
 
     public function showDetailsModal($id)
     {
-        $this->selectedModel = $this->model::find($id);
+        if ($id != null) {
+            $this->selectedModel = $this->model::find($id);
+        }
         $this->showDetails = true;
         $this->stopRefresh = true;
     }
@@ -249,6 +251,11 @@ class BaseLivewireComponent extends Component
         if (!App::environment('production')) {
             throw new Exception(__("App is in demo version. Some changes can't be made"));
         };
+    }
+
+    public function inDemo()
+    {
+        return !App::environment('production');
     }
 
 

@@ -94,7 +94,7 @@ class TaxiDriverOrderController extends Controller
             if ($order->taxi_order != null && !empty($uncompletedOrder)) {
                 throw new Exception(__("You have an uncompleted order"));
             } else {
-                $maxOnOrderForDriver = setting('maxDriverOrderAtOnce', 1);
+                $maxOnOrderForDriver = maxDriverOrderAtOnce($order);
                 if ((int)$maxOnOrderForDriver <= $driver->assigned_orders) {
                     throw new Exception(__("You have reached the maximum number of orders you can accept at once"));
                 }

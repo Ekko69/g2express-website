@@ -27,15 +27,14 @@ class Kernel extends ConsoleKernel
         // $schedule->command('inspire')->hourly();
         $schedule->command('order:dispatch')->everyTenMinutes();
         $schedule->command('order:cancel')->everyMinute();
+        $schedule->command('vendor:auto:open-close')->everyMinute();
         $schedule->command('taxi:cancel')->everyMinute();
         $schedule->command('order:manage')->everySixHours();
+        // $schedule->command('app:sync-demo-data')->sundays()->at('12:00');
+        //
         $assignmentType = setting('autoassignmentsystem', 0);
-
         if ($assignmentType == 1) {
-            $schedule->command('order:assign:regular')->everyMinute();
-        } else if ($assignmentType == 2) {
-            //use firebase to fetch nearest driver
-            $schedule->command('order:fb-assign')->everyMinute();
+            $schedule->command('order:assign:firestore-on-device')->everyMinute();
         } else {
             $schedule->command('order:assign')->everyMinute();
         }
@@ -43,6 +42,10 @@ class Kernel extends ConsoleKernel
         $schedule->command('order:auto_assignment_cancel')->everyMinute();
         $schedule->command('subscription:manage')->hourly();
         $schedule->command('order:driver:clear')->hourly();
+        //
+        $schedule->command('order:cancel-pending-payments')->everyMinute();
+        $schedule->command('wallet:cancel-pending-transactions')->everyMinute();
+
         //clear logs on monday, Wednesdays, Saturday at 6am
         $schedule->command('logs:clear')->weekly()->days([1, 3, 6])->at('6:00');
         //

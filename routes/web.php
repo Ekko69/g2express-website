@@ -18,6 +18,7 @@ use App\Http\Livewire\SubCategoryLivewire;
 use App\Http\Livewire\VendorTypeLivewire;
 use App\Http\Livewire\VendorLivewire;
 use App\Http\Livewire\ProductLivewire;
+use App\Http\Livewire\ProductRequestLivewire;
 use App\Http\Livewire\FavouriteLivewire;
 use App\Http\Livewire\ReviewLivewire;
 use App\Http\Livewire\ProductReviewLivewire;
@@ -28,6 +29,8 @@ use App\Http\Livewire\WalletTransactionLivewire;
 use App\Http\Livewire\PaymentAccountLivewire;
 
 use App\Http\Livewire\ServiceLivewire;
+use App\Http\Livewire\ServiceOptionGroupLivewire;
+use App\Http\Livewire\ServiceOptionLivewire;
 
 use App\Http\Livewire\OrderLivewire;
 use App\Http\Livewire\NewOrderLivewire;
@@ -44,6 +47,8 @@ use App\Http\Livewire\FinanceSettingsLivewire;
 use App\Http\Livewire\WebsiteSettingsLivewire;
 use App\Http\Livewire\ServerSettingsLivewire;
 use App\Http\Livewire\SettingsLivewire;
+use App\Http\Livewire\PageSettingsLivewire;
+use App\Http\Livewire\CMSPageSettingsLivewire;
 use App\Http\Livewire\DynamicLinkSettingsLivewire;
 use App\Http\Livewire\WebhookSettingsLivewire;
 use App\Http\Livewire\AppUpgradeSettingsLivewire;
@@ -52,6 +57,7 @@ use App\Http\Livewire\PaymentMethodivewire;
 use App\Http\Livewire\VendorPaymentMethodLivewire;
 use App\Http\Livewire\Payment\OrderPaymentLivewire;
 use App\Http\Livewire\Payment\OrderPaymentCallbackLivewire;
+use App\Http\Livewire\Payment\PaymentProcessedLivewire;
 
 use App\Http\Livewire\PackageTypeLivewire;
 use App\Http\Livewire\NewPackageOrderLivewire;
@@ -68,6 +74,7 @@ use App\Http\Livewire\UserPermissionLivewire;
 use App\Http\Livewire\UserDetailsLivewire;
 use App\Http\Livewire\DeletedUserLivewire;
 use App\Http\Livewire\DriverLivewire;
+use App\Http\Livewire\VendorDriverSettingLivewire;
 use App\Http\Livewire\DriverEarningLivewire;
 use App\Http\Livewire\DriverRemittanceLivewire;
 use App\Http\Livewire\VendorEarningLivewire;
@@ -114,6 +121,9 @@ use App\Http\Livewire\TaxiPricingLivewire;
 use App\Http\Livewire\DeliveryZoneLivewire;
 use App\Http\Livewire\TaxiZoneLivewire;
 use App\Http\Livewire\NewTaxiOrderLivewire;
+//
+use App\Http\Livewire\VendorDocumentRequestLivewire;
+use App\Http\Livewire\DriverDocumentRequestLivewire;
 
 //Reports
 use App\Http\Livewire\Report\SummaryReportLivewire;
@@ -143,8 +153,11 @@ use App\Http\Livewire\OrderPrintLivewire;
 
 use App\Http\Livewire\DriverEarningHistoryLivewire;
 use App\Http\Livewire\EditOrderLivewire;
+use App\Http\Livewire\SystemDriverLivewire;
 use App\Http\Livewire\VendorEarningHistoryLivewire;
 use Illuminate\Http\Request;
+
+use App\Http\Controllers\CMSPageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -160,23 +173,44 @@ use Illuminate\Http\Request;
 Route::group(['middleware' => ['web']], function () {
 
 
-    Route::get('preview/mail', function () {
+    Route::get('preview/mail', function (Request $request) {
         return;
         //New vendor mail
         // $vendor = App\Models\Vendor::first();
         // return new App\Mail\NewVendorMail($vendor);
         // NEW USER MAIL
         // $user = App\Models\User::first();
-        // return new App\Mail\NewAccountMail($user);
-        //order update mail
-        $order = App\Models\Order::find(2);
+        // return new App\Mail\NewAccountMail($user, "password");
+
+        //vendor custom settings
+        // $order = App\Models\Order::where('vendor_id', 174)->first();
+        // return driverSearchRadius($order);
+
+        $slug = $request->slug ?? "";
+        if ($slug == 'taxi') {
+            $order = App\Models\Order::whereHas('taxi_order')->first();
+        } else if ($slug == 'package') {
+            $order = App\Models\Order::whereHas('package_type')->first();
+        } else {
+            //order update mail
+            $order = App\Models\Order::whereHas('products')->first();
+        }
+        // return $order;
+        // $order = App\Models\Order::whereHas('taxi_order')->first();
+        // $order = App\Models\Order::whereHas('package_type')->first();
         return new App\Mail\OrderUpdateMail($order);
     });
 
 
     //redirect api to authenticated web route
     Route::get('/auth/redirect', [AuthRedirectController::class, 'index']);
-
+    //empty
+    Route::get('driver/document/instructions', function () {
+        return  setting('page.settings.driverDocumentInstructions', __('Documents'));
+    })->name('driver.document.instructions');
+    Route::get('vendor/document/instructions', function () {
+        return  setting('page.settings.vendorDocumentInstructions', __('Documents'));
+    })->name('vendor.document.instructions');
     // Auth
     Route::get('login', LoginLivewire::class)->name('login');
     Route::get('register/driver', DriverRegisterLivewire::class)->name('register.driver');
@@ -202,32 +236,36 @@ Route::group(['middleware' => ['web']], function () {
 
     // Pages
     Route::get('privacy/policy', function () {
-        return view('layouts.pages.privacy');
+        return view('layouts.includes.privacy');
     })->name('privacy');
 
     Route::get('pages/contact', function () {
-        return view('layouts.pages.contact');
+        return view('layouts.includes.contact');
     })->name('contact');
 
     Route::get('pages/terms', function () {
-        return view('layouts.pages.terms');
+        return view('layouts.includes.terms');
     })->name('terms');
     //
     Route::get('support/chat', InAppSupportPageLivewire::class)->name('support.chat');
+    Route::get('cms/{slug}', [CMSPageController::class, 'index'])->name('cms.page');
 
     // AUth routes
-    Route::group(['middleware' => ['auth']], function () {
+    Route::group(['middleware' => ['auth', 'restrict_roles:client,driver']], function () {
 
         //
         Route::get('profile', ProfileLivewire::class)->name('profile');
         Route::get('', DashboardLivewire::class)->name('dashboard');
         Route::get('product/products', ProductLivewire::class)->name('products');
+        Route::get('product/requests', ProductRequestLivewire::class)->name('products.requests');
         Route::get('product/menus', MenuLivewire::class)->name('products.menus');
         Route::get('product/options/group', OptionGroupLivewire::class)->name('products.options.group');
         Route::get('product/options', OptionLivewire::class)->name('products.options');
 
         //services
         Route::get('service/services', ServiceLivewire::class)->name('services');
+        Route::get('service/option/groups', ServiceOptionGroupLivewire::class)->name('services.option.groups');
+        Route::get('service/options', ServiceOptionLivewire::class)->name('services.options');
 
         Route::get('order/orders', OrderLivewire::class)->name('orders');
         Route::get('order/create', NewOrderLivewire::class)->name('order.create');
@@ -235,7 +273,7 @@ Route::group(['middleware' => ['web']], function () {
         Route::get('order/refunds', RefundLivewire::class)->name('refunds');
         Route::get('order/coupons', CouponLivewire::class)->name('coupons');
 
-        Route::get('vendors/types', VendorTypeLivewire::class)->name('vendor.types');
+        Route::get('modules', VendorTypeLivewire::class)->name('vendor.types');
         Route::get('vendors', VendorLivewire::class)->name('vendors');
 
         //admin/manager routes
@@ -269,6 +307,8 @@ Route::group(['middleware' => ['web']], function () {
             //
             Route::get('setting/currencies', CurrencyLivewire::class)->name('currencies');
             Route::get('setting/settings', SettingsLivewire::class)->name('settings');
+            Route::get('setting/page', PageSettingsLivewire::class)->name('settings.page');
+            Route::get('setting/cms/page', CMSPageSettingsLivewire::class)->name('settings.page.cms');
             Route::get('setting/app/settings', AppSettingsLivewire::class)->name('settings.app');
             Route::get('setting/app/map', MapSettingsLivewire::class)->name('settings.map');
             Route::get('setting/ui/settings', UISettingsLivewire::class)->name('settings.ui');
@@ -406,7 +446,8 @@ Route::group(['middleware' => ['web']], function () {
             Route::get('package/my/cities', VendorCitiesLivewire::class)->name('package.cities.my');
             Route::get('package/my/states', VendorStatesLivewire::class)->name('package.states.my');
             Route::get('package/my/countries', VendorCountriesLivewire::class)->name('package.countries.my');
-            Route::get('drivers', DriverLivewire::class)->name('drivers');
+            Route::get('vendor/drivers', DriverLivewire::class)->name('my.drivers');
+            Route::get('vendor/driver/settings', VendorDriverSettingLivewire::class)->name('my.driver.settings');
             Route::get('vendor/payment/methods', VendorPaymentMethodLivewire::class)->name('payment.methods.my');
             //subscription
             Route::get('subscription/my', MySubscriptionLivewire::class)->name('my.subscriptions');
@@ -483,11 +524,24 @@ Route::group(['middleware' => ['web']], function () {
         //
         Route::get('payments/outstanding', OutstandingPaymentLivewire::class)->name('payment.outstanding')
             ->middleware(['permission:view-outstanding-payments']);
+
+        // driver management
+        Route::get('drivers', SystemDriverLivewire::class)->name('drivers')
+            ->middleware(['permission:view-drivers']);
+        Route::get('driver/incentives', OutstandingPaymentLivewire::class)->name('driver.incentives')
+            ->middleware(['permission:driver.incentives']);
+
+        //document management
+        Route::get('vendors/documents', VendorDocumentRequestLivewire::class)->name('vendors.documents')
+            ->middleware(['permission:view-vendor-documents']);
+        Route::get('drivers/documents', DriverDocumentRequestLivewire::class)->name('drivers.documents')
+            ->middleware(['permission:view-driver-documents']);
     });
 
 
 
     //Unauth routes
+    Route::get('payment/processed', PaymentProcessedLivewire::class)->name('payment.processed');
     Route::get('order/payment', OrderPaymentLivewire::class)->name('order.payment');
     Route::get('order/payment/callback', OrderPaymentCallbackLivewire::class)->name('payment.callback');
     //Wallet

@@ -148,9 +148,9 @@ class UserLivewire extends BaseLivewireComponent
             $this->phone = $this->selectedModel->phone;
             $this->updateRole = $this->selectedModel->role_id;
             $this->setRoleName($this->selectedModel->role_id);
-            $this->commission = $this->selectedModel->commission;
+            $this->commission = $this->selectedModel->getRawOriginal('commission');
             $this->walletBalance = $this->selectedModel->wallet->balance ?? 0.00;
-            $this->emit('initPhone', json_encode(["phoneEdit", "phone", $this->phone]));
+            $this->emit('initPhone', json_encode(["phoneEdit", "phone", $this->phone ?? ""]));
             $this->emit('showEditModal');
         } catch (Exception $error) {
             $this->showErrorAlert($error->getMessage() ?? __("Edit User") . " " . __('failed!'));

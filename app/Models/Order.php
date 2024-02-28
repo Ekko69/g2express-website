@@ -21,9 +21,15 @@ class Order extends BaseModel
 
     // protected $fillable = ["note", "reason", "sub_total", "total", "driver_id", "delivery_fee", "payment_method_id"];
     //remove some data to prevent mass assignment by user
-    protected $fillable = ["note", "reason"];
+    protected $fillable = ["note", "reason", "payment_method_id"];
     protected $with = ["user", "driver", 'statuses', 'stops', 'order_service', 'taxi_order'];
-    protected $appends = ["payment_link", 'formatted_date', 'type', 'formatted_type', 'can_rate', 'can_rate_driver', 'status', 'pickup_location', 'dropoff_location', 'photo', 'signature', 'attachments'];
+    protected $appends = [
+        "payment_link", 'formatted_date', 'type', 'formatted_type',
+        'can_rate', 'can_rate_driver', 'can_cancel',
+        'status',
+        'pickup_location', 'dropoff_location',
+        'photo', 'signature', 'attachments'
+    ];
 
     protected $casts = [
         'total' => 'double',
@@ -76,7 +82,7 @@ class Order extends BaseModel
 
     public function driver()
     {
-        return $this->belongsTo('App\Models\User', 'driver_id', 'id');
+        return $this->belongsTo('App\Models\User', 'driver_id', 'id')->withTrashed();
     }
 
     public function delivery_address()
@@ -91,7 +97,7 @@ class Order extends BaseModel
 
     public function vendor()
     {
-        return $this->belongsTo('App\Models\Vendor', 'vendor_id', 'id');
+        return $this->belongsTo('App\Models\Vendor', 'vendor_id', 'id')->withTrashed();
     }
 
     public function payment()
@@ -170,6 +176,15 @@ class Order extends BaseModel
         return empty($driverReview);
     }
 
+    public function getCanCancelAttribute()
+    {
+        $preventOrderCancellation = setting('finance.preventOrderCancellation', "");
+        if (!is_array($preventOrderCancellation)) {
+            $preventOrderCancellation = json_decode(setting('finance.preventOrderCancellation', ""), true) ?? [];
+        }
+        return !in_array($this->status, $preventOrderCancellation);
+    }
+
     public function getPaymentLinkAttribute()
     {
 
@@ -224,10 +239,27 @@ class Order extends BaseModel
         return ($this->taxi_order != null && $this->taxi_order->currency != null) ? $this->taxi_order->currency->code : setting('currencyCode', 'USD');
     }
 
+    public function getCurrencySymbolAttribute()
+    {
+        return ($this->taxi_order != null && $this->taxi_order->currency != null) ? $this->taxi_order->currency->symbol : setting('currency', '$');
+    }
+
+    //get payment status color
+    public function getPaymentStatusColorAttribute()
+    {
+        $status = $this->payment_status ?? "pending";
+        return setting("appColorTheme.$status" . "Color", '#0099FF');
+    }
+
 
     public function getSignatureAttribute()
     {
         return $this->getFirstMediaUrl('signature');
+    }
+
+    public function getStatusAttribute()
+    {
+        return $this->status() != null ?  $this->status()->name : "pending";
     }
 
     public function getDeliveryPhotoAttribute()
@@ -252,15 +284,16 @@ class Order extends BaseModel
         ) {
             //fetch refund by order id
             $refund = Refund::where('order_id', $this->id)->first();
-
             //if there is a refund
-            if (!empty($refund)) {
+            if (!empty($refund) && $refund->status == "successful") {
                 return;
             }
 
             //create refund
-            $refund = new Refund();
-            $refund->order_id = $this->id;
+            if ($refund == null) {
+                $refund = new Refund();
+                $refund->order_id = $this->id;
+            }
 
             //if there is no refund
             if ($force || (bool) setting('finance.autoRefund', true)) {

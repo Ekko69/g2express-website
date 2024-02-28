@@ -36,6 +36,8 @@ class AppSettingsController extends Controller
                 "company_name" => setting('websiteName', ""),
                 "enble_otp" => setting('enableOTP', "1"),
                 "enableOTPLogin" => setting('enableOTPLogin', "0"),
+                "enableEmailLogin" => (bool) setting('enableEmailLogin', 1),
+                "enableProfileUpdate" => (bool) setting('enableProfileUpdate', 1),
                 "otpGateway" => setting('otpGateway', ""),
                 "enableGoogleDistance" => setting('enableGoogleDistance', "0"),
                 "enableSingleVendor" => setting('enableSingleVendor', "0"),
@@ -68,7 +70,7 @@ class AppSettingsController extends Controller
                 "maxParcelStops" => setting('maxParcelStops', "1"),
                 "what3wordsApiKey" => env('what3wordsApiKey'),
                 "currency" => $currency->symbol,
-                "country_code" => setting('appCountryCode', "GH"),
+                "country_code" => setting('countryCode', "GH"),
                 //links
                 "androidDownloadLink" => setting('androidDownloadLink', ""),
                 "iosDownloadLink" => setting('iosDownloadLink', ""),

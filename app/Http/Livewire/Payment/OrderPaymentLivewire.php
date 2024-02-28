@@ -5,6 +5,7 @@ namespace App\Http\Livewire\Payment;
 use App\Models\Order;
 use App\Http\Livewire\BaseLivewireComponent;
 use App\Models\Payment;
+use App\Models\PaymentMethod;
 use App\Traits\FlutterwaveTrait;
 use App\Traits\PaystackTrait;
 use App\Traits\RazorPayTrait;
@@ -31,24 +32,47 @@ class OrderPaymentLivewire extends BaseLivewireComponent
     //
     public $paymentCode;
     public $customView;
+    public $paymentMethods = [];
 
+
+    public function mount()
+    {
+        $this->selectedModel = Order::where('code', $this->code)->first();
+        $this->paymentStatus = $this->selectedModel->payment_status ?? "";
+
+        //
+        if (!empty($this->selectedModel) && empty($this->selectedModel->payment_method_id) && empty($this->paymentMethods)) {
+            $this->paymentMethods = $this->selectedModel->vendor->payment_methods;
+            if (empty($this->paymentMethods) || $this->paymentMethods->count() == 0) {
+                $this->paymentMethods = PaymentMethod::active()->get();
+            }
+        }
+    }
 
     public function render()
     {
-
-        $this->selectedModel = Order::where('code', $this->code)->first();
-        $this->paymentStatus = $this->selectedModel->payment_status ?? "";
 
         //
         if (empty($this->selectedModel)) {
             return view('livewire.payment.invalid')->layout('layouts.auth');
         } else if (!in_array($this->paymentStatus, ['pending', 'review'])) {
-            return view('livewire.payment.processed')->layout('layouts.auth');
+            // return view('livewire.payment.processed')->layout('layouts.auth');
+            //payment already processed
+            $link = route('payment.processed', ["code" => $this->selectedModel->code, "type" => "order"]);
+            return redirect()->away($link);
         } else {
             return view('livewire.payment.order', [
                 "order" => $this->selectedModel,
             ])->layout('layouts.guest');
         }
+    }
+
+    public function setPaymentMethod($id)
+    {
+        $this->selectedModel->payment_method_id = $id;
+        $this->selectedModel->saveQuietly();
+        //reload page
+        $this->emit('reloadPage');
     }
 
 
@@ -79,6 +103,9 @@ class OrderPaymentLivewire extends BaseLivewireComponent
                 setting('websiteName', env("APP_NAME")),
                 setting('websiteLogo', asset('images/logo.png')),
                 $razorpayOrderId,
+                //callback url
+                route('api.payment.callback', ["code" => $this->selectedModel->code, "status" => "success"]),
+                //redirect url
                 route('payment.callback', ["code" => $this->selectedModel->code, "status" => "success"]),
             ]);
         } else if ($paymentMethodSlug == "paystack") {
@@ -145,6 +172,14 @@ class OrderPaymentLivewire extends BaseLivewireComponent
             $this->emit('initPayUPayment', $paymentData);
         }
         //custom payment
+    }
+
+    public function checkOfflinePayMobileView()
+    {
+        $this->emit(
+            'openExternalBrowser',
+            route('order.payment', ["code" => $this->selectedModel->code]),
+        );
     }
 
     //

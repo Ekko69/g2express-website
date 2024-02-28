@@ -59,19 +59,8 @@ class ResetDBState extends Command
             ->where('key', "appVerison")
             ->update(['value' => $appVerison]);
 
-        \DB::table('settings')
-            ->where('key', "googleMapKey")
-            ->delete();
-        //iseed the settings with the new version code and version number
-        \Artisan::call('iseed settings --force');
-
         //
-        $keysToDelete = ["googleMapKey", "apiKey", "projectId", "messagingSenderId", "appId", "vapidKey", "billzCollectionId", "serverFBAuthToken"];
-        $this->withProgressBar($keysToDelete, function ($key) {
-            \DB::table('settings')
-                ->where('key', $key)
-                ->delete();
-        });
+        \Artisan::call('reset:settings');
         $this->info('Done setting app version');
         return 0;
     }

@@ -15,6 +15,8 @@ class AppSettingsLivewire extends BaseLivewireComponent
     public $appName;
     public $enableOTP;
     public $enableOTPLogin;
+    public $enableEmailLogin;
+    public $enableProfileUpdate;
     public $otpGateway;
     public $appCountryCode;
     public $enableGoogleDistance;
@@ -86,21 +88,33 @@ class AppSettingsLivewire extends BaseLivewireComponent
     public $systemTypes = [
         [
             "id" => 0,
-            "name" => "Old",
+            "name" => "Matching via server",
         ], [
             "id" => 1,
-            "name" => "New",
-        ], [
-            "id" => 2,
+            "name" => "On Driver Device",
+        ]
+    ];
+    public $fetchDriversystemTypes = [
+        [
+            "id" => 0,
+            "name" => "Server Fetch API",
+        ],
+        [
+            "id" => 1,
             "name" => "Firebase Cloud Function",
         ]
     ];
     public $autoassignmentsystem;
+    public $fetchNearbyDriverSystem;
 
     //
     public $smsGateways = [];
     public $androidDownloadLink;
     public $iosDownloadLink;
+
+    //order related
+    public $orderRetryAfter;
+    public $allowOldUnEncryptedOrder;
 
 
     public function mount()
@@ -118,8 +132,10 @@ class AppSettingsLivewire extends BaseLivewireComponent
         $this->appName = setting('appName', env('APP_NAME'));
         $this->enableOTP = (bool) setting('enableOTP');
         $this->enableOTPLogin = (bool) setting('enableOTPLogin');
+        $this->enableEmailLogin = (bool) setting('enableEmailLogin', true);
+        $this->enableProfileUpdate = (bool) setting('enableProfileUpdate', true);
         $this->otpGateway = setting('otpGateway');
-        $this->appCountryCode = setting('appCountryCode', 'GH');
+        $this->appCountryCode = setting('countryCode', 'GH');
         $this->enableGoogleDistance = (bool) setting('enableGoogleDistance', 1);
         $this->enableSingleVendor = (bool) setting('enableSingleVendor');
         $this->enableMultipleVendorOrder = (bool) setting('enableMultipleVendorOrder');
@@ -132,6 +148,7 @@ class AppSettingsLivewire extends BaseLivewireComponent
         $this->enableNumericOrderCode = (bool) setting('enableNumericOrderCode');
         $this->vendorsHomePageListCount = (int) setting('vendorsHomePageListCount', 15);
         $this->enableFatchByLocation = (bool) setting('enableFatchByLocation');
+
 
         //login
         $this->googleLogin = (bool) setting('googleLogin');
@@ -163,6 +180,7 @@ class AppSettingsLivewire extends BaseLivewireComponent
         $this->partnersCanRegister = (bool) setting('partnersCanRegister', true);
         $this->autoassignmentStatus =  setting('autoassignment_status', "ready");
         $this->autoassignmentsystem =  setting('autoassignmentsystem', 0);
+        $this->fetchNearbyDriverSystem =  setting('fetchNearbyDriverSystem', 0);
 
         //
         $this->accentColor = setting('appColorTheme.accentColor', '#64bda1');
@@ -194,12 +212,14 @@ class AppSettingsLivewire extends BaseLivewireComponent
 
         //
         $this->statuses = Order::getPossibleStatues();
+
+        //order related
+        $this->orderRetryAfter = (int) setting('orderRetryAfter', 20);
+        $this->allowOldUnEncryptedOrder = (bool) setting('allowOldUnEncryptedOrder', 1);
     }
 
     public function render()
     {
-
-        $this->mount();
         return view('livewire.settings.app-settings');
     }
 
@@ -221,9 +241,10 @@ class AppSettingsLivewire extends BaseLivewireComponent
                 'appName' =>  $this->appName,
                 'clearFirestore' =>  $this->clearFirestore,
                 'enableNumericOrderCode' =>  $this->enableNumericOrderCode,
-                'appCountryCode' =>  $this->appCountryCode,
                 'enableParcelMultipleStops' =>  $this->enableParcelMultipleStops,
                 'maxParcelStops' =>  $this->maxParcelStops,
+                'enableProfileUpdate' =>  $this->enableProfileUpdate,
+                'countryCode' =>  $this->appCountryCode,
             ];
 
             // update the site name
@@ -231,6 +252,7 @@ class AppSettingsLivewire extends BaseLivewireComponent
 
             $this->showSuccessAlert(__("Settings saved successfully!"));
             $this->reset();
+            $this->mount();
         } catch (Exception $error) {
             $this->showErrorAlert($error->getMessage() ?? __("Settings save failed!"));
         }
@@ -250,15 +272,22 @@ class AppSettingsLivewire extends BaseLivewireComponent
                 $columnType = Schema::getColumnType('users', 'phone');
                 $isNullable = (strpos($columnType, 'nullable') !== false);
                 if (!$isNullable) {
-                    \Schema::table("users", function ($table) {
+                    Schema::table("users", function ($table) {
                         $table->string('phone')->nullable()->change();
                     });
                 }
             }
 
 
+            //make sure at least one login is enabled
+            if (!$this->enableOTPLogin && !$this->enableEmailLogin) {
+                throw new Exception(__("At least one login method must be enabled!"));
+            }
+
+
             $appSettings = [
                 'enableOTPLogin' =>  $this->enableOTPLogin,
+                'enableEmailLogin' =>  $this->enableEmailLogin,
                 'otpGateway' =>  $this->otpGateway,
                 //logins
                 'googleLogin' =>  $this->googleLogin,
@@ -273,6 +302,7 @@ class AppSettingsLivewire extends BaseLivewireComponent
 
             $this->showSuccessAlert(__("Settings saved successfully!"));
             $this->reset();
+            $this->mount();
         } catch (Exception $error) {
             $this->showErrorAlert($error->getMessage() ?? __("Settings save failed!"));
         }
@@ -307,6 +337,7 @@ class AppSettingsLivewire extends BaseLivewireComponent
 
             $this->showSuccessAlert(__("Settings saved successfully!"));
             $this->reset();
+            $this->mount();
         } catch (Exception $error) {
             $this->showErrorAlert($error->getMessage() ?? __("Settings save failed!"));
         }
@@ -318,6 +349,23 @@ class AppSettingsLivewire extends BaseLivewireComponent
 
 
         try {
+
+            //driver search radius can't be more than 6,371km
+            if ($this->driverSearchRadius > 6371) {
+                $msg = __("Driver search radius can't be more than");
+                $msg .= " 6,371km!";
+                $this->addError('driverSearchRadius', $msg);
+                return;
+            }
+
+            //minutes to seconds
+            $resendSeconds = ($this->clearRejectedAutoAssignment * 60) ?? 0;
+            //make sure resendSeconds is at least 2ice the alertDuration
+            if ($resendSeconds < ($this->alertDuration * 2)) {
+                $this->addError('clearRejectedAutoAssignment', __("Clear rejected auto assignment must be at least twice the alert duration!"));
+                return;
+            }
+
 
             $this->isDemo();
             $appSettings = [
@@ -335,6 +383,7 @@ class AppSettingsLivewire extends BaseLivewireComponent
                 'timePassLocationUpdate' =>  $this->timePassLocationUpdate,
                 'autoassignment_status' =>  $this->autoassignmentStatus,
                 'autoassignmentsystem' =>  $this->autoassignmentsystem,
+                'fetchNearbyDriverSystem' =>  $this->fetchNearbyDriverSystem,
             ];
 
             // update the site name
@@ -342,6 +391,7 @@ class AppSettingsLivewire extends BaseLivewireComponent
 
             $this->showSuccessAlert(__("Settings saved successfully!"));
             $this->reset();
+            $this->mount();
         } catch (Exception $error) {
             $this->showErrorAlert($error->getMessage() ?? __("Settings save failed!"));
         }
@@ -391,8 +441,33 @@ class AppSettingsLivewire extends BaseLivewireComponent
 
             $this->showSuccessAlert(__("Settings saved successfully!"));
             $this->reset();
+            $this->mount();
         } catch (Exception $error) {
             $this->showErrorAlert($error->getMessage() ?? __("Settings save failed!"));
+        }
+    }
+
+    public function saveOrderSettings()
+    {
+
+        $this->validate([
+            'orderRetryAfter' => 'required|numeric|min:5',
+        ]);
+
+        try {
+
+            $this->isDemo();
+            // update order retry after
+            setting([
+                'orderRetryAfter' =>  $this->orderRetryAfter ?? 20,
+                'allowOldUnEncryptedOrder' =>  $this->allowOldUnEncryptedOrder ?? 0,
+            ])->save();
+
+            $this->showSuccessAlert(__("Order settings saved successfully!"));
+            $this->reset();
+            $this->mount();
+        } catch (Exception $error) {
+            $this->showErrorAlert($error->getMessage() ?? __("Order settings save failed!"));
         }
     }
 }

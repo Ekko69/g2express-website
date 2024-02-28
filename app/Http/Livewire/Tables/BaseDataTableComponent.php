@@ -3,15 +3,18 @@
 namespace App\Http\Livewire\Tables;
 
 use App\Traits\DataTableTrait;
+use App\Traits\DataTableOverrideTrait;
 use Exception;
 use Rappasoft\LaravelLivewireTables\DataTableComponent;
 use Illuminate\Support\Facades\App;
 use Jantinnerezo\LivewireAlert\LivewireAlert;
+use DateTime;
 
 class BaseDataTableComponent extends DataTableComponent
 {
 
     use DataTableTrait;
+    use DataTableOverrideTrait;
     use LivewireAlert;
 
     public array $perPageAccepted = [5, 10, 15, 20, 50, 100];
@@ -29,7 +32,6 @@ class BaseDataTableComponent extends DataTableComponent
         'filterUsers',
         'refreshTable' => '$refresh',
     ];
-
 
     public function searchView(): ?string
     {
@@ -181,7 +183,7 @@ class BaseDataTableComponent extends DataTableComponent
 
 
 
-    //APPROVE/REJECT 
+    //APPROVE/REJECT
 
     public function initiateApprove($id)
     {

@@ -6,7 +6,7 @@
         <div class="shadow pb-4 px-2 bg-white rounded">
             <x-stepper.main steps="7" :currentStep="$currentStep">
                 <x-slot name="header">
-                    <x-stepper.header step="1" title="{{ __('Customer & Package Type') }}" />
+                    <x-stepper.header step="1" title="{!! __('Customer & Package Type') !!}" />
                     <x-stepper.header step="2" title="{{ __('Delivery Info') }}" />
                     <x-stepper.header step="3" title="{{ __('Vendor') }}" />
                     <x-stepper.header step="4" title="{{ __('Contact Info') }}" />
@@ -61,7 +61,7 @@
                                 <div class="border-l-2 border-primary-500 absolute h-full top-0 left-4"></div>
                                 @foreach ($orderStops ?? [] as $key => $orderStop)
                                     <!-- Timeline items -->
-                                    <div class="flex items-start mb-8" wire:key="order-stop-{{ $orderStop['code'] }}">
+                                    <div class="flex items-start mb-8" wire:key="order-stop-{{ $key }}">
                                         <div
                                             class="bg-primary-500 rounded-full h-8 w-8 flex items-center justify-center mr-4">
                                             <span class="text-white text-sm font-bold">
@@ -72,19 +72,49 @@
                                             <h3 class="text-lg font-bold">
                                                 {{ $orderStop['label'] ?? __('Address') }}
                                             </h3>
-                                            <div>
+                                            {{-- address autocomplete --}}
+                                            <div class="{{ $orderStop['showMapPicker'] ?? false ? '' : 'hidden' }}">
+                                                <livewire:component.autocomplete-address
+                                                    wire:key="order-stop-{{ $key }}" name="address"
+                                                    elementId="order-stop-{{ $key }}"
+                                                    address="{{ $address ?? '' }}" extraData="{{ $key }}" />
+                                            </div>
+                                            {{-- select from delivery address --}}
+                                            <div class="{{ $orderStop['showMapPicker'] ?? false ? 'hidden' : '' }}">
                                                 <x-select name="orderStops.{{ $key }}.id" :options="$deliveryAddresses"
                                                     :noPreSelect="true" />
                                             </div>
+                                            {{-- add error  --}}
+                                            <x-input-error
+                                                message="{{ $errors->first('orderStops.' . $key . '.address') }}" />
                                         </div>
-                                        @if ($key != 0 && count($orderStops) > 2)
+                                        @if (!$orderStop['showMapPicker'])
+                                            {{-- icon for map picker --}}
                                             <div class="ml-2">
-                                                <x-buttons.plain wireClick="removeOrderStop({{ $key }})"
-                                                    bgColor="bg-red-600">
-                                                    <x-heroicon-o-trash class="w-5 h-5" />
+                                                <h3 class="text-lg font-bold"> &nbsp; </h3>
+                                                <x-buttons.plain wireClick="openMapPicker({{ $key }})"
+                                                    bgColor="bg-primary-600">
+                                                    <x-heroicon-o-map class="w-5 h-5" />
+                                                </x-buttons.plain>
+                                            </div>
+                                        @else
+                                            {{-- icon for select address --}}
+                                            <div class="ml-2">
+                                                <h3 class="text-lg font-bold"> &nbsp; </h3>
+                                                <x-buttons.plain wireClick="openAddressPicker({{ $key }})"
+                                                    bgColor="bg-primary-600">
+                                                    <x-heroicon-o-search class="w-5 h-5" />
                                                 </x-buttons.plain>
                                             </div>
                                         @endif
+                                        {{-- icon for removing stop --}}
+                                        <div class="ml-2 {{ $key == 0 ? 'hidden' : '' }}">
+                                            <h3 class="text-lg font-bold"> &nbsp; </h3>
+                                            <x-buttons.plain wireClick="removeOrderStop({{ $key }})"
+                                                bgColor="bg-red-600">
+                                                <x-heroicon-o-trash class="w-5 h-5" />
+                                            </x-buttons.plain>
+                                        </div>
                                     </div>
                                 @endforeach
                             </div>

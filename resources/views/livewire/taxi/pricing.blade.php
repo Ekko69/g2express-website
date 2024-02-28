@@ -1,7 +1,15 @@
-@section('title',__('Pricing'))
+@section('title', __('Pricing'))
 <div>
 
     <x-baseview title="{{ __('Pricing') }}" :showNew="true">
+        <div class="text-sm mb-4">
+            <p class="font-bold text-red-500">{{ __('Note') }}:</p>
+            <p>
+                {{ __('Only use this page, if you need to have taxi running in different country with different pricing.') }}
+            </p>
+            <p> {{ __('If you are running taxi in one country, then you should only set the price in the vehicle types page only') }}
+            </p>
+        </div>
         <livewire:tables.taxi.pricing-table />
     </x-baseview>
 

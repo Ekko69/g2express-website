@@ -41,33 +41,53 @@ class ProductTable extends OrderingBaseDataTableComponent
             $mQuery = Product::where("vendor_id", Auth::user()->vendor_id);
         }
 
-        return $mQuery->when($this->getFilter('digital'), fn ($query, $isDigital) => $query->whereDigital($isDigital));
+        return $mQuery->withCount('options')
+            ->when($this->getFilter('digital'), function ($query, $isDigital) {
+                return $query->whereDigital($isDigital);
+            })
+            ->when(\Schema::hasColumn('products', 'approved'), function ($query) {
+                return $query->where('approved', 1);
+            });
     }
+
+    public function setTableRowClass($row): ?string
+    {
+        return $row->is_active ? null : 'inactive-item';
+    }
+
+
     public function columns(): array
     {
         return [
-            Column::make(__('ID'), 'id')->addClass('w-48')->searchable()->sortable(),
-            $this->smImageColumn(),
-            Column::make(__('Name'), 'name')->addClass('break-all w-64 md:w-3/12')->searchable()->sortable(),
+            Column::make(__('ID'), 'id')->searchable()->sortable(),
+            $this->xsImageColumn(),
+            Column::make(__('Name'), 'name')->addClass('w-3/12 line-clamp-1 text-ellipsis truncate')->searchable()->sortable(),
             Column::make(__('Price'), 'price')->format(function ($value, $column, $row) {
-                return view('components.table.price', $data = [
-                    "model" => $row
-                ]);
-            })->searchable()->sortable(),
-            Column::make(__('Discount Price'), 'discount_price')->format(function ($value, $column, $row) {
-                return view('components.table.discount_price', $data = [
-                    "model" => $row
+                if ($row->discount_price) {
+                    $text = "<span class='font-medium'>" . currencyFormat($row->discount_price ??  '') . "</span>";
+                    $text .= " <span class='text-xs line-through'>" . currencyFormat($row->price) . "</span>";
+                } else {
+                    $text = currencyFormat($value ??  '');
+                }
+                return view('components.table.plain', $data = [
+                    "text" => $text
                 ]);
             })->searchable()->sortable(),
             Column::make(__('Available Qty'), "available_qty")->sortable(),
-            $this->activeColumn(),
+            Column::make(__('Has Options'), 'has_options')->format(function ($value, $column, $row) {
+                if ($value) {
+                    return view('components.table.check');
+                } else {
+                    return view('components.table.close');
+                }
+            })->sortable(function ($query, $direction) {
+                return $query->orderBy('options_count', $direction);
+            }),
             Column::make(__('Actions'))->addClass('flex items-center')->format(function ($value, $column, $row) {
                 return view('components.buttons.product_actions', $data = [
                     "model" => $row
                 ]);
             }),
-
-
         ];
     }
 

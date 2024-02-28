@@ -10,14 +10,14 @@ class OptionsGroupTable extends OrderingBaseDataTableComponent
 {
 
     public $model = OptionGroup::class;
-   
+
 
     public function query()
     {
 
         if (Auth::user()->hasRole('admin')) {
             return OptionGroup::query();
-        }else{
+        } else {
             return OptionGroup::where('vendor_id', Auth::user()->vendor_id);
         }
     }
@@ -26,13 +26,14 @@ class OptionsGroupTable extends OrderingBaseDataTableComponent
     {
 
         $columns = [
-            Column::make(__('ID'),"id")->searchable()->sortable(),
-            Column::make(__('Name'),'name')->searchable()->sortable(),
+            Column::make(__('ID'), "id")->searchable()->sortable(),
+            Column::make(__('Name'), 'name')->searchable()->sortable(),
             Column::make(__('Multiple'))->format(function ($value, $column, $row) {
                 return view($actionView ?? 'components.table.multiple', $data = [
                     "model" => $row
                 ]);
             }),
+            Column::make(__('Max Options'), 'max_options'),
             Column::make(__('Created At'), 'formatted_date'),
             $this->actionsColumn(),
         ];

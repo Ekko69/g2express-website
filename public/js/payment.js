@@ -1,4 +1,18 @@
 $(function () {
+
+    //
+    var isFlutterInAppWebViewReady = false;
+    window.addEventListener("flutterInAppWebViewPlatformReady", function (event) {
+        isFlutterInAppWebViewReady = true;
+    });
+    //custom code
+    livewire.on("openExternalBrowser", url => {
+        if (isFlutterInAppWebViewReady) {
+            window.flutter_inappwebview.callHandler('handlerOpenLink', url, true);
+        }
+    });
+
+
     //Stripe
     livewire.on("initStripe", (data) => {
         var stripe = Stripe(data[0]);
@@ -38,7 +52,7 @@ $(function () {
             redirect: true,
             callback_url: data[6],
             handler: function (response) {
-                window.location.href = "" + data[6] + "";
+                window.location.href = "" + data[7] + "";
             },
             theme: {
                 // color: "" + data[7] + ""
@@ -142,7 +156,7 @@ $(function () {
     //payu
     livewire.on("initPayUPayment", (paymentData) => {
         //
-        
+
         $("#payU_key").val(paymentData["payU_key"]);
         $("#payU_hash_string").val(paymentData["payU_hash_string"]);
         $("#payU_hash").val(paymentData["payU_hash"]);
