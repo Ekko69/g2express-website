@@ -4,6 +4,7 @@ namespace App\Http\Livewire;
 
 use App\Models\Order;
 use App\Models\User;
+use App\Models\UserToken;
 use App\Services\ModelTranslationService;
 use App\Services\TranslationFixService;
 use App\Services\FirestoreRestService;
@@ -408,6 +409,56 @@ class TroubleShootLivewire extends BaseLivewireComponent
         } catch (\Exception $ex) {
             logger("error", [$ex]);
             $this->showErrorAlert($ex->getMessage() ?? __("Failed"), $time = 30000);
+        }
+    }
+
+
+
+    public function fixWebBrowserFCMTokens()
+    {
+
+        try {
+            $this->isDemo();
+
+            $userTokens = UserToken::get();
+            //loop through and get user model, then check if the user has sanctum token
+            foreach ($userTokens as $userToken) {
+                $user = User::find($userToken->user_id);
+                if (empty($user)) {
+                    $userToken->delete();
+                    continue;
+                }
+                if (empty($user->tokens) || !$userToken->is_mobile) {
+                    $userToken->delete();
+                    continue;
+                } else {
+                    //
+                    $userToken->is_mobile = 1;
+                    $userToken->save();
+                }
+            }
+
+
+
+            $userTokens = UserToken::where('is_mobile', 0)->get();
+            foreach ($userTokens as $userToken) {
+                $userToken->delete();
+            }
+
+
+            //also clear duplicate tokens and leave the latest
+            $userTokens = UserToken::get();
+            $userTokens->groupBy('token')->each(function ($group) {
+                $group->slice(1)->each(function ($item) {
+                    $item->delete();
+                });
+            });
+
+
+            $this->showSuccessAlert(__("Firestore Web Tokens cleared") . " " . __("Successfully"));
+        } catch (\Exception $ex) {
+            logger("error", [$ex]);
+            $this->showErrorAlert($ex->getMessage() ?? __("Firestore Web Tokens clearing") . " " . __("Failed"));
         }
     }
 }

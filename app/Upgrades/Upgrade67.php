@@ -41,13 +41,17 @@ class Upgrade67 extends BaseUpgrade
         $permission->guard_name = 'web';
         $permission->save();
         //add auto-approve-product to the admin & city-admin roles
-        $role = Role::where('name', 'admin')->first();
-        $role->givePermissionTo('auto-approve-product');
-        $role = Role::where('name', 'city-admin')->first();
-        $role->givePermissionTo('auto-approve-product');
-        //
-
-
-
+        $adminRole = Role::where('name', 'admin')->first();
+        $adminRole->givePermissionTo('auto-approve-product');
+        $cityAdminRole = Role::where('name', 'city-admin')->first();
+        $cityAdminRole->givePermissionTo('auto-approve-product');
+        //add `view-product-requests` permission to the admin role
+        $permission = new Permission();
+        $permission->name = 'view-product-requests';
+        $permission->guard_name = 'web';
+        $permission->save();
+        //add view-product-requests to the admin role
+        $adminRole->givePermissionTo('view-product-requests');
+        $cityAdminRole->givePermissionTo('view-product-requests');
     }
 }

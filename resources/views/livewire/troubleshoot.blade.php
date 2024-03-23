@@ -79,6 +79,10 @@
                 </x-slot>
             </x-settings-item>
 
+            {{-- try clear browser tokens --}}
+            <x-settings-item title="{{ __('Clear Browser Notification Tokens') }}" wireClick="fixWebBrowserFCMTokens">
+                <x-heroicon-o-desktop-computer class="w-5 h-5 {{ isRTL() ? 'ml-4' : 'mr-4' }}" />
+            </x-settings-item>
 
 
         </div>

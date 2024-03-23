@@ -19,9 +19,16 @@ class PaymentMethodivewire extends BaseLivewireComponent
     public $hash_key;
     public $instruction;
     public $isActive;
+    //min_order & max_order
+    public $min_order = 0;
+    public $max_order;
 
     protected $rules = [
         "name" => "required|string",
+        //if min_order is provided, then must be a number and greater than 0
+        "min_order" => "nullable|numeric|min:0",
+        //if max_order is provided, then must be a number and greater than 0 and greater than min_order
+        "max_order" => "nullable|numeric|min:0",
     ];
 
 
@@ -39,6 +46,8 @@ class PaymentMethodivewire extends BaseLivewireComponent
         $this->hash_key = $this->selectedModel->hash_key;
         $this->instruction = $this->selectedModel->instruction;
         $this->isActive = $this->selectedModel->is_active;
+        $this->min_order = $this->selectedModel->min_order;
+        $this->max_order = $this->selectedModel->max_order;
         $this->emit('showEditModal');
     }
 
@@ -46,9 +55,9 @@ class PaymentMethodivewire extends BaseLivewireComponent
     {
         //validate
         $this->validate();
-        
+
         try {
-            
+
             $this->isDemo();
             DB::beginTransaction();
             $model = $this->selectedModel;
@@ -58,6 +67,8 @@ class PaymentMethodivewire extends BaseLivewireComponent
             $model->hash_key = $this->hash_key;
             $model->instruction = $this->instruction;
             $model->is_active = $this->isActive;
+            $model->min_order = $this->min_order;
+            $model->max_order = $this->max_order;
             $model->save();
 
             if ($this->photo) {
@@ -72,11 +83,11 @@ class PaymentMethodivewire extends BaseLivewireComponent
 
             $this->dismissModal();
             $this->reset();
-            $this->showSuccessAlert(__("Payment Method")." ".__('created successfully!'));
+            $this->showSuccessAlert(__("Payment Method") . " " . __('created successfully!'));
             $this->emit('refreshTable');
         } catch (Exception $error) {
             DB::rollback();
-            $this->showErrorAlert( $error->getMessage() ?? __("Payment Method")." ".__('creation failed!'));
+            $this->showErrorAlert($error->getMessage() ?? __("Payment Method") . " " . __('creation failed!'));
         }
     }
 }

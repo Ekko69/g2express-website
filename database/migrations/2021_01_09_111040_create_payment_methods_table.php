@@ -27,6 +27,9 @@ class CreatePaymentMethodsTable extends Migration
             $table->boolean('is_cash')->default(false);
             $table->boolean('use_taxi')->default(true);
             $table->boolean('use_wallet')->default(true);
+            // finance: min_order & max_order
+            $table->decimal('min_order', 15, 4)->nullable();
+            $table->decimal('max_order', 15, 4)->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

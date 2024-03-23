@@ -140,7 +140,7 @@ trait SystemUpdateTrait
             $appVerison = "1.1.2";
 
             //
-            \DB::statement("ALTER TABLE orders MODIFY COLUMN `status` ENUM('pending', 'preparing', 'ready', 'enroute', 'failed', 'cancelled', 'delivered') DEFAULT 'pending' ");
+            // \DB::statement("ALTER TABLE orders MODIFY COLUMN `status` ENUM('pending', 'preparing', 'ready', 'enroute', 'failed', 'cancelled', 'delivered') DEFAULT 'pending' ");
 
             if (!Schema::hasColumn('vendors', 'auto_assignment')) {
                 Schema::table('vendors', function (Blueprint $table) {
@@ -265,7 +265,7 @@ trait SystemUpdateTrait
             \DB::statement("ALTER TABLE wallet_transactions MODIFY COLUMN `status` ENUM('pending', 'failed', 'review', 'successful') DEFAULT 'pending' NOT NULL");
             \DB::statement("ALTER TABLE orders MODIFY COLUMN `payment_status` ENUM('pending', 'review', 'failed', 'cancelled', 'successful') DEFAULT 'pending'  NOT NULL");
             //add scheduled to status
-            \DB::statement("ALTER TABLE orders MODIFY COLUMN `status` ENUM('scheduled','pending', 'preparing', 'ready', 'enroute', 'failed', 'cancelled', 'delivered') DEFAULT 'pending'  NOT NULL");
+            // \DB::statement("ALTER TABLE orders MODIFY COLUMN `status` ENUM('scheduled','pending', 'preparing', 'ready', 'enroute', 'failed', 'cancelled', 'delivered') DEFAULT 'pending'  NOT NULL");
 
 
             //making filed optional
@@ -514,7 +514,7 @@ trait SystemUpdateTrait
 
                 DB::beginTransaction();
 
-                //deslivery addresses table                
+                //deslivery addresses table
                 if (!Schema::hasColumn('delivery_addresses', 'description')) {
                     Schema::table('delivery_addresses', function (Blueprint $table) {
                         $table->text('description')->nullable()->after('name');
@@ -527,7 +527,6 @@ trait SystemUpdateTrait
                     Artisan::call('migrate --force');
                     $seeder = new VendorTypesTableSeeder();
                     $seeder->run();
-
                 }
                 //
                 if (!Schema::hasColumn('categories', 'vendor_type_id')) {
@@ -537,11 +536,11 @@ trait SystemUpdateTrait
                 }
 
                 //migrate all categories to food category
-                if(setting('enableGroceryMode', "0")){
-                    $vendorType = VendorType::where('slug','grocery')->first();
+                if (setting('enableGroceryMode', "0")) {
+                    $vendorType = VendorType::where('slug', 'grocery')->first();
                     Category::whereNull('vendor_type_id')->withTrashed()->update(['vendor_type_id' => $vendorType->id]);
-                }else{
-                    $vendorType = VendorType::where('slug','food')->first();
+                } else {
+                    $vendorType = VendorType::where('slug', 'food')->first();
                     Category::whereNull('vendor_type_id')->withTrashed()->update(['vendor_type_id' => $vendorType->id]);
                 }
 
@@ -593,7 +592,7 @@ trait SystemUpdateTrait
                     $orderStop->stop_id = $parcelOrder->pickup_location_id;
                     $orderStop->is_first = true;
                     $orderStop->save();
-                    //dropoff loction 
+                    //dropoff loction
                     $orderStop = new OrderStop();
                     $orderStop->order_id = $parcelOrder->id;
                     $orderStop->stop_id = $parcelOrder->dropoff_location_id;

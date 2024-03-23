@@ -179,13 +179,13 @@ class SettingsTableSeeder extends Seeder
             array (
                 'id' => 39,
                 'key' => 'appVerisonCode',
-                'value' => '67',
+                'value' => '68',
             ),
             27 => 
             array (
                 'id' => 40,
                 'key' => 'appVerison',
-                'value' => '1.7.40',
+                'value' => '1.7.41',
             ),
             28 => 
             array (

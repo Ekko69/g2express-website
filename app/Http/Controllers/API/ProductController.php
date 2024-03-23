@@ -27,6 +27,7 @@ class ProductController extends Controller
             })
                 ->when($request->keyword, function ($query) use ($request) {
                     return $query->where('name', "like", "%" . $request->keyword . "%")
+                        ->orWhere('description', 'like', '%' . $request->keyword . '%')
                         ->orWhere('barcode', "like", "%" . $request->keyword);
                 })->latest()->paginate($this->perPage);
         }
@@ -43,8 +44,11 @@ class ProductController extends Controller
                 return $query->withCount('sales')->orderBy('sales_count', 'DESC');
             })
             ->when($request->keyword, function ($query) use ($request) {
-                return $query->where('name', "like", "%" . $request->keyword . "%")
-                    ->orWhere('barcode', "like", "%" . $request->keyword);
+                return $query->where(function ($q) use ($request) {
+                    $q->where('name', 'like', '%' . $request->keyword . '%')
+                        ->orWhere('description', 'like', '%' . $request->keyword . '%')
+                        ->orWhere('barcode', "like", "%" . $request->keyword);
+                });
             })
             ->when($request->category_id, function ($query) use ($request) {
                 return $query->whereHas('categories', function ($query) use ($request) {
@@ -97,17 +101,6 @@ class ProductController extends Controller
                         $query->whereIn('delivery_zone_id', $deliveryZonesIds);
                     });
                 });
-                // return $query->whereHas('vendor', function ($query) use ($request) {
-                //     return $query->byDeliveryZone($request->latitude, $request->longitude);
-                // });
-
-                // return $query->where(function ($query) use ($request) {
-                //     return $query->whereHas('vendor', function ($query) use ($request) {
-                //         return $query->active()->within($request->latitude, $request->longitude);
-                //     })->orWhereHas('vendor', function ($query) use ($request) {
-                //         return $query->active()->withinrange($request->latitude, $request->longitude);
-                //     });
-                // });
             })
             //order by in_order
             ->orderBy('in_order', 'ASC')

@@ -352,6 +352,18 @@
             </p>
             {{--  --}}
             <x-details.item title="{{ __('Name') }}" text="{{ $selectedModel->name ?? '' }}" />
+            <div class="grid grid-cols-1 gap-4 mt-4 border-t border-b pb-4 md:grid-cols-2 ">
+                {{-- logo --}}
+                <div>
+                    <x-label title="{{ __('Logo') }}" />
+                    <img src="{{ $selectedModel->logo ?? '' }}" class="h-24 rounded-sm object-cover" />
+                </div>
+                {{-- featured image --}}
+                <div>
+                    <x-label title="{{ __('Featured Image') }}" />
+                    <img src="{{ $selectedModel->feature_image ?? '' }}" class="h-24 rounded-sm object-cover" />
+                </div>
+            </div>
             <x-details.item title="{{ __('Description') }}">
                 <div>
                     {!! $selectedModel->description ?? '' !!}
@@ -361,27 +373,17 @@
 
                 <x-details.item title="{{ __('Phone') }}" text="{{ $selectedModel->phone ?? '' }}" />
                 <x-details.item title="{{ __('Email') }}" text="{{ $selectedModel->email ?? '' }}" />
-
-                <x-details.item title="{{ __('Address') }}" text="{{ $selectedModel->address ?? '' }}" />
+            </div>
+            <x-details.item title="{{ __('Address') }}" text="{{ $selectedModel->address ?? '' }}" />
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <x-details.item title="{{ __('Latitude') }}" text="{{ $selectedModel->latitude ?? '' }}" />
                 <x-details.item title="{{ __('Longitude') }}" text="{{ $selectedModel->longitude ?? '' }}" />
 
-                @php
-                    $categoriesName =
-                        $selectedModel != null
-                            ? implode(
-                                ', ',
-                                $selectedModel
-                                    ->categories()
-                                    ->pluck('name')
-                                    ->toArray(),
-                            )
-                            : '';
-                @endphp
-                <x-details.item title="{{ __('Categories') }}" text="">
-                    {{ $categoriesName }}
-                </x-details.item>
             </div>
+            {{-- categories --}}
+            <x-details.item title="{{ __('Categories') }}" text="">
+                {{ $selectedModel != null ? implode(', ', $selectedModel->categories()->pluck('name')->toArray()) : '' }}
+            </x-details.item>
             <div class="grid grid-cols-1 gap-4 mt-4 border-t md:grid-cols-2 ">
                 <x-details.item title="{{ __('Prepare Time') }}"
                     text="{{ $selectedModel->prepare_time ?? '-' }} {{ __('minutes') }}" />

@@ -18,7 +18,10 @@ class ServiceController extends Controller
             return $query->withCount('sales')->orderBy('sales_count', 'DESC');
         })
             ->when($request->keyword, function ($query) use ($request) {
-                return $query->where('name', "like", "%" . $request->keyword . "%");
+                return $query->where(function ($q) use ($request) {
+                    $q->where('name', 'like', '%' . $request->keyword . '%')
+                        ->orWhere('description', 'like', '%' . $request->keyword . '%');
+                });
             })
             ->when($request->category_id, function ($query) use ($request) {
                 return $query->where('category_id', "=", $request->category_id);

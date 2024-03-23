@@ -12,9 +12,17 @@ use Illuminate\Support\Facades\DB;
 class VendorServiceController extends Controller
 {
 
-    public function index()
+    public function index(Request $request)
     {
-        return Service::where('vendor_id', Auth::user()->vendor_id)->paginate();
+        return Service::where('vendor_id', Auth::user()->vendor_id)
+            ->when($request->keyword, function ($q) use ($request) {
+                //where with 2 inner where
+                return $q->where(function ($q) use ($request) {
+                    $q->where('name', 'like', '%' . $request->keyword . '%')
+                        ->orWhere('description', 'like', '%' . $request->keyword . '%');
+                });
+            })
+            ->paginate();
     }
 
     public function store(Request $request)

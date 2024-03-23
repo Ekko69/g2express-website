@@ -339,7 +339,7 @@ class Order extends BaseModel
                 $product = $orderProduct->product;
                 if ($product->available_qty != null) {
                     $product->available_qty += $orderProduct->quantity;
-                    $product->save();
+                    $product->saveQuietly();
                 }
             }
         }

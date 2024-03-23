@@ -50,6 +50,19 @@
                 <x-heroicon-o-archive class="w-5 h-5" />
             </x-settings-item>
 
+            <x-settings-item title="{{ __('Push Notifications') }}"
+                wireClick="confirmAction('Push Notification','clearPushNotifications')">
+                <x-lineawesome-broadcast-tower-solid class="w-5 h-5" />
+            </x-settings-item>
+
+            <x-settings-item title="{{ __('Queued Jobs') }}" wireClick="confirmAction('Job','clearJobs')">
+                <x-lineawesome-tasks-solid class="w-5 h-5" />
+            </x-settings-item>
+
+            <x-settings-item title="{{ __('Failed Queued Jobs') }}" wireClick="confirmAction('Job','clearFailedJobs')">
+                <x-lineawesome-exclamation-solid class="w-5 h-5 text-red-500" />
+            </x-settings-item>
+
 
 
         </div>

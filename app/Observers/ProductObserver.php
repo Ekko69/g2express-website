@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\Vendor;
 use App\Models\SubscriptionVendor;
 use App\Models\User;
+use Spatie\Permission\Models\Permission;
 
 class ProductObserver
 {
@@ -54,6 +55,19 @@ class ProductObserver
 
     public function handleProductApproval(Product $model)
     {
+        //if not permission named: auto-approve-product
+        $checkPermission = Permission::where('name', 'auto-approve-product')->first();
+        if (empty($checkPermission)) {
+            $model->approved = true;
+            return;
+        }
+
+        //
+        $productDetailsUpdateRequest = (bool) setting('productDetailsUpdateRequest', 0);
+        if (!$productDetailsUpdateRequest) {
+            return;
+        }
+        //
         //ge user from api guard or web guard
         $user = auth()->user();
         if (empty($user)) {
@@ -62,6 +76,7 @@ class ProductObserver
 
         //
         $userModel = User::find($user->id);
+
         //set approved to true if user has admin role or auto-approve-product permission
         if ($userModel->hasRole('admin') || $userModel->hasPermissionTo('auto-approve-product')) {
             $model->approved = true;

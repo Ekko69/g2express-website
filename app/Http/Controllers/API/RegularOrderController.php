@@ -151,14 +151,23 @@ class RegularOrderController extends Controller
             $optionIds = $product['options_ids'] ?? [];
             $options = Option::whereIn('id', $optionIds)->get();
             $totalOptionsPrice = $options->sum('price');
-            //check if product
-            if ($productModel->plus_option ?? false || empty($options)) {
-                $productPrice = $sellPrice + $totalOptionsPrice;
-            } else if (empty($options)) {
+            //
+            $noOptions = $productModel->options->count() == 0;
+            if ($noOptions) {
                 $productPrice = $sellPrice;
             } else {
-                $productPrice = $totalOptionsPrice;
+                //check if product
+                if ($productModel->plus_option ?? false || empty($options)) {
+                    $productPrice = $sellPrice + $totalOptionsPrice;
+                } else if (empty($options)) {
+                    $productPrice = $sellPrice;
+                } else {
+                    $productPrice = $totalOptionsPrice;
+                }
             }
+
+
+
 
             $productPrice = $productPrice * ($product['selected_qty'] ?? 1);
             $subtotal += $productPrice;

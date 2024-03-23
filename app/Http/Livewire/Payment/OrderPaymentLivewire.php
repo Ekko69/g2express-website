@@ -196,7 +196,8 @@ class OrderPaymentLivewire extends BaseLivewireComponent
         try {
 
             \DB::beginTransaction();
-            $payment = new Payment();
+            $payment = Payment::where('order_id', $this->selectedModel->id)->where('status', '!=', 'successful')->first();
+            $payment ??= new Payment();
             $payment->order_id = $this->selectedModel->id;
             $payment->ref = $this->paymentCode;
             $payment->status = "review";
@@ -207,7 +208,7 @@ class OrderPaymentLivewire extends BaseLivewireComponent
             $this->selectedModel->save();
 
             if ($this->photo) {
-
+                $payment->clearMediaCollection();
                 $payment->addMedia($this->photo->getRealPath())->toMediaCollection();
                 $this->photo = null;
             }

@@ -273,14 +273,22 @@ class BaseLivewireComponent extends Component
 
     //FCM
     public $fcmToken;
-    public function changeFCMToken($token)
+    public function changeFCMToken($token, $deviceIdenfier = null)
     {
         $this->fcmToken = $token;
         if (Auth::check() && !empty($this->fcmToken)) {
             //
             UserToken::updateOrCreate(
-                ['token' => $this->fcmToken],
-                ['user_id' => Auth::id()]
+                [
+                    'user_id' => Auth::id(),
+                    'device_uuid' => $deviceIdenfier
+                ],
+                [
+                    'user_id' => Auth::id(),
+                    'token' => $this->fcmToken,
+                    'is_mobile' => false,
+                    'device_uuid' => $deviceIdenfier
+                ],
             );
         }
     }

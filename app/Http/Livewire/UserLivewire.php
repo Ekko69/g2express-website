@@ -115,10 +115,8 @@ class UserLivewire extends BaseLivewireComponent
             $user->commission = $this->commission;
             $user->password = Hash::make($this->password);
             $user->save();
-
-            if (!empty($this->role)) {
-                $user->assignRole($this->role);
-            }
+            //client role if not set
+            $user->assignRole($this->roleName ?? "client");
 
             //update wallet
             $user->updateWallet($this->walletBalance);

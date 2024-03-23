@@ -11,7 +11,7 @@ class NewOrderUserSelect extends BaseLivewireSelect
     public function options($searchTerm = null): Collection
     {
         return User::where('name', 'like', '%' . $searchTerm . '%')
-            ->limit(20)
+            ->limit(10)
             ->get()
             ->map(function ($model) {
                 return [

@@ -161,4 +161,15 @@ trait OrderTrait
             "link" => $paymentLink
         ];
     }
+
+
+    //
+    public function isOrderAmountPaymentmethodValid($paymentMethodId, $amount)
+    {
+        //check if the order total is less than the max order amount for the payment method
+        $paymentMethod = PaymentMethod::find($paymentMethodId);
+        if ($paymentMethod->max_order != null && $paymentMethod->max_order > 0 && $amount > $paymentMethod->max_order) {
+            throw new \Exception(__("Order total is greater than the maximum order amount for the payment method"), 1);
+        }
+    }
 }

@@ -96,6 +96,10 @@ class TaxiOrderController extends Controller
 
             //also check if user over applied coupon code
 
+            //check if the order total is less than the max order amount for the payment method
+            $this->isOrderAmountPaymentmethodValid($request->payment_method_id, $request->total);
+
+
 
 
             //save new order
@@ -103,6 +107,12 @@ class TaxiOrderController extends Controller
             DB::beginTransaction();
             $order = new order();
             $order->code = $this->generateOrderCode(10);
+            //add user_id if the request has user_id and the auth user has 'new-taxi-order' permission
+            if ($request->has('user_id') && \Auth::user()->can('new-taxi-order')) {
+                $order->user_id = $request->user_id;
+            } else {
+                $order->user_id = \Auth::id();
+            }
             //verify payment method is valid and can handle the order amount
             $paymentMethod = PaymentMethod::find($request->payment_method_id);
             $paymentLink = "";

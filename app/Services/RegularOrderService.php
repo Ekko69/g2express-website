@@ -35,6 +35,10 @@ class RegularOrderService
             throw new \Exception(__("Vendor not found or is inactive"), 1);
         }
 
+        //check if the order total is less than the max order amount for the payment method
+        $this->isOrderAmountPaymentmethodValid($request->payment_method_id, $request->total);
+
+
         //redirect prescription order
         if ($request->type == "prescription" || ($request->type == "pharmacy" && ($request->hasFile("photo") || $request->hasFile("photos")))) {
             return $this->prescriptionOrder($request);
@@ -178,6 +182,9 @@ class RegularOrderService
         //handle the check to see if the order is payable by wallet
         // it will throw an exception if the order is not payable by wallet
         $this->isPayableByWallet();
+
+        //check if the order total is less than the max order amount for the payment method
+        $this->isOrderAmountPaymentmethodValid($request->payment_method_id, $request->total);
 
 
         foreach ($request->data as $vendorOrderData) {

@@ -96,9 +96,11 @@
             <x-heroicon-o-archive class="w-5 h-5" />
         </x-menu-item>
 
-        <x-menu-item title="{{ __('Product Requests') }}" route="products.requests">
-            <x-heroicon-o-question-mark-circle class="w-5 h-5" />
-        </x-menu-item>
+        @can('view-product-requests')
+            <x-menu-item title="{{ __('Product Requests') }}" route="products.requests">
+                <x-heroicon-o-question-mark-circle class="w-5 h-5" />
+            </x-menu-item>
+        @endcan
 
         <x-hr />
 
@@ -563,6 +565,18 @@
     @can('view-settings')
         <x-group-menu-item routePath="setting/*" title="{{ __('Settings') }}" icon="heroicon-o-cog">
 
+            {{-- Settings --}}
+            <x-menu-item title="{{ __('General Settings') }}" route="settings">
+                <x-heroicon-o-cog class="w-5 h-5" />
+            </x-menu-item>
+
+            {{-- App Settings --}}
+            <x-menu-item title="{{ __('Mobile App Settings') }}" route="settings.app">
+                <x-heroicon-o-device-mobile class="w-5 h-5" />
+            </x-menu-item>
+
+            <x-hr />
+
             {{-- Currencies --}}
             <x-menu-item title="{{ __('Currencies') }}" route="currencies">
                 <x-heroicon-o-currency-dollar class="w-5 h-5" />
@@ -585,11 +599,6 @@
             <x-hr />
 
 
-            {{-- Settings --}}
-            <x-menu-item title="{{ __('General Settings') }}" route="settings">
-                <x-heroicon-o-cog class="w-5 h-5" />
-            </x-menu-item>
-
             {{-- Page Settings --}}
             <x-menu-item title="{{ __('Page Settings') }}" route="settings.page">
                 <x-heroicon-o-document class="w-5 h-5" />
@@ -600,10 +609,7 @@
                 <x-heroicon-o-document-text class="w-5 h-5" />
             </x-menu-item>
 
-            {{-- App Settings --}}
-            <x-menu-item title="{{ __('Mobile App Settings') }}" route="settings.app">
-                <x-heroicon-o-device-mobile class="w-5 h-5" />
-            </x-menu-item>
+            <x-hr />
 
             {{-- Map Settings --}}
             <x-menu-item title="{{ __('Map Settings') }}" route="settings.map">

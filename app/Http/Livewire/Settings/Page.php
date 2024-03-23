@@ -51,8 +51,8 @@ class Page extends BaseSettingsComponent
                 'page.settings.vendorDocumentCount' =>  $this->vendorDocumentCount,
             ])->save();
 
-            $this->showSuccessAlert(__("Page Settings saved successfully!"));
             $this->setupEditors();
+            $this->showSuccessAlert(__("Page Settings saved successfully!"));
         } catch (\Exception $error) {
             $this->showErrorAlert($error->getMessage() ?? __("Page Settings save failed!"));
         }

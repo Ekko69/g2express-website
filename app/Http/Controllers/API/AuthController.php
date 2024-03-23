@@ -16,9 +16,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Propaganistas\LaravelPhone\PhoneNumber;
 use App\Models\VendorManager;
-
-
-
+use Illuminate\Contracts\Encryption\DecryptException;
 
 class AuthController extends Controller
 {
@@ -114,7 +112,7 @@ class AuthController extends Controller
             } else {
                 return $this->authObject($user);
             }
-        } catch (\DecryptException $e) {
+        } catch (DecryptException $e) {
             return response()->json([
                 "message" => __('Invalid Login Data')
             ], 400);

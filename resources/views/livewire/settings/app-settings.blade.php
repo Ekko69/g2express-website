@@ -12,6 +12,7 @@
                 <x-tab.header tab="4" title="{{ __('Driver') }}" />
                 <x-tab.header tab="5" title="{{ __('Theme') }}" />
                 <x-tab.header tab="6" title="{{ __('Order') }}" />
+                <x-tab.header tab="7" title="{{ __('Page Setting') }}" />
             </x-slot>
 
             <x-slot name="body">
@@ -32,6 +33,9 @@
                 </x-tab.body>
                 <x-tab.body tab="6">
                     @include('livewire.settings.appsettings.order')
+                </x-tab.body>
+                <x-tab.body tab="7">
+                    <livewire:settings.page />
                 </x-tab.body>
             </x-slot>
 

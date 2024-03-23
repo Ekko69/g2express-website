@@ -6,6 +6,7 @@ function initAnySummerNote() {
         const elementId = $(this).attr('id');
         const inputEntryId = "" + elementId + "-Input";
         $(this).summernote({
+            dialogsInBody: true,
             tabsize: 2,
             height: 320,
             toolbar: [

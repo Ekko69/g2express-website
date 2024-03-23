@@ -1,4 +1,4 @@
-@section('title',  __('Payment Methods') )
+@section('title', __('Payment Methods'))
 <div>
 
     <x-baseview title="{{ __('Payment Methods') }}">
@@ -15,21 +15,17 @@
             <x-input title="Hash Key" name="hash_key" />
             <x-label title="{{ __('Instruction(offline payment)') }}" />
             <textarea wire:model.defer="instruction" class="w-full h-40 p-2 mt-1 border rounded"></textarea>
-            <x-media-upload
-                        title="{{ __('Photo') }}"
-                        name="photo"
-                        preview="{{ $selectedModel->photo ?? '' }}"
-                        :photo="$photo"
-                        :photoInfo="$photoInfo"
-                        types="PNG or JPEG"
-                        rules="image/*" />
-            <x-checkbox
-                    title="{{ __('Active') }}"
-                    name="isActive" :defer="false" />
+            <x-media-upload title="{{ __('Photo') }}" name="photo" preview="{{ $selectedModel->photo ?? '' }}"
+                :photo="$photo" :photoInfo="$photoInfo" types="PNG or JPEG" rules="image/*" />
+            <x-checkbox title="{{ __('Active') }}" name="isActive" :defer="false" />
 
+            <hr class="my-4" />
+
+            <div class="grid grid-cols-2 gap-4">
+                <x-input title="{{ __('Min Order Amount') }}" name="min_order" />
+                <x-input title="{{ __('Max Order Amount') }}" name="max_order" />
+            </div>
 
         </x-modal>
     </div>
 </div>
-
-

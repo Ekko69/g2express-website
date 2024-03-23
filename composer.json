@@ -32,12 +32,17 @@
                     }
                 }
             }
+        },
+        {
+            "url": "https://github.com/ambrosethebuild/envato-purchase-code-verifier",
+            "type": "git"
         }
     ],
     "require": {
         "php": "^8.0",
         "ahsankhatri/firestore-php": "master",
         "aloha/twilio": "*",
+        "ambrosethebuild/epcv": "dev-master",
         "anandsiddharth/laravel-paytm-wallet": "^2.0",
         "anlutro/l4-settings": "*",
         "anthonymartin/geo-location": "^2.0",

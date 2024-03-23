@@ -9,7 +9,7 @@ class SubCategoryTable extends OrderingBaseDataTableComponent
 {
 
     public $model = Subcategory::class;
-    public $header_view = 'components.buttons.new';
+
 
     public function query()
     {
@@ -30,7 +30,11 @@ class SubCategoryTable extends OrderingBaseDataTableComponent
             ),
             Column::make(__('Name'), 'name')->searchable()->sortable(),
             $this->activeColumn(),
-            Column::make(__('Created At'), 'formatted_date'),
+            Column::make(__('Created At'), 'formatted_date')->sortable(
+                function ($query, $direction) {
+                    return $query->orderBy('created_at', $direction);
+                }
+            ),
             $this->actionsColumn(),
         ];
     }

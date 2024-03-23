@@ -69,13 +69,12 @@ class UserTable extends BaseDataTableComponent
                 })->searchable()->sortable(),
         ];
 
-        // if (!$this->inDemo()) {
-        //     $columns[] = Column::make(__('Phone'), 'phone')->searchable()->sortable();
-        // }
+        if (!$this->inDemo()) {
+            $columns[] = Column::make(__('Email'), 'email')->searchable()->sortable();
+        }
 
         $mColumns = [
             $this->customColumn(__('Wallet'), 'components.table.wallet'),
-            Column::make(__('Commission') . "(%)", 'commission'),
             Column::make(__('Role'), 'role_name'),
             Column::make(__('Created At'), 'formatted_date'),
             $this->actionsColumn('components.buttons.user_actions'),
@@ -84,6 +83,28 @@ class UserTable extends BaseDataTableComponent
         $columns = array_merge($columns, $mColumns);
 
         return $columns;
+    }
+
+    //
+    public function initiateDelete($id)
+    {
+        try {
+            $this->selectedModel = $this->model::withTrashed()->find($id);
+        } catch (\Exception $ex) {
+            $this->selectedModel = $this->model::find($id);
+        }
+
+        $this->confirm(__('Delete'), [
+            'icon' => 'question',
+            'toast' => false,
+            'text' =>  __('When deleting a user, all related data such has orders, wallet, delivery address, product reviews will be deleted.') . "\n" . __('Are you sure you want to delete the selected data?'),
+            'position' => 'center',
+            'showConfirmButton' => true,
+            'cancelButtonText' => __("Cancel"),
+            'confirmButtonText' => __("Yes"),
+            'onConfirmed' => 'deleteModel',
+            'onCancelled' => 'cancelled'
+        ]);
     }
 
     //

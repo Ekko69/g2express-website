@@ -47,7 +47,11 @@ class CategoryTable extends OrderingBaseDataTableComponent
             }),
             Column::make(__('No Subcategories'), 'sub_categories_count')->sortable(),
             $this->activeColumn(),
-            Column::make(__('Created At'), 'formatted_date'),
+            Column::make(__('Created At'), 'formatted_date')->sortable(
+                function ($query, $direction) {
+                    return $query->orderBy('created_at', $direction);
+                }
+            ),
             $this->actionsColumn(),
         ];
     }

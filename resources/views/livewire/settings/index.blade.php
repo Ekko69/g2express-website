@@ -7,8 +7,8 @@
 
             <x-slot name="header">
                 <x-tab.header tab="1" title="{{ __('Push notification setting(Firebase)') }}" />
-                <x-tab.header tab="2" title="{{ __('Web App Settings') }}" />
-                <x-tab.header tab="3" title="{{ __('Page Setting') }}" />
+                <x-tab.header tab="2" title="{{ __('Backend Settings') }}" />
+                <x-tab.header tab="3" title="{{ __('General Settings') }}" />
                 <x-tab.header tab="4" title="{{ __('Custom Order Notification Messages') }}" />
                 <x-tab.header tab="5" title="{{ __('File Upload Limits') }}" />
             </x-slot>
@@ -18,10 +18,10 @@
                     <livewire:settings.notification />
                 </x-tab.body>
                 <x-tab.body tab="2">
-                    <livewire:settings.web-app-settings />
+                    <livewire:settings.backend-settings />
                 </x-tab.body>
                 <x-tab.body tab="3">
-                    <livewire:settings.page />
+                    <livewire:settings.web-app-settings />
                 </x-tab.body>
                 <x-tab.body tab="4">
                     <livewire:settings.custom-notification-message />

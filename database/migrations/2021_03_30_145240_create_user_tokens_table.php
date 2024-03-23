@@ -17,6 +17,8 @@ class CreateUserTokensTable extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('token');
+            $table->string('device_uuid')->nullable();
+            $table->boolean('is_mobile')->default(true);
             $table->timestamps();
         });
     }

@@ -79,8 +79,8 @@ class DataLivewire extends BaseLivewireComponent
             DB::statement("SET foreign_key_checks=1");
 
 
-            $this->dismissModal();
             $this->showSuccessAlert($this->model . " " . __('clear successfully!'));
+            $this->dismissModal();
         } catch (Exception $error) {
 
             $this->showErrorAlert($error->getMessage() ?? $this->model . " " . __('clearing failed!'));
@@ -98,8 +98,8 @@ class DataLivewire extends BaseLivewireComponent
             DB::table('wallet_transactions')->truncate();
             DB::table('wallets')->update(['balance' => 0]);
             DB::statement("SET foreign_key_checks=1");
-            $this->dismissModal();
             $this->showSuccessAlert($this->model . " " . __('clear successfully!'));
+            $this->dismissModal();
         } catch (Exception $error) {
             $this->showErrorAlert($error->getMessage() ?? $this->model . " " . __('clearing failed!'));
         }
@@ -115,8 +115,8 @@ class DataLivewire extends BaseLivewireComponent
             //order payments
             DB::table('wallets')->update(['balance' => 0]);
             DB::statement("SET foreign_key_checks=1");
-            $this->dismissModal();
             $this->showSuccessAlert($this->model . " " . __('clear successfully!'));
+            $this->dismissModal();
         } catch (Exception $error) {
             $this->showErrorAlert($error->getMessage() ?? $this->model . " " . __('clearing failed!'));
         }
@@ -142,8 +142,8 @@ class DataLivewire extends BaseLivewireComponent
             DB::statement("SET foreign_key_checks=1");
 
 
-            $this->dismissModal();
             $this->showSuccessAlert($this->model . " " . __('clear successfully!'));
+            $this->dismissModal();
         } catch (Exception $error) {
 
             $this->showErrorAlert($error->getMessage() ?? $this->model . " " . __('clearing failed!'));
@@ -168,8 +168,8 @@ class DataLivewire extends BaseLivewireComponent
             DB::statement("SET foreign_key_checks=1");
 
 
-            $this->dismissModal();
             $this->showSuccessAlert($this->model . " " . __('clear successfully!'));
+            $this->dismissModal();
         } catch (Exception $error) {
 
             $this->showErrorAlert($error->getMessage() ?? $this->model . " " . __('clearing failed!'));
@@ -211,8 +211,8 @@ class DataLivewire extends BaseLivewireComponent
             DB::statement("SET foreign_key_checks=1");
 
 
-            $this->dismissModal();
             $this->showSuccessAlert($this->model . " " . __('clear successfully!'));
+            $this->dismissModal();
         } catch (Exception $error) {
 
             $this->showErrorAlert($error->getMessage() ?? $this->model . " " . __('clearing failed!'));
@@ -250,8 +250,8 @@ class DataLivewire extends BaseLivewireComponent
 
 
 
-            $this->dismissModal();
             $this->showSuccessAlert($this->model . " " . __('clear successfully!'));
+            $this->dismissModal();
         } catch (Exception $error) {
 
             $this->showErrorAlert($error->getMessage() ?? $this->model . " " . __('clearing failed!'));
@@ -286,8 +286,8 @@ class DataLivewire extends BaseLivewireComponent
             DB::statement("SET foreign_key_checks=1");
 
 
-            $this->dismissModal();
             $this->showSuccessAlert($this->model . " " . __('clear successfully!'));
+            $this->dismissModal();
         } catch (Exception $error) {
 
             $this->showErrorAlert($error->getMessage() ?? $this->model . " " . __('clearing failed!'));
@@ -327,13 +327,54 @@ class DataLivewire extends BaseLivewireComponent
             }
 
 
-            $this->dismissModal();
             $this->showSuccessAlert($this->model . " " . __('clear successfully!'));
+            $this->dismissModal();
         } catch (Exception $error) {
 
             $this->showErrorAlert($error->getMessage() ?? $this->model . " " . __('clearing failed!'));
         }
     }
+
+
+    public function clearPushNotifications()
+    {
+        try {
+
+            $this->isDemo();
+            DB::table('push_notifications')->truncate();
+            $this->showSuccessAlert($this->model . " " . __('clear successfully!'));
+            $this->dismissModal();
+        } catch (Exception $error) {
+            $this->showErrorAlert($error->getMessage() ?? $this->model . " " . __('clearing failed!'));
+        }
+    }
+
+    public function clearJobs()
+    {
+        try {
+
+            $this->isDemo();
+            DB::table('jobs')->truncate();
+            $this->showSuccessAlert($this->model . " " . __('clear successfully!'));
+            $this->dismissModal();
+        } catch (Exception $error) {
+            $this->showErrorAlert($error->getMessage() ?? $this->model . " " . __('clearing failed!'));
+        }
+    }
+
+    public function clearFailedJobs()
+    {
+        try {
+
+            $this->isDemo();
+            DB::table('failed_jobs')->truncate();
+            $this->showSuccessAlert($this->model . " " . __('clear successfully!'));
+            $this->dismissModal();
+        } catch (Exception $error) {
+            $this->showErrorAlert($error->getMessage() ?? $this->model . " " . __('clearing failed!'));
+        }
+    }
+
 
 
 

@@ -56,7 +56,7 @@ class SubCategoryLivewire extends BaseLivewireComponent
             $model = new Subcategory();
             $model->name = $this->name;
             $model->is_active = $this->isActive;
-            $model->category_id = $this->category_id;
+            $model->category_id = $this->category_id ?? $this->categories->first()->id ?? null;
             $model->save();
 
             if ($this->photo) {

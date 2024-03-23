@@ -125,6 +125,8 @@ view-tags
             "change-order-cancel-reason",
             "view-driver-documents",
             "view-vendor-documents",
+            "auto-approve-product",
+            "view-product-requests",
         ];
         //managers roles only
         $managerRolePermissions = ["manager-fleets", "my-subscription", 'my-earning'];
@@ -159,6 +161,8 @@ view-tags
             "view-vendor-earning",
             "vendor-earning-history",
             "driver-earning-history",
+            "view-product-requests",
+            "auto-approve-product",
         ];
         //permission for manager, city-admin & admin
         $allRolePermissions = [

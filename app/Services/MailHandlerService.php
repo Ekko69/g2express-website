@@ -35,7 +35,11 @@ class MailHandlerService
             }
 
             //
-            $mail->send($mailable);
+            if (!delayFCMJob()) {
+                $mail->send($mailable);
+            } else {
+                $mail->queue($mailable);
+            }
         } catch (\Exception $ex) {
             \Log::error($ex);
         }

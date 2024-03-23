@@ -70,11 +70,11 @@ class AutoAssignmentService
     public function saveNewOrderToFirebaseFirestore($driver, $newOrderData, $address = null, $distance = null)
     {
 
-        $firestoreClient = $this->getFirebaseStoreClient();
 
         //
         try {
 
+            $firestoreClient = $this->getFirebaseStoreClient();
             $orderRef = "driver_new_order/" . $driver->id . "";
             try {
                 $firestoreClient->addDocument($orderRef, $newOrderData);
